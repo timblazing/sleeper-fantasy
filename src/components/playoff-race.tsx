@@ -44,7 +44,7 @@ export function PlayoffRace({ leagueId, picture, username }: { leagueId: string;
   const max = Math.max(...rows.map((row) => row.playoffOdds), 1);
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Playoff race</CardTitle>
         <CardDescription>{METRIC.description} — {picture.simulations.toLocaleString()} simulations</CardDescription>

@@ -31,7 +31,7 @@ export function PlayerWeeklyChart({ weekly, season }: { weekly: PlayerWeeklyLine
   const best = Math.max(...data.map((row) => row.points));
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Weekly scoring</CardTitle>
         <CardDescription>

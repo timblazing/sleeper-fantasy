@@ -54,7 +54,7 @@ export function PlayerValueChart({ valueHistory, history, isSuperflex }: { value
   const pad = Math.max(Math.round((max - min) * 0.15), 50);
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Value history</CardTitle>
         <CardDescription>

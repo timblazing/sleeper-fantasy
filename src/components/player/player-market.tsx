@@ -31,7 +31,7 @@ export function PlayerTradeMarketCard({ market }: { market: PlayerTradeMarket | 
   const total = market.trades.length;
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Recent trades</CardTitle>
         <CardDescription>
@@ -72,7 +72,7 @@ export function PlayerTradeMarketCard({ market }: { market: PlayerTradeMarket | 
 function RelatedList({ title, description, players, leagueId, username }: { title: string; description: string; players: PlayerRelatedPlayer[]; leagueId: string; username?: string }) {
   if (!players.length) return null;
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

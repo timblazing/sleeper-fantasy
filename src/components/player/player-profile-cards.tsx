@@ -28,7 +28,7 @@ export function PlayerCliffRiskCard({ cliffRisk }: { cliffRisk: PlayerCliffRisk 
   const Icon = level === "low" ? ShieldCheck : level === "high" || level === "extreme" ? ShieldAlert : TriangleAlert;
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Icon className={cn("size-4", tone)} />
@@ -60,7 +60,7 @@ export function PlayerInjuryCard({ injury }: { injury: PlayerInjuryHistory | nul
   const totalMissed = injury.events.reduce((total, event) => total + (event.gamesMissed ?? 0), 0);
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Injury history</CardTitle>
         <CardDescription>
@@ -129,7 +129,7 @@ export function PlayerContractCard({ contract }: { contract: PlayerContract | nu
   if (!contract || (contract.totalValue == null && contract.apy == null)) return null;
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           Contract
@@ -167,7 +167,7 @@ export function PlayerCombineCard({ combine }: { combine: PlayerCombine | null }
   if (!measurables.length && !drafted) return null;
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Draft &amp; combine</CardTitle>
         <CardDescription>

@@ -25,7 +25,7 @@ export function PlayerSnapTrend({ snaps, avgSnapPct }: { snaps: PlayerSnapWeek[]
   const drift = Math.round(recentAvg - seasonAvg);
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Snap share trend</CardTitle>
         <CardDescription>

@@ -32,3 +32,23 @@ export function formatValue(value: number): string {
 export function formatTrend(trend: number): string {
   return `${trend > 0 ? "+" : ""}${Math.round(trend).toLocaleString("en-US")}`;
 }
+
+/**
+ * Kickoff label for a game that has not started, in the reader's own zone.
+ *
+ * ESPN's `shortDetail` is a fixed "9/14 - 8:15 PM EDT" in the league's zone, which is both stale
+ * for anyone outside Eastern and noisy for a game later today. Formatting from the ISO kickoff
+ * instead gives "8:15 PM" today, "Sun 8:15 PM" inside the week, and a date beyond it.
+ */
+export function formatKickoff(kickoff: string, now: Date = new Date(), timeZone?: string): string {
+  const date = new Date(kickoff);
+  if (Number.isNaN(date.getTime())) return "";
+  const time = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone });
+  // Compare calendar days in the display zone, not UTC: a Sunday-night kickoff is still "today"
+  // for a reader in Los Angeles even though its UTC date has already rolled over.
+  const day = (value: Date) => value.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit", timeZone });
+  if (day(date) === day(now)) return time;
+  const days = Math.round((new Date(day(date)).getTime() - new Date(day(now)).getTime()) / 86_400_000);
+  if (days > 0 && days < 7) return `${date.toLocaleDateString("en-US", { weekday: "short", timeZone })} ${time}`;
+  return `${date.toLocaleDateString("en-US", { month: "numeric", day: "numeric", timeZone })} ${time}`;
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeGame, formatTrend, formatValue, headshotUrl } from "@/lib/display";
+import { describeGame, formatKickoff, formatTrend, formatValue, headshotUrl } from "@/lib/display";
 import { makePlayer } from "@/lib/test/fixtures";
 import type { PlayerGame } from "@/lib/types";
 
@@ -63,5 +63,30 @@ describe("formatTrend", () => {
 
   it("rounds a fractional value", () => {
     expect(formatTrend(12.6)).toBe("+13");
+  });
+});
+
+describe("formatKickoff", () => {
+  const zone = "America/New_York";
+
+  it("shows just the time for a game later today", () => {
+    expect(formatKickoff("2026-09-14T20:15:00Z", new Date("2026-09-14T14:00:00Z"), zone)).toBe("4:15 PM");
+  });
+
+  it("prefixes the weekday for a game later this week", () => {
+    expect(formatKickoff("2026-09-17T00:15:00Z", new Date("2026-09-14T14:00:00Z"), zone)).toBe("Wed 8:15 PM");
+  });
+
+  it("uses a date for a game more than a week out", () => {
+    expect(formatKickoff("2026-09-27T17:00:00Z", new Date("2026-09-14T14:00:00Z"), zone)).toBe("9/27 1:00 PM");
+  });
+
+  it("uses the reader zone to decide what counts as today", () => {
+    // 8:15 PM Pacific on the 14th is already the 15th in UTC, but still "today" out west.
+    expect(formatKickoff("2026-09-15T03:15:00Z", new Date("2026-09-14T22:00:00Z"), "America/Los_Angeles")).toBe("8:15 PM");
+  });
+
+  it("returns an empty string for an unparseable kickoff", () => {
+    expect(formatKickoff("not a date", new Date("2026-09-14T14:00:00Z"), zone)).toBe("");
   });
 });

@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { KickoffTime } from "@/components/kickoff-time";
 import { PositionBadge } from "@/components/position-badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { headshotUrl } from "@/lib/display";
 import type { MatchupDetail, RosterSlot } from "@/lib/types";
 import { cn, withUsername } from "@/lib/utils";
@@ -9,12 +10,15 @@ const points = (entry: RosterSlot) => (entry.game?.state !== "in" && entry.game?
 const projection = (entry: RosterSlot) => entry.projection == null ? "—" : entry.projection.toFixed(1);
 
 /**
- * The opponent line. A live game brings ESPN's own status text; otherwise this is the scheduled
- * matchup, where `projectionHome === false` means the player's team is on the road. An unknown
- * side falls back to the neutral "vs" rather than guessing.
+ * The opponent line. A live or finished game brings ESPN's own status text ("Final", "Q3 8:41");
+ * a game still to come gets its kickoff in the reader's own zone instead of ESPN's fixed Eastern
+ * "9/14 - 8:15 PM EDT". Otherwise this is the scheduled matchup, where `projectionHome === false`
+ * means the player's team is on the road, and an unknown side falls back to the neutral "vs".
  */
 function opponentLabel(entry: RosterSlot) {
-  if (entry.game?.detail) return entry.game.detail;
+  const game = entry.game;
+  if (game?.state === "pre" && game.kickoff && !game.bye) return <KickoffTime fallback={game.detail} kickoff={game.kickoff} />;
+  if (game?.detail) return game.detail;
   if (!entry.projectionOpponent) return "—";
   return `${entry.projectionHome === false ? "@" : "vs"} ${entry.projectionOpponent}`;
 }
@@ -27,7 +31,7 @@ function PlayerSide({ entry, reverse, leagueId, username }: { entry: RosterSlot;
   const name = player?.name ?? "Empty";
 
   return (
-    <div className={cn("flex min-w-0 items-center gap-1.5 rounded-lg bg-muted/35 px-1.5 py-1.5 sm:gap-2 sm:px-2 sm:py-2", reverse && "flex-row-reverse text-right")}>
+    <div className={cn("flex min-w-0 items-center gap-1.5 rounded-lg bg-background/40 px-1.5 py-1.5 sm:gap-2 sm:px-2 sm:py-2", reverse && "flex-row-reverse text-right")}>
       <Avatar className="size-6 shrink-0 bg-muted sm:size-8">
         {player ? <AvatarImage alt="" src={headshotUrl(player)} /> : null}
         <AvatarFallback className="text-[0.6rem]">{player?.position ?? "—"}</AvatarFallback>

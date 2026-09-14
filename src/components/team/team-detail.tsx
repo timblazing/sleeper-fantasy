@@ -35,7 +35,7 @@ function Metric({ label, value, detail }: { label: string; value: string; detail
 
 function TeamHero({ team, leagueName, season, teams, valuesReady }: Pick<TeamDetailProps, "team" | "leagueName" | "season" | "teams" | "valuesReady">) {
   return (
-    <Card>
+    <Card accent>
       <CardContent className="grid gap-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
         <div className="flex min-w-0 items-center gap-4">
           <Avatar className="size-20 shrink-0 sm:size-24">
@@ -60,7 +60,7 @@ function TeamHero({ team, leagueName, season, teams, valuesReady }: Pick<TeamDet
 
 function PositionRooms({ team, teams, valuesReady }: Pick<TeamDetailProps, "team" | "teams" | "valuesReady">) {
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Position rooms</CardTitle>
         <CardDescription>How each group stacks up against the rest of the league.</CardDescription>

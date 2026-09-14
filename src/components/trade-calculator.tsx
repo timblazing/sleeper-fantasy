@@ -137,7 +137,7 @@ function Side({ data, title, description, teamId, onTeamChange, assets, onAdd, o
   const suggestions = [...playerSuggestions, ...(trimmed ? pickSuggestions : pickSuggestions.slice(0, 3))].filter((asset) => !staged.has(asset.key)).slice(0, SUGGESTION_LIMIT);
   const total = sumValues(assets.map((asset) => asset.value));
 
-  return <Card className="flex flex-col">
+  return <Card accent className="flex flex-col">
     <CardHeader>
       <CardTitle>{title}</CardTitle>
       <CardDescription>{description}</CardDescription>
@@ -173,7 +173,7 @@ function Verdict({ basis, trade }: { basis: TradeLabData["league"]["basis"]; tra
   const total = trade.sideA.value + trade.sideB.value;
   const sharePercent = total ? Math.round((trade.sideA.value / total) * 100) : 50;
 
-  return <Card>
+  return <Card accent>
     <CardHeader>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><CardTitle>{winnerLabel}</CardTitle><CardDescription>{trade.verdict.difference ? `${formatter.format(trade.verdict.difference)} ${basisMeta(basis).hasMarket ? "value" : "PPG"} gap` : `Both sides carry the same ${basisMeta(basis).hasMarket ? "market value" : "projected production"}`}</CardDescription></div>

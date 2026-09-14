@@ -37,7 +37,7 @@ export function HistoryChampions({ leagueId, managers, seasons, username }: { le
     .toSorted((a, b) => b.championships - a.championships);
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Champions</CardTitle>
         <CardDescription>Every title in league history{banners.length > 1 ? ` — ${banners.length} seasons decided` : ""}</CardDescription>

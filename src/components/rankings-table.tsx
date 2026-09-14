@@ -78,7 +78,7 @@ export function RankingsTable({ view, query }: { view: RankingsView; query: Rank
   }
 
   return (
-    <Card className="gap-0 py-0">
+    <Card accent className="gap-0 py-0">
       <CardContent className="px-0">
         <Table className="max-sm:table-fixed">
           <TableHeader>

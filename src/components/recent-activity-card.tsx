@@ -82,7 +82,7 @@ function ActivityRow({ item, leagueId, username }: { item: ActivityItem; leagueI
 /** The league's last handful of completed moves — trades, waiver claims, and free agent adds. */
 export function RecentActivityCard({ activity, leagueId, username }: { activity: ActivityItem[]; leagueId?: string; username?: string }) {
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Recent activity</CardTitle>
       </CardHeader>

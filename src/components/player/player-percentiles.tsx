@@ -64,7 +64,7 @@ export function PlayerPercentiles({ metrics, season, position }: { metrics: Play
   const ordered = [...metrics].sort((a, b) => (b.percentile ?? -1) - (a.percentile ?? -1));
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>{season ?? "Season"} rankings</CardTitle>
         <CardDescription>Percentile among {position}s, best first. Hover a metric for what it measures.</CardDescription>

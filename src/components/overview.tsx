@@ -25,30 +25,36 @@ const TONE_TEXT: Record<Tone, string> = {
   neutral: "text-foreground",
 };
 
-/** The connected team header and its four supporting metrics. */
+/**
+ * The dashboard hero. The champion banners on the League page set the visual language, and the
+ * `accent` Card carries it; the identity anchors the left so the four numbers read as one strip
+ * on the right rather than four stretched columns with dead air between them.
+ */
 function LeagueStatus({ data }: { data: OverviewData }) {
   const { team } = data;
   if (!team) return null;
 
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="p-0">
-        <div className="flex min-w-0 items-center gap-3 p-4 md:p-6">
-          <Avatar className="size-10 shrink-0">
+    <Card accent>
+      <CardContent className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
+        <div className="flex min-w-0 items-center gap-3.5">
+          <Avatar className="size-12 shrink-0 after:hidden">
             {team.avatar ? <AvatarImage alt="" src={avatarUrl(team.avatar)} /> : null}
-            <AvatarFallback className="text-xs font-semibold">{initials(team.name)}</AvatarFallback>
+            <AvatarFallback className="text-sm font-semibold">{initials(team.name)}</AvatarFallback>
           </Avatar>
-          <div className="flex min-w-0 flex-col">
-            <p className="truncate font-semibold leading-tight">{team.name}</p>
-            <p className="truncate text-xs text-muted-foreground">@{team.manager}</p>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <p className="truncate text-lg font-semibold leading-tight tracking-tight">{team.name}</p>
+            <p className="truncate font-mono text-xs text-muted-foreground">@{team.manager}</p>
           </div>
         </div>
 
-        <dl className="grid grid-cols-2 gap-px border-t border-border bg-border sm:grid-cols-4">
+        {/* Each metric is its own chip: the tint carries the grouping, so no rules are needed. */}
+        <dl className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:w-auto">
           {data.metrics.map((metric) => (
-            <div className="flex flex-col justify-center gap-0.5 bg-card p-3 md:p-5 lg:gap-1" key={metric.id}>
-              <dt className="font-mono text-[0.65rem] uppercase tracking-wider text-muted-foreground">{metric.label}</dt>
-              <dd className={cn("font-mono text-lg font-semibold tabular-nums md:text-xl", TONE_TEXT[metric.tone])}>{metric.value}</dd>
+            <div className="flex flex-col gap-1 rounded-lg bg-background/40 px-3 py-2.5 lg:min-w-[7.5rem]" key={metric.id}>
+              <dt className="truncate font-mono text-[0.625rem] uppercase tracking-wider text-primary/70">{metric.label}</dt>
+              <dd className={cn("font-mono text-xl font-semibold leading-none tabular-nums", TONE_TEXT[metric.tone])}>{metric.value}</dd>
+              {metric.detail ? <dd className="truncate font-mono text-[0.625rem] text-muted-foreground">{metric.detail}</dd> : null}
             </div>
           ))}
         </dl>
@@ -61,7 +67,7 @@ function CurrentMatchup({ data }: { data: OverviewData }) {
   const { matchup } = data;
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>{data.team && matchup && (matchup.home.team.rosterId === data.team.rosterId || matchup.away.team.rosterId === data.team.rosterId) ? "Your matchup" : "This week"}</CardTitle>
         <CardDescription>Week {data.state.matchupWeek}{data.state.regularSeason ? "" : " · preseason preview"}</CardDescription>
@@ -69,7 +75,7 @@ function CurrentMatchup({ data }: { data: OverviewData }) {
       <CardContent className="flex flex-col gap-3">
         {matchup ? (
           <>
-            <div className="rounded-lg bg-muted/20 p-2.5 sm:p-3"><MatchupSummary leagueId={data.league.id} matchup={matchup} username={data.username} /></div>
+            <div className="rounded-lg bg-background/40 p-2.5 sm:p-3"><MatchupSummary leagueId={data.league.id} matchup={matchup} username={data.username} /></div>
             <LineupPreview leagueId={data.league.id} matchup={matchup} username={data.username} />
           </>
         ) : (

@@ -8,7 +8,7 @@ export default function PlayerProfileLoading() {
     <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-4 p-4 md:p-6 lg:p-8">
       <Skeleton className="h-8 w-28" />
 
-      <Card>
+      <Card accent>
         <CardContent className="flex flex-col gap-5">
           <div className="flex items-center gap-4">
             <Skeleton className="size-16 rounded-full" />
@@ -28,13 +28,13 @@ export default function PlayerProfileLoading() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card accent>
         <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
         <CardContent><Skeleton className="h-64 w-full" /></CardContent>
       </Card>
 
       <Skeleton className="h-8 w-80" />
-      <Card>
+      <Card accent>
         <CardHeader><Skeleton className="h-5 w-40" /></CardHeader>
         <CardContent className="grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }, (_, index) => <Skeleton className="h-14 w-full" key={index} />)}

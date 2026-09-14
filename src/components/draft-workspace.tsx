@@ -70,7 +70,7 @@ function ManagerTable({ data, onSelect }: { data: DraftGradeData; onSelect: (ros
   );
 
   return (
-    <Card className="overflow-hidden">
+    <Card accent className="overflow-hidden">
       <CardHeader>
         <CardTitle>Leaderboard</CardTitle>
         <CardDescription>{data.selectedLabel} · {data.rounds} rounds · graded on value today against the slot used</CardDescription>
@@ -226,7 +226,7 @@ function ManagerDetail({ manager, data }: { manager: DraftManagerGrade; data: Dr
 function PositionBreakdown({ data }: { data: DraftGradeData }) {
   const scale = Math.max(...data.byPosition.map((row) => Math.abs(row.surplusPerPick)), 1);
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Where the value was</CardTitle>
         <CardDescription>Surplus per pick by position across the whole class</CardDescription>
@@ -319,7 +319,7 @@ function DraftBoard({ data, onSelect }: { data: DraftGradeData; onSelect: (roste
   );
 
   return (
-    <Card className="overflow-hidden">
+    <Card accent className="overflow-hidden">
       <CardHeader>
         <CardTitle>Draft results</CardTitle>
         <CardDescription>All {data.allPicks.length} picks in {data.selectedLabel}, graded against the slot each used</CardDescription>
@@ -389,7 +389,7 @@ function DraftBoard({ data, onSelect }: { data: DraftGradeData; onSelect: (roste
 function CareerTable({ data }: { data: DraftGradeData }) {
   const seasons = [...new Set(data.classes.map((entry) => entry.season))].toSorted((a, b) => Number(a) - Number(b));
   return (
-    <Card className="overflow-hidden">
+    <Card accent className="overflow-hidden">
       <CardHeader>
         <CardTitle>Career draft record</CardTitle>
         <CardDescription>Every completed draft in this league, {seasons.at(0)}–{seasons.at(-1)}</CardDescription>
@@ -453,7 +453,7 @@ export function DraftWorkspace({ data, basePath }: { data: DraftGradeData; baseP
 
   if (!data.managers.length) {
     return (
-      <Card>
+      <Card accent>
         <CardContent>
           <Empty className="min-h-80">
             <EmptyHeader>

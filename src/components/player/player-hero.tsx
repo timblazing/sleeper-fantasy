@@ -57,7 +57,7 @@ export function PlayerHero({ profile, context, leagueId, isSuperflex, username }
   const meta = [player.team, player.age ? `${player.age.toFixed(1)}y` : null, player.yearsExp === 0 ? "Rookie" : player.yearsExp ? `${player.yearsExp} yr exp` : null, formatHeight(player.heightInches), player.weightLbs ? `${player.weightLbs} lb` : null, player.college].filter(Boolean).join(" · ");
 
   return (
-    <Card>
+    <Card accent>
       <CardContent className="flex flex-col gap-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 items-center gap-4">

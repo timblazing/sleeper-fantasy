@@ -85,7 +85,7 @@ export function HistoryRecords({ leagueId, managers, records, username }: { leag
   if (!heroes.length && !rest.length) return null;
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>All-time records</CardTitle>
         <CardDescription>The high-water marks and the low points, across every season on record</CardDescription>

@@ -42,7 +42,7 @@ export function PlayerAdvanced({ advanced }: { advanced: Record<string, number |
   if (!entries.length) return null;
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Advanced usage</CardTitle>
         <CardDescription>Next Gen Stats and play-by-play context behind the box score</CardDescription>
@@ -89,7 +89,7 @@ export function PlayerCareerTable({ career }: { career: PlayerCareerSeason[] }) 
   const seasons = [...career].sort((a, b) => (b.season ?? 0) - (a.season ?? 0));
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Career stats</CardTitle>
         <CardDescription>Season by season, newest first</CardDescription>

@@ -10,7 +10,7 @@ export function SeasonTimelineCard({ timeline }: { timeline: SeasonTimeline }) {
   const at = (week: number) => Math.min(100, Math.max(0, ((week - timeline.startWeek) / span) * 100));
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Season timeline</CardTitle>
         <CardDescription>

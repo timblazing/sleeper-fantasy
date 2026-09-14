@@ -28,7 +28,7 @@ function ToneIcon({ tone }: { tone: Tone }) {
 
 function ActionRow({ action }: { action: RecommendedAction }) {
   return (
-    <div className="flex items-start gap-3 border-b py-3 first:pt-0 last:border-b-0 last:pb-0">
+    <div className="flex items-start gap-3 border-b border-primary/15 py-3 first:pt-0 last:border-b-0 last:pb-0">
       <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", TONE_CHIP[action.tone])}><ToneIcon tone={action.tone} /></span>
       <div className="min-w-0 flex-1">
         <p className="font-medium">{action.title}</p>
@@ -84,7 +84,7 @@ export function PositionalScarcityCard({ data }: { data: OverviewData }) {
   if (!data.positionScarcity.length) return null;
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Positional scarcity</CardTitle>
         <CardDescription>Who controls each position</CardDescription>
@@ -100,7 +100,7 @@ export function RecommendedActionsCard({ data }: { data: OverviewData }) {
   if (!data.actions.length) return null;
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Recommended actions</CardTitle>
         <CardDescription>Ranked by what costs you most if you ignore it</CardDescription>

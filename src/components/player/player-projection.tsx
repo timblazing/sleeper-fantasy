@@ -42,7 +42,7 @@ export function PlayerProjection({ curve, outcome, summary, ppg, ppgPpr }: { cur
   const pad = Math.max(Math.round((max - min) * 0.15), 100);
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader>
         <CardTitle>Dynasty projection</CardTitle>
         <CardDescription>

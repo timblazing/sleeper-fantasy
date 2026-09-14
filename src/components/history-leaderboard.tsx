@@ -52,7 +52,7 @@ export function HistoryLeaderboard({ leagueId, rows, seasonCount, username }: { 
   );
 
   return (
-    <Card>
+    <Card accent>
       <CardHeader className="max-sm:grid-cols-1!">
         <CardTitle>All-time standings</CardTitle>
         <CardDescription>{active.description} — {rows.length} managers across {seasonCount} {seasonCount === 1 ? "season" : "seasons"}</CardDescription>

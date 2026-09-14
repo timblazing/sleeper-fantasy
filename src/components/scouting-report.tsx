@@ -386,7 +386,7 @@ export function ScoutingReportView({ report }: { report: ScoutingReport }) {
           </div>
 
           {selected ? (
-            <Card className="gap-0 py-0 max-lg:hidden">
+            <Card accent className="gap-0 py-0 max-lg:hidden">
               <CardContent className="p-4 md:p-5">
                 <Dossier profile={selected} />
               </CardContent>
