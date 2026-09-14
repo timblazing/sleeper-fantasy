@@ -93,10 +93,10 @@
 }
 
 /* ---------------------------------------------------------------------------
- * Palette: StyleSeed-generated from key #00CEB8 (Sleeper teal), dark-first,
- * balanced character, cool surfaces. Source of truth is `.styleseed/palette.json`
- * — the roles there are mapped onto shadcn's token names below so components
- * keep consuming `bg-card` / `text-muted-foreground` and inherit the system.
+ * Palette: generated from key #00CEB8 (Sleeper teal), dark-first, balanced
+ * character, cool surfaces. The roles are mapped onto shadcn's token names
+ * below so components keep consuming `bg-card` / `text-muted-foreground` and
+ * inherit the system. These tokens are now the source of truth.
  *
  * Grammar: operations-console. Cool near-neutrals carry 90% of the surface;
  * teal is reserved for the primary action and selected state, violet for
