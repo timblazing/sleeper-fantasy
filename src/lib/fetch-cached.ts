@@ -31,11 +31,22 @@ async function httpError(response: Response, url: string): Promise<HttpError> {
   return new HttpError(response.status, response.statusText, url, body);
 }
 
-export async function fetchCached<T>(url: string, options: { ttl: number; headers?: HeadersInit }): Promise<T> {
+/**
+ * `ttl` seconds of caching, or `"live"` to always hit the upstream.
+ *
+ * Next's `revalidate` is stale-while-revalidate: once the window lapses the *next* reader is still
+ * served the stale body while the refresh runs behind it. For scoring data that means a first visit
+ * after a quiet spell renders last-known scores and only a manual reload shows the real ones, so
+ * endpoints that move during games opt out of the data cache entirely.
+ */
+export type CacheTtl = number | "live";
+
+export async function fetchCached<T>(url: string, options: { ttl: CacheTtl; headers?: HeadersInit }): Promise<T> {
+  const caching: RequestInit = options.ttl === "live" ? { cache: "no-store" } : { next: { revalidate: options.ttl } };
   let lastError: Error | null = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      const response = await fetch(url, { headers: { "User-Agent": "Sleeper Fantasy Dashboard/0.1", ...options.headers }, next: { revalidate: options.ttl } });
+      const response = await fetch(url, { headers: { "User-Agent": "Sleeper Fantasy Dashboard/0.1", ...options.headers }, ...caching });
       if (!response.ok) { const error = await httpError(response, url); if (!RETRYABLE.has(response.status)) throw error; lastError = error; }
       else { return (await response.json()) as T; }
     } catch (error) {

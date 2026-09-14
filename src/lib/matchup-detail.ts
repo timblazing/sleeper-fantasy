@@ -1,6 +1,6 @@
 import { buildStandings, getLeagueBase } from "@/lib/league-context";
 import { liveSource, type LeagueSource } from "@/lib/league-source";
-import { projectedWinProbability, scoreProjection, type WeeklyProjection } from "@/lib/projections";
+import { liveForecast, liveWinProbability, scoreProjection, type LiveForecast, type WeeklyProjection } from "@/lib/projections";
 import { buildStarterSlots } from "@/lib/roster-board";
 import type { MatchupDetail, MatchupSide, NflPlayer, PlayerGame, SleeperMatchup, StandingRow } from "@/lib/types";
 
@@ -25,6 +25,10 @@ export async function getMatchupBoard(leagueId: string, week: number, source: Le
   // The shared builder ranks the rows; this board shows a single week, so the rank is not meaningful here.
   const teamByRoster = new Map<number, StandingRow>(buildStandings(base).map((row) => [row.rosterId, { ...row, rank: 0 }]));
 
+  // The forecast informs the win probability but is not part of the rendered side, so it rides
+  // alongside rather than inside `MatchupSide`.
+  const forecasts = new Map<number, LiveForecast | null>();
+
   const toSide = (row: SleeperMatchup): MatchupSide | null => {
     const team = teamByRoster.get(row.roster_id);
     if (!team) return null;
@@ -42,6 +46,9 @@ export async function getMatchupBoard(leagueId: string, week: number, source: Le
     const benchPoints = Object.entries(row.players_points ?? {}).reduce((sum, [id, value]) => (startersSet.has(id) ? sum : sum + value), 0);
     const projected = slots.filter((slot) => slot.player && slot.projection != null);
     const projectedScore = projected.length ? projected.reduce((sum, slot) => sum + (slot.projection ?? 0), 0) : null;
+    // The forecast blends points already banked with what is left to play, so the win probability
+    // tracks the week instead of restating the pregame projection.
+    forecasts.set(row.roster_id, liveForecast(slots.filter((slot) => slot.player).map((slot) => ({ points: slot.points, projection: slot.projection, state: slot.game?.state ?? null }))));
     return { team, score: row.points ?? 0, projectedScore, slots, benchPoints };
   };
 
@@ -59,7 +66,9 @@ export async function getMatchupBoard(leagueId: string, week: number, source: Le
     const home = toSide(pair[0]);
     const away = toSide(pair[1]);
     if (!home || !away) return [];
-    const homeWinProbability = home.projectedScore != null && away.projectedScore != null ? projectedWinProbability(home.projectedScore, away.projectedScore) : null;
+    const homeForecast = forecasts.get(pair[0].roster_id);
+    const awayForecast = forecasts.get(pair[1].roster_id);
+    const homeWinProbability = homeForecast && awayForecast ? liveWinProbability(homeForecast, awayForecast) : null;
     return [{ id, home, away, homeWinProbability, awayWinProbability: homeWinProbability == null ? null : 100 - homeWinProbability }];
   }).toSorted((a, b) => a.id - b.id);
 

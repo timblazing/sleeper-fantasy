@@ -22,10 +22,15 @@ type ScoreboardResponse = {
 
 export type NflGame = { id: string; kickoff: string; state: "pre" | "in" | "post"; detail: string; home: string; away: string; homeScore: number | null; awayScore: number | null };
 
-/** ESPN's `seasontype`: 1 = preseason, 2 = regular, 3 = postseason. */
+/**
+ * ESPN's `seasontype`: 1 = preseason, 2 = regular, 3 = postseason.
+ *
+ * Uncached: this drives the live/final game labels beside every player, and a stale-while-revalidate
+ * read would show the previous refresh's scores to whoever arrives first after the window lapses.
+ */
 export async function getScoreboard(season: string, week: number, seasonType = 2): Promise<NflGame[]> {
   try {
-    const data = await fetchCached<ScoreboardResponse>(`${SITE}/scoreboard?dates=${season}&seasontype=${seasonType}&week=${week}`, { ttl: 300 });
+    const data = await fetchCached<ScoreboardResponse>(`${SITE}/scoreboard?dates=${season}&seasontype=${seasonType}&week=${week}`, { ttl: "live" });
     return (data.events ?? []).flatMap((event) => {
       const competitors = event.competitions?.[0]?.competitors ?? [];
       const home = competitors.find((side) => side.homeAway === "home");

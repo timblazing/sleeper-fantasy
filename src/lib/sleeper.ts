@@ -1,19 +1,20 @@
 import "server-only";
-import { fetchCached } from "@/lib/fetch-cached";
+import { fetchCached, type CacheTtl } from "@/lib/fetch-cached";
 import { describeLeagueType, isDynastyLeague } from "@/lib/league-features";
 import type { NflState, SleeperAccount, SleeperBracketGame, SleeperDraft, SleeperDraftPick, SleeperLeague, SleeperMatchup, SleeperRoster, SleeperTradedPick, SleeperTransaction, SleeperUser } from "@/lib/types";
 const API = "https://api.sleeper.app/v1";
-function sleeper<T>(path: string, ttl: number) { return fetchCached<T>(`${API}${path}`, { ttl }); }
-export const getNflState = () => sleeper<NflState>("/state/nfl", 300);
+function sleeper<T>(path: string, ttl: CacheTtl) { return fetchCached<T>(`${API}${path}`, { ttl }); }
+// The week and season phase flip mid-Sunday; a stale read points every other query at the wrong week.
+export const getNflState = () => sleeper<NflState>("/state/nfl", "live");
 export const getUser = (username: string) => sleeper<SleeperUser>(`/user/${encodeURIComponent(username)}`, 3600);
 export const getUserLeagues = (userId: string, season: string) => sleeper<SleeperLeague[]>(`/user/${userId}/leagues/nfl/${season}`, 300);
 // These functions assume `id` has already been validated (see `isLeagueId`) — encoding the
 // upstream URL path below is defense in depth only.
 export const getLeague = (id: string) => sleeper<SleeperLeague>(`/league/${encodeURIComponent(id)}`, 3600);
 export const getLeagueUsers = (id: string) => sleeper<SleeperUser[]>(`/league/${encodeURIComponent(id)}/users`, 3600);
-export const getLeagueRosters = (id: string) => sleeper<SleeperRoster[]>(`/league/${encodeURIComponent(id)}/rosters`, 300);
-export const getMatchups = (id: string, week: number) => sleeper<SleeperMatchup[]>(`/league/${encodeURIComponent(id)}/matchups/${week}`, 300);
-export const getTransactions = (id: string, week: number) => sleeper<SleeperTransaction[]>(`/league/${encodeURIComponent(id)}/transactions/${week}`, 300);
+export const getLeagueRosters = (id: string) => sleeper<SleeperRoster[]>(`/league/${encodeURIComponent(id)}/rosters`, "live");
+export const getMatchups = (id: string, week: number) => sleeper<SleeperMatchup[]>(`/league/${encodeURIComponent(id)}/matchups/${week}`, "live");
+export const getTransactions = (id: string, week: number) => sleeper<SleeperTransaction[]>(`/league/${encodeURIComponent(id)}/transactions/${week}`, "live");
 // Completed seasons never change, so the brackets that decide final placements cache for a day.
 export const getWinnersBracket = (id: string) => sleeper<SleeperBracketGame[]>(`/league/${encodeURIComponent(id)}/winners_bracket`, 86400);
 export const getLosersBracket = (id: string) => sleeper<SleeperBracketGame[]>(`/league/${encodeURIComponent(id)}/losers_bracket`, 86400);

@@ -63,6 +63,24 @@ describe("fetchCached", () => {
     expect(error.status).toBe(503);
   });
 
+  it("caches against Next's data cache for a numeric ttl", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(response(200, "{}"));
+    vi.stubGlobal("fetch", fetchMock);
+    await fetchCached("https://x.test/i", { ttl: 60 });
+    const init = fetchMock.mock.calls[0][1] as RequestInit & { next?: { revalidate: number } };
+    expect(init.next).toEqual({ revalidate: 60 });
+    expect(init.cache).toBeUndefined();
+  });
+
+  it("bypasses the cache entirely for a live ttl", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(response(200, "{}"));
+    vi.stubGlobal("fetch", fetchMock);
+    await fetchCached("https://x.test/j", { ttl: "live" });
+    const init = fetchMock.mock.calls[0][1] as RequestInit & { next?: { revalidate: number } };
+    expect(init.cache).toBe("no-store");
+    expect(init.next).toBeUndefined();
+  });
+
   it("throws a plain Error for a network failure", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
     const error = await rejection(fetchCached("https://x.test/h", { ttl: 60 }));
