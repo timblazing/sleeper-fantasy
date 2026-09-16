@@ -2,12 +2,21 @@
 
 ### Issue tracker
 
-Issues live in GitHub Issues on `timblazing/sleeper-fantasy-dashboard`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues live in GitHub Issues on `timblazing/sleeper-fantasy-dashboard`, via the `gh` CLI.
 
-### Triage labels
+### Implementation plans
 
-The five canonical triage roles, each using its default label string. See `docs/agents/triage-labels.md`.
+`plans/` holds handoff plans for agent execution. `plans/README.md` is the index:
+execution order, dependencies, status, and the findings previously considered and
+rejected. Read the index before adding a plan so numbering stays monotonic and
+settled findings are not re-audited.
 
-### Domain docs
+### Verifying a change
 
-Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+| Purpose   | Command             |
+|-----------|---------------------|
+| Typecheck | `npm run typecheck` |
+| Lint      | `npm run lint`      |
+| Tests     | `npm test`          |
+
+All three pass on `main`. Run them before proposing a change.
