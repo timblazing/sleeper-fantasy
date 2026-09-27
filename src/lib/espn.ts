@@ -15,12 +15,12 @@ export const toSleeperTeam = (team: string) => ESPN_TO_SLEEPER[team] ?? team;
 type ScoreboardResponse = {
   events: {
     id: string; date: string; shortName: string;
-    status: { type: { state: "pre" | "in" | "post"; shortDetail: string; detail: string } };
+    status: { period?: number; clock?: number; type: { state: "pre" | "in" | "post"; shortDetail: string; detail: string } };
     competitions: { competitors: { homeAway: "home" | "away"; score?: string; team: { abbreviation: string } }[] }[];
   }[];
 };
 
-export type NflGame = { id: string; kickoff: string; state: "pre" | "in" | "post"; detail: string; home: string; away: string; homeScore: number | null; awayScore: number | null };
+export type NflGame = { period?: number; clockSeconds?: number; id: string; kickoff: string; state: "pre" | "in" | "post"; detail: string; home: string; away: string; homeScore: number | null; awayScore: number | null };
 
 /**
  * ESPN's `seasontype`: 1 = preseason, 2 = regular, 3 = postseason.
@@ -37,7 +37,7 @@ export async function getScoreboard(season: string, week: number, seasonType = 2
       const away = competitors.find((side) => side.homeAway === "away");
       if (!home || !away) return [];
       const score = (value?: string) => (value == null || value === "" ? null : Number(value));
-      return [{ id: event.id, kickoff: event.date, state: event.status.type.state, detail: event.status.type.shortDetail, home: toSleeperTeam(home.team.abbreviation), away: toSleeperTeam(away.team.abbreviation), homeScore: score(home.score), awayScore: score(away.score) }];
+      return [{ period: event.status.period, clockSeconds: event.status.clock, id: event.id, kickoff: event.date, state: event.status.type.state, detail: event.status.type.shortDetail, home: toSleeperTeam(home.team.abbreviation), away: toSleeperTeam(away.team.abbreviation), homeScore: score(home.score), awayScore: score(away.score) }];
     });
   } catch {
     // ESPN is undocumented and occasionally unavailable; the roster and matchup views degrade to
@@ -69,8 +69,8 @@ export async function getWeekGamesByTeam(season: string, week: number, seasonTyp
   const games = await getScoreboard(season, week, seasonType);
   const byTeam = new Map<string, PlayerGame>();
   for (const game of games) {
-    byTeam.set(game.home, { opponent: game.away, home: true, kickoff: game.kickoff, state: game.state, detail: game.detail, bye: false });
-    byTeam.set(game.away, { opponent: game.home, home: false, kickoff: game.kickoff, state: game.state, detail: game.detail, bye: false });
+    byTeam.set(game.home, { opponent: game.away, home: true, kickoff: game.kickoff, state: game.state, period: game.period, clockSeconds: game.clockSeconds, detail: game.detail, bye: false });
+    byTeam.set(game.away, { opponent: game.home, home: false, kickoff: game.kickoff, state: game.state, period: game.period, clockSeconds: game.clockSeconds, detail: game.detail, bye: false });
   }
   return byTeam;
 }

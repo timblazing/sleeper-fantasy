@@ -47,6 +47,22 @@ describe("liveForecast", () => {
     expect(forecast.deviation).toBeCloseTo(2.45, 1);
   });
 
+  it("uses the remaining clock instead of adding half a projection near the final whistle", () => {
+    const early = liveForecast([{ ...slot(10, 20, "in"), period: 1, clockSeconds: 600 }])!;
+    const late = liveForecast([{ ...slot(10, 20, "in"), period: 4, clockSeconds: 60 }])!;
+    expect(early.mean).toBeCloseTo(10 + 20 * 3300 / 3600);
+    expect(late.mean).toBeCloseTo(10 + 20 / 60);
+    expect(late.deviation).toBeLessThan(early.deviation);
+  });
+
+  it("handles halftime, overtime, and invalid clocks", () => {
+    expect(liveForecast([{ ...slot(10, 20, "in"), period: 2, clockSeconds: 0 }])!.mean).toBe(20);
+    expect(liveForecast([{ ...slot(10, 20, "in"), period: 5, clockSeconds: 600 }])!.mean).toBeCloseTo(10 + 20 / 6);
+    expect(liveForecast([{ ...slot(10, 20, "in"), period: 4, clockSeconds: NaN }])!.mean).toBe(20);
+    expect(liveForecast([{ ...slot(10, 20, "in"), period: 4, clockSeconds: 0 }])!.deviation).toBeGreaterThan(0);
+    expect(liveForecast([{ ...slot(10, 20, "post"), period: 4, clockSeconds: 0 }])!.deviation).toBe(0);
+  });
+
   it("never lets a hot start subtract from the forecast", () => {
     // A negative projection would otherwise pull the mean below what the player already scored.
     expect(liveForecast([slot(30, -10, "in")])!.mean).toBe(30);

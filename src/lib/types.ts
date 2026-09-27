@@ -40,4 +40,4 @@ export type MatchupSide = { team: StandingRow; score: number; projectedScore: nu
 export type MatchupDetail = { id: number; home: MatchupSide; away: MatchupSide; homeWinProbability: number | null; awayWinProbability: number | null };
 export type TransactionAsset = { rosterId: number; teamName: string; adds: NflPlayer[]; drops: NflPlayer[]; picks: string[]; faab: number | null };
 export type TransactionEntry = { id: string; type: "trade" | "waiver" | "free_agent"; status: string; week: number; created: number; time: string; bid: number | null; sides: TransactionAsset[] };
-export type PlayerGame = { opponent: string | null; home: boolean; kickoff: string | null; state: "pre" | "in" | "post"; detail: string; bye: boolean };
+export type PlayerGame = { period?: number; clockSeconds?: number; opponent: string | null; home: boolean; kickoff: string | null; state: "pre" | "in" | "post"; detail: string; bye: boolean };

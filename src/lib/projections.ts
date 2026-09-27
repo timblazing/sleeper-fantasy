@@ -53,7 +53,7 @@ export function projectedWinProbability(home: number, away: number, uncertainty 
 }
 
 /** One starter's contribution to a live projection: what it has banked and what it may still add. */
-export type LiveSlotInput = { points: number | null; projection: number | null; state: "pre" | "in" | "post" | null };
+export type LiveSlotInput = { period?: number; clockSeconds?: number; points: number | null; projection: number | null; state: "pre" | "in" | "post" | null };
 
 export type LiveForecast = {
   /** Points already scored plus the projected remainder of games still to play. */
@@ -67,8 +67,8 @@ export type LiveForecast = {
  *
  * A starter whose game is over contributes exactly what it scored and no variance. One yet to
  * kick off contributes its full projection. One mid-game contributes its points so far plus the
- * share of its projection matching the time left, which is approximated as half the game — Sleeper
- * exposes no game clock here, so the estimate is deliberately coarse.
+ * share of its projection matching the time left on the ESPN game clock. If the clock is
+ * unavailable, it falls back to half a game. Overtime uses only its current period remaining.
  *
  * Variance is carried per unplayed slot (35% of the outstanding projection, floored so a scoreless
  * projection is not treated as certain) and added in quadrature, which is what makes the number
@@ -89,7 +89,12 @@ export function liveForecast(slots: LiveSlotInput[]): LiveForecast | null {
     known = true;
 
     if (slot.state === "post") { mean += scored; continue; }
-    const remainingShare = slot.state === "in" ? 0.5 : 1;
+    const hasClock = Number.isInteger(slot.period) && slot.period! >= 1
+      && slot.clockSeconds != null && Number.isFinite(slot.clockSeconds) && slot.clockSeconds >= 0;
+    const remainingShare = slot.state !== "in" ? 1 : hasClock
+      ? Math.max(1 / 3600, (Math.max(0, 4 - slot.period!) * 900 + Math.min(900, slot.clockSeconds!)) / 3600)
+      : 0.5;
+    // Keep a tiny amount of uncertainty at 0:00 until the feed marks the game final.
     // Mid-game, the projection's remaining share can undershoot what the player already banked;
     // the outstanding amount floors at zero so a hot start never subtracts from the forecast.
     const outstanding = Math.max(0, (projection ?? scored) * remainingShare);

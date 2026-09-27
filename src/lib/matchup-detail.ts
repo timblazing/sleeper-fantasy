@@ -48,7 +48,7 @@ export async function getMatchupBoard(leagueId: string, week: number, source: Le
     const projectedScore = projected.length ? projected.reduce((sum, slot) => sum + (slot.projection ?? 0), 0) : null;
     // The forecast blends points already banked with what is left to play, so the win probability
     // tracks the week instead of restating the pregame projection.
-    forecasts.set(row.roster_id, liveForecast(slots.filter((slot) => slot.player).map((slot) => ({ points: slot.points, projection: slot.projection, state: slot.game?.state ?? null }))));
+    forecasts.set(row.roster_id, liveForecast(slots.filter((slot) => slot.player).map((slot) => ({ points: slot.points, projection: slot.projection, state: slot.game?.state ?? null, period: slot.game?.period, clockSeconds: slot.game?.clockSeconds }))));
     return { team, score: row.points ?? 0, projectedScore, slots, benchPoints };
   };
 
