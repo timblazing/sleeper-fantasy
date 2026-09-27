@@ -74,3 +74,15 @@ export async function getMatchupBoard(leagueId: string, week: number, source: Le
 
   return { leagueName: league.name, season: league.season, week, matchups, byes };
 }
+
+/** Keep each team's probability attached when putting the connected roster on the left. */
+export function matchupForRoster(matchup: MatchupDetail, rosterId: number): MatchupDetail {
+  if (matchup.away.team.rosterId !== rosterId) return matchup;
+  return {
+    ...matchup,
+    home: matchup.away,
+    away: matchup.home,
+    homeWinProbability: matchup.awayWinProbability,
+    awayWinProbability: matchup.homeWinProbability,
+  };
+}

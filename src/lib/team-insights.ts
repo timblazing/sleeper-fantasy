@@ -1,7 +1,7 @@
 import { formatTrend, formatValue } from "@/lib/display";
 import { getMovers } from "@/lib/roster-audit";
 import { findTeamForUser, getLeagueValueContext, letterGrade, ROOM_POSITIONS, type LeagueTeam, type LeagueValueContext, type PositionRoom, type ValuedPlayer } from "@/lib/league-values";
-import { getMatchupBoard } from "@/lib/matchup-detail";
+import { getMatchupBoard, matchupForRoster } from "@/lib/matchup-detail";
 import { getNflLeaguesForUsername } from "@/lib/sleeper";
 import { getTransactionFeed, toActivityItem } from "@/lib/transaction-feed";
 import { withUsername } from "@/lib/utils";
@@ -331,7 +331,7 @@ export async function getOverviewData(leagueId: string, username?: string): Prom
 
   const found = team && board ? board.matchups.find((entry) => entry.home.team.rosterId === team.rosterId || entry.away.team.rosterId === team.rosterId) : undefined;
   // Always render the connected team on the left, whichever side Sleeper put them on.
-  const matchup = found && team && found.away.team.rosterId === team.rosterId ? { ...found, home: found.away, away: found.home } : found ?? board?.matchups[0] ?? null;
+  const matchup = found && team ? matchupForRoster(found, team.rosterId) : found ?? board?.matchups[0] ?? null;
 
   const slots = team ? starterSlots(matchup, team.rosterId) : [];
   const starterValue = (entries: RosterSlot[]) => sumValues(entries.map((entry) => (entry.player ? context.values.get(entry.player.id) ?? 0 : 0)));

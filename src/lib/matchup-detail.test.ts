@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getMatchupBoard } from "@/lib/matchup-detail";
+import { getMatchupBoard, matchupForRoster } from "@/lib/matchup-detail";
 import { makeTwelveTeamLeague } from "@/lib/test/fixtures";
 
 describe("getMatchupBoard", () => {
@@ -60,5 +60,22 @@ describe("getMatchupBoard", () => {
     const board = await getMatchupBoard("L1", 5, source);
     expect(board.matchups).toEqual([]);
     expect(board.byes).toEqual([]);
+  });
+});
+
+describe("matchupForRoster", () => {
+  it("keeps win probabilities with their teams when the connected roster is second", async () => {
+    const { source } = makeTwelveTeamLeague();
+    const board = await getMatchupBoard("L1", 5, source);
+    const original = { ...board.matchups[0], homeWinProbability: 4, awayWinProbability: 96 };
+    const displayed = matchupForRoster(original, original.away.team.rosterId);
+    expect(displayed.home).toBe(original.away);
+    expect(displayed.homeWinProbability).toBe(96);
+    expect(displayed.away).toBe(original.home);
+    expect(displayed.awayWinProbability).toBe(4);
+    expect(original.homeWinProbability).toBe(4);
+    expect(matchupForRoster(original, original.home.team.rosterId)).toBe(original);
+    expect(matchupForRoster(original, -1)).toBe(original);
+    expect(matchupForRoster({ ...original, homeWinProbability: null, awayWinProbability: null }, original.away.team.rosterId).homeWinProbability).toBeNull();
   });
 });
