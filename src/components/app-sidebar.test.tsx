@@ -72,8 +72,8 @@ describe("AppSidebar", () => {
   it("renders the requested primary links in order without a section title", () => {
     const { container } = renderSidebar(league(true));
     const rendered = hrefs(container);
-    const primaryLinks = rendered.filter((href) => href === "/123" || href === "/123/league" || href === "/123/players" || href === "/123/draft");
-    expect(primaryLinks).toEqual(["/123", "/123/league", "/123/players", "/123/draft"]);
+    const primaryLinks = rendered.filter((href) => href === "/123" || href === "/123/scoreboard" || href === "/123/league" || href === "/123/players" || href === "/123/draft");
+    expect(primaryLinks).toEqual(["/123", "/123/scoreboard", "/123/league", "/123/players", "/123/draft"]);
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
     expect(screen.getByText("League")).toBeInTheDocument();
     expect(screen.getByText("Draft")).toBeInTheDocument();

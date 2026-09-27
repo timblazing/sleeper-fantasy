@@ -1,13 +1,16 @@
-import { AmbulanceIcon, BinocularsIcon, BookOpenIcon, ClipboardListIcon, LayoutDashboardIcon, ScaleIcon, TrophyIcon, UsersIcon, type LucideIcon } from "lucide-react";
+import type { ComponentType } from "react";
+import { NflIcon } from "@/components/nfl-icon";
+import { AmbulanceIcon, BinocularsIcon, BookOpenIcon, ClipboardListIcon, LayoutDashboardIcon, ScaleIcon, TrophyIcon, UsersIcon } from "lucide-react";
 
 // `segment` matches what useSelectedLayoutSegment() reports under the [leagueId] layout;
 // null is the index route (Dashboard).
 // Every entry renders for every league format. Pages that quote player values quote them in the
 // league's own basis (`src/lib/value-basis.ts`) rather than hiding themselves.
-export type NavEntry = { title: string; segment: string | null; icon: LucideIcon };
+export type NavEntry = { title: string; segment: string | null; icon: ComponentType<{ className?: string }> };
 
 export const mainNav: NavEntry[] = [
   { title: "Dashboard", segment: null, icon: LayoutDashboardIcon },
+  { title: "Scoreboard", segment: "scoreboard", icon: NflIcon },
   { title: "League", segment: "league", icon: TrophyIcon },
   { title: "Players", segment: "players", icon: UsersIcon },
   { title: "Draft", segment: "draft", icon: ClipboardListIcon },
