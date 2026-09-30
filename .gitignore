@@ -44,3 +44,11 @@ next-env.d.ts
 # agent tooling (repo root)
 .claude/settings.local.json
 .claude/worktrees/
+
+# design-sync (generated / machine-local)
+.ds-sync/
+.ds-pkg/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules

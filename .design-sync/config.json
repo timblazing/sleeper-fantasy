@@ -1,0 +1,161 @@
+{
+  "projectId": "a5583354-8e2f-444e-9783-a4bcaca03443",
+  "shape": "package",
+  "pkg": "sleeper-fantasy-dashboard",
+  "globalName": "SleeperDashboard",
+  "buildCmd": "node .design-sync/build.mjs",
+  "cssEntry": "dist/styles.css",
+  "provider": {
+    "component": "DsRoot"
+  },
+  "srcDir": "../src/components",
+  "docsDir": "docs",
+  "tsconfig": "../tsconfig.json",
+  "overrides": {
+    "RankingsTable": {
+      "cardMode": "single"
+    },
+    "MatchupSummary": {
+      "cardMode": "column"
+    },
+    "Overview": {
+      "cardMode": "column",
+      "viewport": "900x1600"
+    },
+    "MatchupLineup": {
+      "cardMode": "column"
+    },
+    "MatchupBoard": {
+      "cardMode": "column"
+    },
+    "NflScoreboardPage": {
+      "cardMode": "column",
+      "viewport": "900x1800"
+    },
+    "HistoryLeaderboard": {
+      "cardMode": "column"
+    },
+    "HistoryRecords": {
+      "cardMode": "column"
+    },
+    "HistoryChampions": {
+      "cardMode": "column"
+    },
+    "PlayoffRace": {
+      "cardMode": "column"
+    },
+    "SeasonTimelineCard": {
+      "cardMode": "column"
+    },
+    "InjuryReportTable": {
+      "cardMode": "column"
+    },
+    "InjuryToolbar": {
+      "cardMode": "column"
+    },
+    "ScoutingReportView": {
+      "cardMode": "single",
+      "viewport": "1280x1500"
+    },
+    "PlayerDetail": {
+      "cardMode": "column",
+      "viewport": "1280x1800"
+    },
+    "PlayerHero": {
+      "cardMode": "column"
+    },
+    "PlayerAdvanced": {
+      "cardMode": "column"
+    },
+    "PlayerCareerTable": {
+      "cardMode": "column"
+    },
+    "PlayerPercentiles": {
+      "cardMode": "column"
+    },
+    "PlayerProjection": {
+      "cardMode": "column"
+    },
+    "PlayerValueChart": {
+      "cardMode": "column"
+    },
+    "PlayerWeeklyChart": {
+      "cardMode": "column"
+    },
+    "PlayerSnapTrend": {
+      "cardMode": "column"
+    },
+    "PlayerTradeMarketCard": {
+      "cardMode": "column"
+    },
+    "PlayerRelatedCards": {
+      "cardMode": "column"
+    },
+    "RankingsToolbar": {
+      "cardMode": "column"
+    },
+    "DraftWorkspace": {
+      "cardMode": "column",
+      "viewport": "1100x1500"
+    },
+    "TradeCalculator": {
+      "cardMode": "column",
+      "viewport": "1100x1500"
+    },
+    "TeamDetail": {
+      "cardMode": "single",
+      "viewport": "1100x1500"
+    },
+    "LeagueShell": {
+      "cardMode": "single"
+    },
+    "AppSidebar": {
+      "cardMode": "single"
+    },
+    "SiteFooter": {
+      "cardMode": "column"
+    },
+    "PageContainer": {
+      "cardMode": "column"
+    },
+    "PageHeader": {
+      "cardMode": "column"
+    },
+    "AppBreadcrumb": {
+      "cardMode": "column"
+    },
+    "RecommendedActionsCard": {
+      "cardMode": "column"
+    },
+    "PositionalScarcityCard": {
+      "cardMode": "column"
+    },
+    "ResponsiveDialog": {
+      "cardMode": "single",
+      "viewport": "900x640"
+    },
+    "SortHeader": {
+      "cardMode": "column"
+    },
+    "InjurySearch": {
+      "cardMode": "column"
+    },
+    "NavMain": {
+      "cardMode": "single"
+    },
+    "NavProjects": {
+      "cardMode": "single"
+    },
+    "NavUser": {
+      "cardMode": "single"
+    },
+    "TeamSwitcher": {
+      "cardMode": "single"
+    }
+  },
+  "guidelinesGlob": "guidelines/**/*.md",
+  "libOverrides": {
+    "dts.mjs": "strictNullChecks so nullable props keep | null in the emitted contract"
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}

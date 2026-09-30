@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // design-sync: preview harness and generated bundles for claude.ai/design, not app code.
+    ".design-sync/**",
+    ".ds-sync/**",
+    ".ds-pkg/**",
+    "ds-bundle/**",
   ]),
 ]);
 
