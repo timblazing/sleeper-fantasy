@@ -1,21 +1,21 @@
 <p align="center">
-  <img alt="Sleeper Fantasy Dashboard" src="https://shieldcn.dev/header/surface.svg?title=Sleeper+Fantasy+Dashboard&amp;subtitle=Tools+and+insights+for+Sleeper+fantasy+leagues&amp;mode=dark&amp;image=https%3A%2F%2Fi.imgur.com%2FGl1TnAp.png&amp;overlay=.8" />
+  <img alt="Sleeper Fantasy" src="https://shieldcn.dev/header/surface.svg?title=Sleeper+Fantasy&amp;subtitle=Tools+and+insights+for+Sleeper+fantasy+leagues&amp;mode=dark&amp;image=https%3A%2F%2Fi.imgur.com%2FGl1TnAp.png&amp;overlay=.8" />
 </p>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/timblazing/sleeper-fantasy-dashboard/refs/heads/main/docs/screenshots/dashboard.png"><img alt="Dashboard" src="https://raw.githubusercontent.com/timblazing/sleeper-fantasy-dashboard/refs/heads/main/docs/screenshots/dashboard.png" /></a>
+  <a href="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/dashboard.png"><img alt="Dashboard" src="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/dashboard.png" /></a>
 </p>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/timblazing/sleeper-fantasy-dashboard/refs/heads/main/docs/screenshots/players.png"><img alt="Players" src="https://raw.githubusercontent.com/timblazing/sleeper-fantasy-dashboard/refs/heads/main/docs/screenshots/players.png" /></a>
+  <a href="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/players.png"><img alt="Players" src="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/players.png" /></a>
 </p>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/timblazing/sleeper-fantasy-dashboard/refs/heads/main/docs/screenshots/playoff-race.png"><img alt="Playoff race" src="https://raw.githubusercontent.com/timblazing/sleeper-fantasy-dashboard/refs/heads/main/docs/screenshots/playoff-race.png" /></a>
+  <a href="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/playoff-race.png"><img alt="Playoff race" src="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/playoff-race.png" /></a>
 </p>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/timblazing/sleeper-fantasy-dashboard/refs/heads/main/docs/screenshots/seed-probability.png"><img alt="Seed probability" src="https://raw.githubusercontent.com/timblazing/sleeper-fantasy-dashboard/refs/heads/main/docs/screenshots/seed-probability.png" /></a>
+  <a href="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/seed-probability.png"><img alt="Seed probability" src="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/seed-probability.png" /></a>
 </p>
 
 ## Features

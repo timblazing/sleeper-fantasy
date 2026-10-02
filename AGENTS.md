@@ -2,7 +2,7 @@
 
 ### Issue tracker
 
-Issues live in GitHub Issues on `timblazing/sleeper-fantasy-dashboard`, via the `gh` CLI.
+Issues live in GitHub Issues on `timblazing/sleeper-fantasy`, via the `gh` CLI.
 
 ### Implementation plans
 

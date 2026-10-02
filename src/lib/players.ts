@@ -44,7 +44,7 @@ function trim(id: string, raw: RawPlayer): NflPlayer | null {
 }
 
 async function loadCatalog(): Promise<Map<string, NflPlayer>> {
-  const response = await fetch(`${API}/players/nfl`, { cache: "no-store", headers: { "User-Agent": "Sleeper Fantasy Dashboard/0.1" } });
+  const response = await fetch(`${API}/players/nfl`, { cache: "no-store", headers: { "User-Agent": "Sleeper Fantasy/0.1" } });
   if (!response.ok) throw new Error(`Sleeper player map returned ${response.status}`);
   const raw = (await response.json()) as Record<string, RawPlayer>;
   const players = new Map<string, NflPlayer>();

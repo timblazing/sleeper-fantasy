@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 // No `template`: tab titles stay the bare page name ("Dashboard", "Players"). The league is
 // already named in the sidebar and the favicon, so repeating it in every tab only crowds them.
-export const metadata: Metadata = { title: { default: "Sleeper Fantasy Dashboard", template: "%s" }, description: "A live Sleeper fantasy football league dashboard." };
+export const metadata: Metadata = { title: { default: "Sleeper Fantasy", template: "%s" }, description: "A live Sleeper fantasy football league dashboard." };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

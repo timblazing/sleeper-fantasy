@@ -65,13 +65,13 @@ export async function fetchCached<T>(url: string, options: { ttl: CacheTtl; head
   let lastError: Error | null = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      const response = await fetch(url, { headers: { "User-Agent": "Sleeper Fantasy Dashboard/0.1", ...options.headers }, ...caching });
+      const response = await fetch(url, { headers: { "User-Agent": "Sleeper Fantasy/0.1", ...options.headers }, ...caching });
 ```
 
 `src/lib/players.ts:46-48`
 ```ts
 async function loadCatalog(): Promise<Map<string, NflPlayer>> {
-  const response = await fetch(`${API}/players/nfl`, { cache: "no-store", headers: { "User-Agent": "Sleeper Fantasy Dashboard/0.1" } });
+  const response = await fetch(`${API}/players/nfl`, { cache: "no-store", headers: { "User-Agent": "Sleeper Fantasy/0.1" } });
   if (!response.ok) throw new Error(`Sleeper player map returned ${response.status}`);
 ```
 
@@ -79,14 +79,14 @@ async function loadCatalog(): Promise<Map<string, NflPlayer>> {
 ```ts
   const response = await fetch(`${API}/projections/nfl/${season}/${week}?season_type=regular`, {
     cache: "no-store",
-    headers: { "User-Agent": "Sleeper Fantasy Dashboard/0.1" },
+    headers: { "User-Agent": "Sleeper Fantasy/0.1" },
   });
   if (!response.ok) throw new Error(`Sleeper projections returned ${response.status}`);
 ```
 
 `src/lib/roster-audit/client.ts:32`
 ```ts
-      const response = await fetch(`${API}${path}`, { method: "POST", headers: { "Content-Type": "application/json", "User-Agent": "Sleeper Fantasy Dashboard/0.1", ...headers }, body: JSON.stringify(options.body ?? {}) });
+      const response = await fetch(`${API}${path}`, { method: "POST", headers: { "Content-Type": "application/json", "User-Agent": "Sleeper Fantasy/0.1", ...headers }, body: JSON.stringify(options.body ?? {}) });
 ```
 
 `src/app/api/avatar/route.ts:12`
@@ -167,7 +167,7 @@ line 49. Place it so a caller-supplied option cannot silently drop it — the
 resulting call should read:
 
 ```ts
-const response = await fetch(url, { headers: { "User-Agent": "Sleeper Fantasy Dashboard/0.1", ...options.headers }, ...caching, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+const response = await fetch(url, { headers: { "User-Agent": "Sleeper Fantasy/0.1", ...options.headers }, ...caching, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
 ```
 
 Note: the signal must be created *inside* the retry loop (a fresh one per

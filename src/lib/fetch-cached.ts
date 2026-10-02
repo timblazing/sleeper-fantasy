@@ -46,7 +46,7 @@ export async function fetchCached<T>(url: string, options: { ttl: CacheTtl; head
   let lastError: Error | null = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      const response = await fetch(url, { headers: { "User-Agent": "Sleeper Fantasy Dashboard/0.1", ...options.headers }, ...caching });
+      const response = await fetch(url, { headers: { "User-Agent": "Sleeper Fantasy/0.1", ...options.headers }, ...caching });
       if (!response.ok) { const error = await httpError(response, url); if (!RETRYABLE.has(response.status)) throw error; lastError = error; }
       else { return (await response.json()) as T; }
     } catch (error) {

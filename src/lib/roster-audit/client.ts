@@ -29,7 +29,7 @@ export async function raFetch<T>(path: string, schema: ZodType<T>, options: { tt
 
   if (method === "POST") {
     try {
-      const response = await fetch(`${API}${path}`, { method: "POST", headers: { "Content-Type": "application/json", "User-Agent": "Sleeper Fantasy Dashboard/0.1", ...headers }, body: JSON.stringify(options.body ?? {}) });
+      const response = await fetch(`${API}${path}`, { method: "POST", headers: { "Content-Type": "application/json", "User-Agent": "Sleeper Fantasy/0.1", ...headers }, body: JSON.stringify(options.body ?? {}) });
       const json = await response.json().catch(() => undefined);
       if (!response.ok) return { ok: false, error: classifyStatus(response.status, json, Boolean(apiKey), `${response.status} upstream error`) };
       payload = json;

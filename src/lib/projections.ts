@@ -17,7 +17,7 @@ async function loadWeeklyProjections(key: string): Promise<Map<string, WeeklyPro
   const [season, week] = key.split(":");
   const response = await fetch(`${API}/projections/nfl/${season}/${week}?season_type=regular`, {
     cache: "no-store",
-    headers: { "User-Agent": "Sleeper Fantasy Dashboard/0.1" },
+    headers: { "User-Agent": "Sleeper Fantasy/0.1" },
   });
   if (!response.ok) throw new Error(`Sleeper projections returned ${response.status}`);
   const rows = (await response.json()) as SleeperProjection[];
