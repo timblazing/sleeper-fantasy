@@ -4,6 +4,9 @@ const team = z.object({
   id: z.string(),
   displayName: z.string(),
   abbreviation: z.string(),
+  shortDisplayName: z.string().optional(),
+  color: z.string().optional(),
+  alternateColor: z.string().optional(),
   logo: z.string().optional(),
   logos: z.array(z.object({ href: z.string() })).optional(),
 });
@@ -48,10 +51,22 @@ const competition = z.object({
     .optional(),
   situation: z
     .object({
+      down: z.number().optional(),
+      distance: z.number().optional(),
+      yardLine: z.number().optional(),
       downDistanceText: z.string().optional(),
+      shortDownDistanceText: z.string().optional(),
+      possessionText: z.string().optional(),
       possession: z.string().optional(),
       isRedZone: z.boolean().optional(),
-      lastPlay: z.object({ text: z.string().optional() }).optional(),
+      lastPlay: z
+        .object({
+          text: z.string().optional(),
+          scoreValue: z.number().optional(),
+          type: z.object({ text: z.string().optional() }).optional(),
+          team: z.object({ id: z.string() }).optional(),
+        })
+        .optional(),
     })
     .optional(),
 });
@@ -66,17 +81,38 @@ export const scoreboardSchema = z.object({
   week: z.object({ number: z.number() }),
   events: z.array(event),
 });
+const spot = z.object({
+  down: z.number().optional(),
+  distance: z.number().optional(),
+  yardLine: z.number().optional(),
+  downDistanceText: z.string().optional(),
+  shortDownDistanceText: z.string().optional(),
+  possessionText: z.string().optional(),
+  team: z.object({ id: z.string() }).optional(),
+});
 const play = z.object({
   id: z.string(),
   sequenceNumber: z.string().optional(),
   text: z.string().optional(),
+  type: z.object({ text: z.string().optional() }).optional(),
   period: z.object({ number: z.number() }).optional(),
   clock: z.object({ displayValue: z.string() }).optional(),
   scoringPlay: z.boolean().optional(),
   awayScore: z.number().optional(),
   homeScore: z.number().optional(),
+  start: spot.optional(),
+  end: spot.optional(),
 });
-const drive = z.object({ plays: z.array(play).optional() });
+const drive = z.object({
+  id: z.string().optional(),
+  description: z.string().optional(),
+  displayResult: z.string().optional(),
+  team: z.object({ id: z.string() }).optional(),
+  start: z
+    .object({ yardLine: z.number().optional(), text: z.string().optional() })
+    .optional(),
+  plays: z.array(play).optional(),
+});
 export const summarySchema = z.object({
   header: event,
   gameInfo: z
@@ -140,6 +176,9 @@ export type ScoreboardTeam = {
   id: string;
   name: string;
   abbreviation: string;
+  shortName: string;
+  /** Primary team color as a CSS hex value. */
+  color: string | null;
   logo: string | null;
   score: string | null;
   record: string;
@@ -158,7 +197,33 @@ export type ScoreboardGame = {
   situation: string;
   lastPlay: string;
   redZone: boolean;
+  field: FieldState | null;
+  scoring: { label: string; teamId: string | null } | null;
   teams: ScoreboardTeam[];
+};
+/**
+ * Live ball position. Yard values run 0–100 from the away team's goal line to the home
+ * team's, so they map straight onto a left-to-right field with the away end zone on the left.
+ */
+export type FieldState = {
+  ball: number;
+  /** Line to gain; the goal line on goal-to-go downs, null when the feed omits it. */
+  firstDown: number | null;
+  driveStart: number | null;
+  offense: string;
+  /** 1 when the offense attacks the home (right) end zone, -1 when it attacks the away one. */
+  direction: 1 | -1;
+  down: string;
+  spot: string;
+  drive: string;
+};
+export type GamePlay = z.infer<typeof play>;
+export type GameDrive = {
+  id: string;
+  teamId: string | null;
+  summary: string;
+  result: string;
+  plays: GamePlay[];
 };
 export type NflScoreboard = {
   season: number;
@@ -170,9 +235,87 @@ export type NflScoreboard = {
 export type GameSummary = {
   game: ScoreboardGame;
   boxscore: z.infer<typeof summarySchema>["boxscore"];
-  plays: z.infer<typeof play>[];
+  /** Newest drive first, each drive's newest play first. */
+  drives: GameDrive[];
   updatedAt: string;
 };
+
+/** Converts a feed spot such as "PIT 43" or "50" to field coordinates. */
+function spotToYard(
+  text: string | undefined,
+  yardLine: number | undefined,
+  teams: ScoreboardTeam[],
+) {
+  const match = text?.trim().match(/^(?:([A-Z]{2,4})\s+)?(\d{1,2})$/);
+  if (match) {
+    const yard = Number(match[2]);
+    if (!match[1] && yard === 50) return 50;
+    if (match[1] === teams[0].abbreviation) return yard;
+    if (match[1] === teams[1].abbreviation) return 100 - yard;
+  }
+  // ESPN's yardLine counts from the home goal line.
+  return yardLine === undefined ? null : 100 - yardLine;
+}
+
+function fieldState(
+  teams: ScoreboardTeam[],
+  s: z.infer<typeof spot>,
+  offense: string | undefined,
+  current?: z.infer<typeof drive>,
+): FieldState | null {
+  const ball = spotToYard(s.possessionText, s.yardLine, teams);
+  if (ball === null || !teams.some((t) => t.id === offense)) return null;
+  const direction = offense === teams[0].id ? 1 : -1;
+  const goal = /goal/i.test(
+    s.downDistanceText ?? s.shortDownDistanceText ?? "",
+  );
+  const ownDrive = current?.team?.id === offense ? current : undefined;
+  return {
+    ball,
+    firstDown: goal
+      ? direction === 1
+        ? 100
+        : 0
+      : s.distance && (s.down ?? 0) > 0
+        ? Math.min(100, Math.max(0, ball + direction * s.distance))
+        : null,
+    driveStart: ownDrive
+      ? spotToYard(ownDrive.start?.text, ownDrive.start?.yardLine, teams)
+      : null,
+    offense: offense!,
+    direction,
+    down: (s.down ?? 0) > 0 ? (s.shortDownDistanceText ?? "") : "",
+    spot: s.possessionText ?? "",
+    drive: ownDrive?.description ?? "",
+  };
+}
+
+function hexLuminance(hex: string) {
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** Near-black primaries vanish on the dark field, so those teams use their alternate color. */
+function teamColor(primary?: string, alternate?: string) {
+  const valid = (c?: string) => (c && /^[0-9a-f]{6}$/i.test(c) ? c : null);
+  const p = valid(primary);
+  const a = valid(alternate);
+  const pick = p && (hexLuminance(p) >= 0.01 || !a) ? p : a;
+  return pick ? `#${pick}` : null;
+}
+
+function scoringLabel(type: string | undefined) {
+  if (!type) return "Score";
+  if (/touchdown/i.test(type)) return "Touchdown";
+  if (/field goal/i.test(type)) return "Field goal";
+  if (/safety/i.test(type)) return "Safety";
+  if (/extra point/i.test(type)) return "Extra point";
+  if (/two-point|2pt/i.test(type)) return "Two-point conversion";
+  return type;
+}
 
 export function normalizeGame(
   input: z.infer<typeof event>,
@@ -199,6 +342,8 @@ export function normalizeGame(
       id: t.team.id,
       name: t.team.displayName,
       abbreviation: t.team.abbreviation,
+      shortName: t.team.shortDisplayName ?? t.team.displayName,
+      color: teamColor(t.team.color, t.team.alternateColor),
       logo: t.team.logo ?? t.team.logos?.[0]?.href ?? null,
       score: state === "upcoming" ? null : (t.score ?? null),
       record:
@@ -211,6 +356,8 @@ export function normalizeGame(
         (q) => q.displayValue ?? String(q.value ?? "—"),
       ),
     }));
+  const situation = c.situation;
+  const last = situation?.lastPlay;
   return {
     id: input.id,
     name: input.name ?? teams.map((t) => t.name).join(" at "),
@@ -225,6 +372,17 @@ export function normalizeGame(
     situation: c.situation?.downDistanceText ?? "",
     lastPlay: c.situation?.lastPlay?.text ?? "",
     redZone: c.situation?.isRedZone ?? false,
+    field:
+      state === "live" && situation
+        ? fieldState(teams, situation, situation.possession)
+        : null,
+    scoring:
+      state === "live" && (last?.scoreValue ?? 0) > 0
+        ? {
+            label: scoringLabel(last?.type?.text),
+            teamId: last?.team?.id ?? null,
+          }
+        : null,
     teams,
   };
 }
@@ -248,17 +406,53 @@ export function normalizeSummary(raw: unknown): GameSummary {
   const game = normalizeGame(data.header);
   if (!game) throw new Error("Missing game competitors");
   game.venue = data.gameInfo?.venue?.fullName ?? game.venue;
-  const plays = [
+  const order = (p: GamePlay) => Number(p.sequenceNumber ?? p.id);
+  // The live drive is repeated in `current`; merge by drive ID, then keep each play once.
+  const merged = new Map<string, GameDrive>();
+  [
     ...(data.drives?.previous ?? []),
     ...(data.drives?.current ? [data.drives.current] : []),
-  ].flatMap((d) => d.plays ?? []);
+  ].forEach((d, index) => {
+    const id = d.id ?? `drive-${index}`;
+    const plays = [...(merged.get(id)?.plays ?? []), ...(d.plays ?? [])];
+    merged.set(id, {
+      id,
+      teamId: d.team?.id ?? null,
+      summary: d.description ?? "",
+      result: d.displayResult ?? "",
+      plays,
+    });
+  });
+  const seen = new Set<string>();
+  const drives = [...merged.values()]
+    .reverse()
+    .map((d) => ({
+      ...d,
+      plays: d.plays
+        .sort((a, b) => order(b) - order(a))
+        .filter((p) => !seen.has(p.id) && seen.add(p.id)),
+    }))
+    .filter((d) => d.plays.length);
+  const latest = drives[0]?.plays[0];
+  if (game.state === "live" && latest) {
+    // The summary carries no situation block; the newest play's end state is the live spot.
+    const offense = latest.end?.team?.id;
+    game.field =
+      (latest.end &&
+        fieldState(game.teams, latest.end, offense, data.drives?.current)) ??
+      game.field;
+    game.lastPlay = latest.text ?? game.lastPlay;
+    game.scoring = latest.scoringPlay
+      ? {
+          label: scoringLabel(latest.type?.text),
+          teamId: latest.start?.team?.id ?? offense ?? null,
+        }
+      : null;
+  }
   return {
     game,
     boxscore: data.boxscore,
-    plays: [...new Map(plays.map((p) => [p.id, p])).values()].sort(
-      (a, b) =>
-        Number(b.sequenceNumber ?? b.id) - Number(a.sequenceNumber ?? a.id),
-    ),
+    drives,
     updatedAt: new Date().toISOString(),
   };
 }

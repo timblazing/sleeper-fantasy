@@ -90,11 +90,56 @@ describe("NFL scoreboard normalization", () => {
     const result = normalizeSummary({
       header: game,
       drives: {
-        previous: [{ plays: [first, last] }],
-        current: { plays: [last] },
+        previous: [{ id: "d1", plays: [first, last] }],
+        current: { id: "d1", plays: [last] },
       },
     });
-    expect(result.plays.map((p) => p.id)).toEqual(["2", "1"]);
+    expect(result.drives).toHaveLength(1);
+    expect(result.drives[0].plays.map((p) => p.id)).toEqual(["2", "1"]);
     expect(result.boxscore).toBeUndefined();
+  });
+  it("places the live ball in away-to-home field coordinates", () => {
+    const c = game.competitions[0];
+    const live = (situation: object) =>
+      normalizeScoreboard(
+        slate([
+          {
+            ...game,
+            competitions: [
+              {
+                ...c,
+                status: { type: { state: "in", shortDetail: "10:24 - 3rd" } },
+                situation,
+              },
+            ],
+          },
+        ]),
+      ).games[0].field;
+    // CAR (away) on its own 43 attacks the CLE end zone on the right.
+    expect(
+      live({
+        possession: "CAR",
+        possessionText: "CAR 43",
+        down: 1,
+        distance: 10,
+        shortDownDistanceText: "1st & 10",
+      }),
+    ).toMatchObject({
+      ball: 43,
+      firstDown: 53,
+      direction: 1,
+      down: "1st & 10",
+    });
+    // CLE (home) at the CAR 8 on goal-to-go attacks left; falls back to yardLine.
+    expect(
+      live({
+        possession: "CLE",
+        yardLine: 92,
+        down: 2,
+        distance: 8,
+        downDistanceText: "2nd & Goal at CAR 8",
+      }),
+    ).toMatchObject({ ball: 8, firstDown: 0, direction: -1 });
+    expect(live({ possessionText: "CAR 43" })).toBeNull();
   });
 });
