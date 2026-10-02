@@ -5,10 +5,7 @@ import { useState } from "react";
 import {
   ArrowUpRightIcon,
   ChevronRightIcon,
-  RadioIcon,
-  RefreshCwIcon,
 } from "lucide-react";
-import { PageHeader } from "@/components/page-header";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -152,53 +149,13 @@ function LoadingGames() {
 }
 
 export function NflScoreboardPage() {
-  const { data, error, refreshing, refresh } =
-    useLiveNfl<NflScoreboard>("/api/scoreboard");
+  const { data, error } = useLiveNfl<NflScoreboard>("/api/scoreboard");
   const [selected, setSelected] = useState<ScoreboardGame | null>(null);
   return (
     <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6 p-4 md:p-6 lg:p-8">
-      <PageHeader
-        title="Scoreboard"
-        description="Every NFL game this week. Follow the action, dive into the numbers."
-      />
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-4">
-        <div className="flex items-center gap-3">
-          <RadioIcon className="size-5 text-muted-foreground" />
-          <div>
-            <h2 className="text-sm font-semibold">
-              {data
-                ? `${data.season} ${data.seasonType === 1 ? "Preseason" : data.seasonType === 3 ? "Postseason" : "Season"} · Week ${data.week}`
-                : "This week in the NFL"}
-            </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {data ? `${data.games.length} games · ` : ""}ESPN · Updates every
-              30 seconds
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {data ? (
-            <span className="text-xs text-muted-foreground">
-              Updated{" "}
-              {new Date(data.updatedAt).toLocaleTimeString(undefined, {
-                hour: "numeric",
-                minute: "2-digit",
-              })}
-            </span>
-          ) : null}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refresh}
-            disabled={refreshing}
-          >
-            <RefreshCwIcon
-              className={cn("size-3.5", refreshing && "animate-spin")}
-            />
-            Refresh
-          </Button>
-        </div>
-      </div>
+      <header className="border-b pb-4">
+        <h1 className="text-xl font-semibold tracking-tight">Scoreboard</h1>
+      </header>
       {error ? (
         <div
           role="alert"
@@ -256,7 +213,7 @@ export function NflScoreboardPage() {
           if (!open) setSelected(null);
         }}
         title={selected?.name ?? "Game details"}
-        description="NFL game details · ESPN"
+        visuallyHideHeader
         className="min-w-0 sm:max-w-4xl"
       >
         {selected ? <GameDetails key={selected.id} initial={selected} /> : null}
@@ -279,7 +236,7 @@ function TableScroll({
       role="region"
       aria-label={label}
       tabIndex={0}
-      className="max-w-full overflow-x-auto rounded-lg border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-lg border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {children}
     </div>

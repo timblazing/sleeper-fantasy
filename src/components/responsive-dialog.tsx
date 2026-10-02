@@ -13,6 +13,7 @@ type ResponsiveDialogProps = {
   title: React.ReactNode;
   description?: React.ReactNode;
   className?: string;
+  visuallyHideHeader?: boolean;
   children: React.ReactNode;
 };
 
@@ -24,7 +25,7 @@ type ResponsiveDialogProps = {
  * one component. Base UI's `Sheet` (`side="bottom"`) is the drawer here; both share the header
  * shape so the title and dismissal land in the same place either way.
  */
-export function ResponsiveDialog({ open, onOpenChange, title, description, className, children }: ResponsiveDialogProps) {
+export function ResponsiveDialog({ open, onOpenChange, title, description, className, visuallyHideHeader = false, children }: ResponsiveDialogProps) {
   const isMobile = useIsMobile();
 
   if (isMobile) {
@@ -32,10 +33,10 @@ export function ResponsiveDialog({ open, onOpenChange, title, description, class
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="bottom" className={cn("max-h-[88svh] rounded-t-xl", className)}>
           <SheetHeader className="pb-0">
-            <SheetTitle>{title}</SheetTitle>
-            {description ? <SheetDescription>{description}</SheetDescription> : null}
+            <SheetTitle className={visuallyHideHeader ? "sr-only" : undefined}>{title}</SheetTitle>
+            {!visuallyHideHeader && description ? <SheetDescription>{description}</SheetDescription> : null}
           </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">{children}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-4 pb-6">{children}</div>
         </SheetContent>
       </Sheet>
     );
@@ -45,10 +46,10 @@ export function ResponsiveDialog({ open, onOpenChange, title, description, class
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn("max-h-[85svh] max-w-2xl grid-rows-[auto_minmax(0,1fr)] sm:max-w-2xl", className)}>
         <DialogHeader className="pr-10">
-          <DialogTitle>{title}</DialogTitle>
-          {description ? <DialogDescription>{description}</DialogDescription> : null}
+          <DialogTitle className={visuallyHideHeader ? "sr-only" : undefined}>{title}</DialogTitle>
+          {!visuallyHideHeader && description ? <DialogDescription>{description}</DialogDescription> : null}
         </DialogHeader>
-        <div className="-mx-4 min-h-0 overflow-y-auto px-4">{children}</div>
+        <div className="-mx-4 min-h-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-4">{children}</div>
       </DialogContent>
     </Dialog>
   );
