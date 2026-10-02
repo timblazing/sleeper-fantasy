@@ -278,6 +278,10 @@ export async function getLeagueHistory(leagueId: string, source: LeagueSource = 
       const weekScores = rows.map((row) => ({ ownerId: rosterToOwner.get(row.roster_id) ?? `roster-${row.roster_id}`, points: scoreOf(row) })).filter((entry) => entry.points > 0);
 
       for (const [home, away] of pairWeek(rows)) {
+        // Sleeper includes paired rows with 0 points for matchups that have not started yet.
+        // A week may already contain completed games, so filtering only whole scoreless weeks
+        // still lets these placeholders inflate records as 0–0 ties.
+        if (scoreOf(home) === 0 && scoreOf(away) === 0) continue;
         const homeOwner = rosterToOwner.get(home.roster_id);
         const awayOwner = rosterToOwner.get(away.roster_id);
         if (!homeOwner || !awayOwner) continue;

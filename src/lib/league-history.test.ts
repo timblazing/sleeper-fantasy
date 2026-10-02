@@ -65,6 +65,25 @@ describe("getLeagueHistory", () => {
     expect(best.pointsPerGame).toBeCloseTo(135, 5);
   });
 
+  test("ignores unplayed 0–0 matchups in a week with other scores", async () => {
+    const base = makeHistorySource();
+    const source = {
+      ...base,
+      getMatchups: async (leagueId: string, week: number) => {
+        const rows = await base.getMatchups(leagueId, week);
+        if (leagueId !== "L2025" || week !== 1) return rows;
+        return rows.map((row) => row.roster_id >= 3 ? { ...row, points: 0 } : row);
+      },
+    };
+
+    const history = await getLeagueHistory("L2025", source);
+    const team3 = history.managers.find((row) => row.name === "Team 3");
+    const team3Season = team3?.seasons.find((season) => season.season === "2025");
+
+    // The scored game between teams 1 and 2 must not cause the placeholder 0–0 pair to count.
+    expect(team3Season).toMatchObject({ wins: 1, losses: 0, ties: 0 });
+  });
+
   test("reads final placements off the bracket's placement games", async () => {
     const history = await getLeagueHistory("L2025", makeHistorySource());
     const byName = new Map(history.managers.map((row) => [row.name, row]));
