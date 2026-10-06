@@ -37,3 +37,9 @@
 - [kt474/fantasy-football-wrapped](https://github.com/kt474/fantasy-football-wrapped)
 - [pseudo-r/Public-ESPN-API](https://github.com/pseudo-r/Public-ESPN-API)
 - [akeaswaran/espn-api-docs](https://gist.github.com/akeaswaran/b48b02f1c94f873c6655e7129910fc3b)
+
+## Design system
+
+The UI follows [blasingame.dev foundations](https://components.blasingame.dev/foundations).
+See [the implementation guide](docs/design-system.md) for tokens, component sourcing,
+and updating the pinned reference. Open `/design-system` for interactive specimens.

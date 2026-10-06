@@ -17,7 +17,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6 p-4 md:p-6 lg:p-8">
+    <div className="mx-auto flex w-full max-w-[1288px] flex-col gap-6 p-4 md:p-6">
       <Empty className="min-h-64 border">
         <EmptyHeader>
           <EmptyMedia variant="icon"><TriangleAlertIcon /></EmptyMedia>

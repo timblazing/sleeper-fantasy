@@ -29,9 +29,9 @@ describe("RankingsTable", () => {
       playerRow({ key: "player-2", rank: 2, sleeperId: "2", name: "Puka Nacua", owner: { teamName: "Turf Monsters", isMine: false } }),
     ])} />);
 
-    expect(screen.getByText("MY TEAM")).toBeInTheDocument();
+    expect(screen.getByText("Your team")).toBeInTheDocument();
     expect(screen.getByText("ATL · Turf Monsters")).toBeInTheDocument();
-    expect(screen.getAllByText("MY TEAM")).toHaveLength(1);
+    expect(screen.getAllByText("Your team")).toHaveLength(1);
   });
 
   it("links a player name to the player profile route, carrying username", () => {
@@ -42,7 +42,7 @@ describe("RankingsTable", () => {
   it("renders a pick row with its label verbatim and an em dash for age", () => {
     render(<RankingsTable query={QUERY} view={view([pickRow()])} />);
     expect(screen.getByText("2027 Early 1st")).toBeInTheDocument();
-    expect(screen.getByText("PICK")).toBeInTheDocument();
+    expect(screen.getByText("Pick")).toBeInTheDocument();
     expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(2);
   });
 

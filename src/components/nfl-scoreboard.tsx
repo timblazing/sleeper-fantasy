@@ -6,7 +6,8 @@ import { ArrowUpRightIcon } from "lucide-react";
 import { Football, FieldTrack, FieldView } from "@/components/nfl-field";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ResponsiveTabs } from "@/components/responsive-tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useLiveNfl } from "@/hooks/use-live-nfl";
 import type {
   GameDrive,
@@ -74,7 +75,7 @@ function TeamLogo({
   ) : (
     <span
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold",
+        "flex shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium",
         className,
       )}
       style={{ width: size, height: size }}
@@ -110,7 +111,7 @@ function GameCard({
                 <TeamLogo team={team} />
                 <span
                   className={cn(
-                    "truncate text-sm font-semibold",
+                    "truncate text-sm font-medium",
                     lost && "font-medium text-muted-foreground",
                   )}
                 >
@@ -118,13 +119,13 @@ function GameCard({
                 </span>
                 {team.possession ? <Football className="shrink-0" /> : null}
                 {team.possession && game.redZone ? (
-                  <span className="shrink-0 rounded-sm bg-negative/15 px-1 text-[10px] font-semibold text-negative">
+                  <span className="shrink-0 rounded-sm bg-negative/15 px-1 text-xs font-medium text-negative">
                     RZ
                   </span>
                 ) : null}
                 <span
                   className={cn(
-                    "ml-auto pl-2 font-mono text-xl font-semibold tabular-nums",
+                    "ml-auto pl-2  text-xl font-medium tabular-nums",
                     lost && "text-muted-foreground",
                     game.scoring?.teamId === team.id &&
                       "rounded bg-positive/15 px-1.5 text-positive",
@@ -140,10 +141,10 @@ function GameCard({
           {live ? (
             <>
               <span className="font-medium text-positive">
-                {period} <span className="font-mono">{clock}</span>
+                {period} <span className="tabular-nums">{clock}</span>
               </span>
               {game.scoring ? (
-                <span className="font-semibold text-positive">
+                <span className="font-medium text-positive">
                   {game.scoring.label}
                 </span>
               ) : game.field?.down ? (
@@ -240,7 +241,7 @@ export function NflScoreboardPage() {
   return (
     <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-8 p-4 md:p-6 lg:p-8">
       <header className="flex items-baseline gap-3 border-b pb-4">
-        <h1 className="text-xl font-semibold tracking-tight">Scoreboard</h1>
+        <h1 className="text-xl font-medium tracking-tight">Scoreboard</h1>
         {data ? (
           <span className="text-sm text-muted-foreground">
             {weekLabel(data)}
@@ -261,7 +262,7 @@ export function NflScoreboardPage() {
       {!data && !error ? <LoadingGames /> : null}
       {data && !data.games.length ? (
         <div className="rounded-xl border border-dashed p-12 text-center">
-          <h2 className="font-semibold">No games scheduled this week</h2>
+          <h2 className="font-medium">No games scheduled this week</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Check back when the next NFL slate is available.
           </p>
@@ -274,12 +275,9 @@ export function NflScoreboardPage() {
             aria-label={section.title}
             className="space-y-3"
           >
-            <h2 className="flex items-center gap-2 text-sm font-semibold">
+            <h2 className="flex items-center gap-2 text-sm font-medium">
               {section.key === "live" ? (
-                <span className="relative flex size-2">
-                  <span className="absolute inset-0 animate-ping rounded-full bg-positive/60 motion-reduce:hidden" />
-                  <span className="relative size-2 rounded-full bg-positive" />
-                </span>
+                <span aria-hidden="true" className="size-2 rounded-full bg-positive" />
               ) : null}
               {section.title}
               <span className="font-normal text-muted-foreground tabular-nums">
@@ -358,7 +356,7 @@ function Scorebug({ game }: { game: ScoreboardGame }) {
             <div className="min-w-0">
               <div
                 className={cn(
-                  "flex items-center gap-1.5 text-sm font-semibold",
+                  "flex items-center gap-1.5 text-sm font-medium",
                   index === 1 && "flex-row-reverse",
                   lost && "text-muted-foreground",
                 )}
@@ -375,7 +373,7 @@ function Scorebug({ game }: { game: ScoreboardGame }) {
             </div>
             <span
               className={cn(
-                "ml-auto font-mono text-3xl font-semibold tabular-nums sm:text-4xl",
+                "ml-auto  text-3xl font-medium tabular-nums sm:text-4xl",
                 index === 1 && "mr-auto ml-0",
                 lost && "text-muted-foreground",
               )}
@@ -389,14 +387,14 @@ function Scorebug({ game }: { game: ScoreboardGame }) {
       <div className="col-start-2 row-start-1 min-w-16 text-center text-xs">
         {game.state === "live" ? (
           <div className="text-positive">
-            <div className="font-semibold">{period}</div>
-            <div className="font-mono">{clock}</div>
+            <div className="font-medium">{period}</div>
+            <div className="tabular-nums">{clock}</div>
           </div>
         ) : game.state === "final" ? (
-          <div className="font-semibold">{game.detail}</div>
+          <div className="font-medium">{game.detail}</div>
         ) : (
           <div>
-            <div className="font-semibold">{kickoffTime(game.kickoff)}</div>
+            <div className="font-medium">{kickoffTime(game.kickoff)}</div>
             <div className="text-muted-foreground">
               {new Date(game.kickoff).toLocaleDateString(undefined, {
                 weekday: "short",
@@ -442,11 +440,11 @@ function LineScore({ game }: { game: ScoreboardGame }) {
                 {team.abbreviation}
               </th>
               {Array.from({ length: quarters }, (_, index) => (
-                <td key={index} className="font-mono">
+                <td key={index} className="tabular-nums">
                   {team.quarters[index] ?? "–"}
                 </td>
               ))}
-              <td className="font-mono font-semibold">{team.score ?? "–"}</td>
+              <td className="tabular-nums font-medium">{team.score ?? "–"}</td>
             </tr>
           ))}
         </tbody>
@@ -493,7 +491,7 @@ function DriveTracker({
       {game.scoring ? (
         <div className="flex items-center justify-center gap-3 pb-4">
           {scorer ? <TeamLogo team={scorer} size={32} /> : null}
-          <span className="text-xl font-semibold tracking-tight text-positive">
+          <span className="text-xl font-medium tracking-tight text-positive">
             {game.scoring.label}
           </span>
         </div>
@@ -502,7 +500,7 @@ function DriveTracker({
           {facts.map(([label, value]) => (
             <div key={label} className="min-w-0 px-2">
               <dt className="text-xs text-muted-foreground">{label}</dt>
-              <dd className="mt-0.5 text-sm font-semibold text-balance sm:text-base">
+              <dd className="mt-0.5 text-sm font-medium text-balance sm:text-base">
                 {value}
               </dd>
             </div>
@@ -519,7 +517,7 @@ function DriveTracker({
               : ""}
           </p>
           <p className="mt-1 text-sm leading-relaxed">
-            <span className="font-mono text-muted-foreground">
+            <span className="tabular-nums text-muted-foreground">
               {latest.clock?.displayValue}
             </span>{" "}
             {latest.text}
@@ -531,6 +529,7 @@ function DriveTracker({
 }
 
 function GameDetails({ initial }: { initial: ScoreboardGame }) {
+  const [detailTab, setDetailTab] = useState(initial.state === "live" ? "plays" : "boxscore");
   const { data, error, refreshing, refresh } = useLiveNfl<GameSummary>(
     `/api/scoreboard/${initial.id}`,
   );
@@ -592,14 +591,13 @@ function GameDetails({ initial }: { initial: ScoreboardGame }) {
       ) : null}
       {data ? (
         <Tabs
-          defaultValue={initial.state === "live" ? "plays" : "boxscore"}
+          value={detailTab}
+          onValueChange={setDetailTab}
           className="min-w-0 pt-1"
         >
-          <TabsList variant="line" className="w-full justify-start border-b">
-            <TabsTrigger value="plays">Play-by-play</TabsTrigger>
-            <TabsTrigger value="boxscore">Box score</TabsTrigger>
-            <TabsTrigger value="team">Team stats</TabsTrigger>
-          </TabsList>
+          <ResponsiveTabs label="Game details" value={detailTab} onValueChange={setDetailTab} items={[
+            { value: "plays", label: "Play-by-play" }, { value: "boxscore", label: "Box score" }, { value: "team", label: "Team stats" },
+          ]} />
           <TabsContent value="plays" className="min-w-0 pt-3">
             {data.drives.length ? (
               <>
@@ -666,7 +664,7 @@ function DriveItem({
     <li>
       <div className="flex items-center gap-2.5">
         {team ? <TeamLogo team={team} size={22} /> : null}
-        <span className="text-sm font-semibold">
+        <span className="text-sm font-medium">
           {current ? "Current drive" : drive.result || "Drive"}
         </span>
         <span className="truncate text-xs text-muted-foreground">
@@ -680,12 +678,12 @@ function DriveItem({
         {drive.plays.map((play) => (
           <li key={play.id} className="text-sm">
             <div className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted-foreground">
-              <span className="font-mono">{playTime(play)}</span>
+              <span className="tabular-nums">{playTime(play)}</span>
               {play.start?.downDistanceText ? (
                 <span>{play.start.downDistanceText}</span>
               ) : null}
               {play.scoringPlay ? (
-                <span className="ml-auto font-mono font-medium text-positive tabular-nums">
+                <span className="ml-auto font-medium text-positive tabular-nums">
                   {game.teams[0].abbreviation} {play.awayScore},{" "}
                   {game.teams[1].abbreviation} {play.homeScore}
                 </span>
@@ -716,7 +714,7 @@ function BoxScore({ data }: { data: GameSummary }) {
     );
   return players.map((team) => (
     <section key={team.team.id} className="space-y-4">
-      <h3 className="flex items-center gap-2 text-sm font-semibold">
+      <h3 className="flex items-center gap-2 text-sm font-medium">
         <TeamLogo
           team={{
             logo: team.team.logo ?? team.team.logos?.[0]?.href ?? null,
@@ -756,17 +754,17 @@ function BoxScore({ data }: { data: GameSummary }) {
                         {player.athlete.displayName}
                       </th>
                       {player.stats.map((stat, index) => (
-                        <td key={index} className="font-mono">
+                        <td key={index} className="tabular-nums">
                           {stat}
                         </td>
                       ))}
                     </tr>
                   ))}
                   {category.totals?.length ? (
-                    <tr className="bg-muted/30 font-semibold">
+                    <tr className="bg-muted/30 font-medium">
                       <th scope="row">Total</th>
                       {category.totals.map((stat, index) => (
-                        <td key={index} className="font-mono">
+                        <td key={index} className="tabular-nums">
                           {stat}
                         </td>
                       ))}
@@ -812,7 +810,7 @@ function TeamStats({ data }: { data: GameSummary }) {
     team.stats.find((s) => s.name === name)?.displayValue ?? "—";
   return (
     <TableScroll label="Team statistics">
-      <table className={cn(tableClass, "[&_td]:font-mono")}>
+      <table className={cn(tableClass, "[&_td]:tabular-nums")}>
         <thead>
           <tr>
             <th scope="col" className="w-1/4">

@@ -22,19 +22,6 @@ export const plain = (value: number) => formatter.format(value);
  */
 export const valueTone = (value: number) => (value > 0 ? "text-positive" : value < 0 ? "text-negative" : "text-muted-foreground");
 
-/**
- * Letter grade → chip color, banded rather than per-letter.
- *
- * A/B read positive, C neutral, D/F negative, so the leaderboard scans by color alone without
- * inventing eleven separate hues for eleven grades.
- */
-export function gradeTone(grade: string) {
-  if (grade.startsWith("A")) return "border-transparent bg-positive/15 text-positive";
-  if (grade.startsWith("B")) return "border-transparent bg-positive/10 text-positive";
-  if (grade.startsWith("C")) return "border-transparent bg-warning/15 text-warning";
-  return "border-transparent bg-negative/15 text-negative";
-}
-
 const initials = (value: string) => value.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
 
 export function ManagerAvatar({ avatar, name, className }: { avatar: string | null; name: string; className?: string }) {
@@ -47,7 +34,7 @@ export function ManagerAvatar({ avatar, name, className }: { avatar: string | nu
 }
 
 export function GradeBadge({ grade, className }: { grade: string; className?: string }) {
-  return <Badge variant="outline" className={cn("font-semibold tabular-nums", gradeTone(grade), className)}>{grade}</Badge>;
+  return <Badge variant={grade.startsWith("A") || grade.startsWith("B") ? "success" : grade.startsWith("C") ? "warning" : "destructive"} className={cn("font-medium tabular-nums", className)}>{grade}</Badge>;
 }
 
 /**
@@ -80,7 +67,7 @@ export function PlayerHeadshot({ playerId, position, className }: { playerId: st
   return (
     <Avatar className={cn("bg-muted", className)}>
       <AvatarImage alt="" src={`https://sleepercdn.com/content/nfl/players/thumb/${playerId}.jpg`} />
-      <AvatarFallback className="text-[0.6rem]">{position ?? "—"}</AvatarFallback>
+      <AvatarFallback className="text-xs">{position ?? "—"}</AvatarFallback>
     </Avatar>
   );
 }
@@ -97,7 +84,7 @@ export function SortHeader({ active, direction, onClick, align = "right", childr
       className={cn(
         // Type comes from the enclosing <th> so sortable and plain headers
         // share one baseline; only the active/idle color differs.
-        "-mx-1 inline-flex w-full items-center gap-1 rounded px-1 py-0.5 font-[inherit] text-[inherit] tracking-[inherit] uppercase transition-colors hover:text-foreground",
+        "-mx-1 inline-flex w-full items-center gap-1 rounded px-1 py-0.5 font-[inherit] text-[inherit] tracking-[inherit] transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
         align === "right" ? "justify-end" : "justify-start",
         active && "text-foreground",
       )}

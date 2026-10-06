@@ -3,27 +3,23 @@ import { SparklesIcon } from "lucide-react";
 import { RecommendedActionsCard } from "@/components/insights";
 import { MatchupLineup } from "@/components/matchup-lineup";
 import { MatchupSummary } from "@/components/matchup-summary";
+import { Metric } from "@/components/metric";
+import { PanelHeader } from "@/components/panel-header";
 import { PageHeader } from "@/components/page-header";
 import { PageContainer } from "@/components/page-container";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { avatarUrl, initials } from "@/lib/display";
 import type { OverviewData, Tone } from "@/lib/team-insights";
-import { cn } from "@/lib/utils";
 import type { MatchupDetail } from "@/lib/types";
 
 /**
  * Tone is the only thing on this screen allowed to color a number, and it maps to the
  * semantic result tokens rather than a per-component hex.
  */
-const TONE_TEXT: Record<Tone, string> = {
-  positive: "text-positive",
-  warning: "text-warning",
-  critical: "text-negative",
-  neutral: "text-foreground",
-};
+const METRIC_TONE: Record<Tone, "positive" | "warning" | "negative" | "neutral"> = { positive: "positive", warning: "warning", critical: "negative", neutral: "neutral" };
 
 /**
  * The dashboard hero. The champion banners on the League page set the visual language, and the
@@ -40,22 +36,18 @@ function LeagueStatus({ data }: { data: OverviewData }) {
         <div className="flex min-w-0 items-center gap-3.5">
           <Avatar className="size-12 shrink-0 after:hidden">
             {team.avatar ? <AvatarImage alt="" src={avatarUrl(team.avatar)} /> : null}
-            <AvatarFallback className="text-sm font-semibold">{initials(team.name)}</AvatarFallback>
+            <AvatarFallback className="text-sm font-medium">{initials(team.name)}</AvatarFallback>
           </Avatar>
           <div className="flex min-w-0 flex-col gap-0.5">
-            <p className="truncate text-lg font-semibold leading-tight tracking-tight">{team.name}</p>
-            <p className="truncate font-mono text-xs text-muted-foreground">@{team.manager}</p>
+            <p className="truncate text-lg font-medium leading-tight tracking-tight">{team.name}</p>
+            <p className="truncate tabular-nums text-xs text-muted-foreground">@{team.manager}</p>
           </div>
         </div>
 
         {/* Each metric is its own chip: the tint carries the grouping, so no rules are needed. */}
         <dl className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:w-auto">
           {data.metrics.map((metric) => (
-            <div className="flex flex-col gap-1 rounded-lg bg-background/40 px-3 py-2.5 lg:min-w-[7.5rem]" key={metric.id}>
-              <dt className="truncate font-mono text-[0.625rem] uppercase tracking-wider text-primary/70">{metric.label}</dt>
-              <dd className={cn("font-mono text-xl font-semibold leading-none tabular-nums", TONE_TEXT[metric.tone])}>{metric.value}</dd>
-              {metric.detail ? <dd className="truncate font-mono text-[0.625rem] text-muted-foreground">{metric.detail}</dd> : null}
-            </div>
+            <Metric key={metric.id} label={metric.label} value={metric.value} detail={metric.detail} tone={METRIC_TONE[metric.tone]} className="rounded-lg bg-muted/40 px-3 py-3 lg:min-w-[7.5rem]" />
           ))}
         </dl>
       </CardContent>
@@ -68,10 +60,7 @@ function CurrentMatchup({ data }: { data: OverviewData }) {
 
   return (
     <Card accent>
-      <CardHeader>
-        <CardTitle>{data.team && matchup && (matchup.home.team.rosterId === data.team.rosterId || matchup.away.team.rosterId === data.team.rosterId) ? "Your matchup" : "This week"}</CardTitle>
-        <CardDescription>Week {data.state.matchupWeek}{data.state.regularSeason ? "" : " · preseason preview"}</CardDescription>
-      </CardHeader>
+      <PanelHeader title={data.team && matchup && (matchup.home.team.rosterId === data.team.rosterId || matchup.away.team.rosterId === data.team.rosterId) ? "Your matchup" : "This week"} description={`Week ${data.state.matchupWeek}${data.state.regularSeason ? "" : " · preseason preview"}`} />
       <CardContent className="flex flex-col gap-3">
         {matchup ? (
           <>
@@ -99,7 +88,7 @@ function ConnectPrompt({ leagueId }: { leagueId: string }) {
           <EmptyHeader>
             <EmptyMedia variant="icon"><SparklesIcon /></EmptyMedia>
             <EmptyTitle>Connect your Sleeper username</EmptyTitle>
-            <EmptyDescription>Roster grades, lineup warnings, and recommended moves are built around your team. Add <code className="font-mono">?username=</code> to the URL, or pick your league from the home page.</EmptyDescription>
+            <EmptyDescription>Roster grades, lineup warnings, and recommended moves are built around your team. Connect your account to see recommendations for your roster.</EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
             <Link className={buttonVariants({ variant: "outline", size: "sm" })} href={`/?league=${leagueId}`}>Connect account</Link>

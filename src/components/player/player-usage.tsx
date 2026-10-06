@@ -2,10 +2,11 @@
 
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { CHART_AXIS, CHART_GRID, SINGLE_SERIES_COLOR, chartValue, formatChartNumber, summarizeChartValues } from "@/lib/chart-style";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, useChartAnimation, type ChartConfig } from "@/components/ui/chart";
 import type { PlayerSnapWeek } from "@/lib/roster-audit";
 
-const config = { snapPct: { label: "Snap share", color: "var(--series-2)" } } satisfies ChartConfig;
+const config = { snapPct: { label: "Snap share", color: SINGLE_SERIES_COLOR } } satisfies ChartConfig;
 
 /**
  * Snap share by week — the leading indicator of a role changing.
@@ -15,13 +16,18 @@ const config = { snapPct: { label: "Snap share", color: "var(--series-2)" } } sa
  * look dramatic.
  */
 export function PlayerSnapTrend({ snaps, avgSnapPct }: { snaps: PlayerSnapWeek[]; avgSnapPct: number | null }) {
-  const data = snaps.filter((week) => week.offensePct != null).map((week) => ({ week: week.week, opponent: week.opponent, snapPct: Math.round((week.offensePct ?? 0) * 100) }));
-  if (data.length < 3) return null;
+  const animate = useChartAnimation();
+  const data = snaps.map((week) => {
+    const share = chartValue(week.offensePct);
+    return { week: week.week, opponent: week.opponent, snapPct: share == null ? null : Math.round(share * 100) };
+  });
+  const stats = summarizeChartValues(data.map((row) => row.snapPct));
+  if (!stats || stats.count < 3) return null;
 
   // Last quarter of the season against the full-year average is the "is the role changing" read.
-  const recent = data.slice(-4);
-  const recentAvg = recent.reduce((total, row) => total + row.snapPct, 0) / recent.length;
-  const seasonAvg = avgSnapPct != null ? Math.round(avgSnapPct * 100) : Math.round(data.reduce((total, row) => total + row.snapPct, 0) / data.length);
+  const recent = data.filter((row) => row.snapPct != null).slice(-4);
+  const recentAvg = summarizeChartValues(recent.map((row) => row.snapPct))!.average;
+  const seasonAvg = chartValue(avgSnapPct) != null ? Math.round(avgSnapPct! * 100) : Math.round(stats.average);
   const drift = Math.round(recentAvg - seasonAvg);
 
   return (
@@ -36,19 +42,13 @@ export function PlayerSnapTrend({ snaps, avgSnapPct }: { snaps: PlayerSnapWeek[]
       <CardContent>
         <ChartContainer className="aspect-auto h-48 w-full" config={config}>
           <AreaChart accessibilityLayer data={data} margin={{ left: 4, right: 4, top: 4 }}>
-            <defs>
-              <linearGradient id="player-snap-fill" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="var(--color-snapPct)" stopOpacity={0.25} />
-                <stop offset="100%" stopColor="var(--color-snapPct)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid vertical={false} />
-            <XAxis axisLine={false} dataKey="week" tickFormatter={(week: number) => `W${week}`} tickLine={false} tickMargin={8} />
-            <YAxis axisLine={false} domain={[0, 100]} tickFormatter={(entry: number) => `${entry}%`} tickLine={false} tickMargin={8} width={40} />
+            <CartesianGrid {...CHART_GRID} />
+            <XAxis {...CHART_AXIS} dataKey="week" tickFormatter={(week: number) => `W${week}`} />
+            <YAxis {...CHART_AXIS} domain={[0, 100]} tickFormatter={(entry: number) => `${entry}%`} width={40} />
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  formatter={(entry) => <span className="font-mono tabular-nums">{Number(entry)}% of snaps</span>}
+                  formatter={(entry) => <span className="tabular-nums">{formatChartNumber(entry)}% of snaps</span>}
                   labelFormatter={(label, payload) => {
                     const row = payload?.[0]?.payload as { opponent: string | null } | undefined;
                     return `Week ${label}${row?.opponent ? ` vs ${row.opponent}` : ""}`;
@@ -56,7 +56,7 @@ export function PlayerSnapTrend({ snaps, avgSnapPct }: { snaps: PlayerSnapWeek[]
                 />
               }
             />
-            <Area dataKey="snapPct" fill="url(#player-snap-fill)" stroke="var(--color-snapPct)" strokeWidth={2} type="monotone" />
+            <Area connectNulls={false} isAnimationActive={animate} dataKey="snapPct" fill="var(--color-snapPct)" fillOpacity={0.12} stroke="var(--color-snapPct)" strokeWidth={2} type="monotone" />
           </AreaChart>
         </ChartContainer>
       </CardContent>

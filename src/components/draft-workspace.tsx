@@ -5,13 +5,14 @@ import Link from "next/link";
 import { ArrowLeftRightIcon, ChevronRightIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react";
 import { GradeBadge, ManagerAvatar, PlayerHeadshot, SortHeader, SurplusBar, plain, signed, valueTone } from "@/components/draft-grade-parts";
 import { PositionBadge } from "@/components/position-badge";
+import { ResponsiveTabs } from "@/components/responsive-tabs";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { DraftGradeData, DraftManagerGrade, DraftPickGrade } from "@/lib/draft-grades";
 import { cn } from "@/lib/utils";
@@ -94,16 +95,16 @@ function ManagerTable({ data, onSelect }: { data: DraftGradeData; onSelect: (ros
               <TableRow className="cursor-pointer" key={manager.rosterId} onClick={() => onSelect(manager.rosterId)}>
                 <TableCell className="text-muted-foreground tabular-nums">{index + 1}</TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-3">
+                  <button type="button" aria-label={`View draft grades for ${manager.teamName}`} onClick={(event) => { event.stopPropagation(); onSelect(manager.rosterId); }} className="flex w-full items-center gap-3 rounded-md text-left focus-visible:outline-2 focus-visible:outline-ring">
                     <ManagerAvatar avatar={manager.avatar} name={manager.teamName} className="size-8" />
                     <div className="min-w-0">
                       <p className="truncate text-xs font-medium sm:text-sm">{manager.teamName}</p>
                       <p className="truncate text-xs text-muted-foreground">{manager.manager}</p>
                     </div>
-                  </div>
+                  </button>
                 </TableCell>
                 <TableCell className="text-right tabular-nums">{manager.picks.length}</TableCell>
-                <TableCell className={cn("hidden text-right tabular-nums sm:table-cell", manager.hitRate >= 50 ? "text-positive" : manager.hitRate > 0 ? "text-warning" : "text-negative")}>{manager.hitRate}%</TableCell>
+                <TableCell className={cn("hidden text-right tabular-nums sm:table-cell", manager.hitRate >= 50 ? "text-positive" : manager.hitRate > 0 ? "text-warning-foreground" : "text-negative")}>{manager.hitRate}%</TableCell>
                 <TableCell className="hidden md:table-cell"><SurplusBar surplus={manager.surplusPerPick} scale={scale} /></TableCell>
                 <TableCell className={cn("text-right font-medium tabular-nums max-sm:hidden", valueTone(manager.surplus))}>{signed(manager.surplus)}</TableCell>
                 <TableCell className="text-right"><GradeBadge grade={manager.grade} /></TableCell>
@@ -129,7 +130,7 @@ function ManagerTable({ data, onSelect }: { data: DraftGradeData; onSelect: (ros
 function PickLine({ pick, scale }: { pick: DraftPickGrade; scale: number }) {
   return (
     <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-2 py-2.5 sm:grid-cols-[2.75rem_minmax(0,1fr)_auto] sm:gap-3">
-      <span className="font-mono text-xs text-muted-foreground tabular-nums">{pick.pick}</span>
+      <span className="text-xs text-muted-foreground tabular-nums">{pick.pick}</span>
       <div className="flex min-w-0 items-center gap-2.5">
         <PlayerHeadshot className="size-8 shrink-0" playerId={pick.playerId} position={pick.position} />
         <div className="min-w-0">
@@ -144,7 +145,7 @@ function PickLine({ pick, scale }: { pick: DraftPickGrade; scale: number }) {
           </p>
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <PositionBadge position={pick.position} />
-            <span className="break-words text-[0.625rem] leading-tight tabular-nums sm:truncate sm:text-xs">{pick.team ?? "FA"} · slot {plain(pick.slotValue)} → now {plain(pick.value)}</span>
+            <span className="break-words text-xs leading-tight tabular-nums sm:truncate sm:text-xs">{pick.team ?? "FA"} · slot {plain(pick.slotValue)} → now {plain(pick.value)}</span>
           </p>
         </div>
       </div>
@@ -161,8 +162,8 @@ function PickLine({ pick, scale }: { pick: DraftPickGrade; scale: number }) {
 function StatTile({ label, value, tone, detail }: { label: string; value: string; tone?: string; detail?: string }) {
   return (
     <div className="rounded-lg border p-3">
-      <p className="text-[0.65rem] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={cn("mt-1 truncate text-lg font-semibold tabular-nums", tone)}>{value}</p>
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p className={cn("mt-1 truncate text-lg font-medium tabular-nums", tone)}>{value}</p>
       {detail ? <p className="mt-0.5 truncate text-xs text-muted-foreground tabular-nums">{detail}</p> : null}
     </div>
   );
@@ -207,8 +208,8 @@ function ManagerDetail({ manager, data }: { manager: DraftManagerGrade; data: Dr
         <div className="flex items-center justify-between gap-3 border-b pb-1.5">
           <SortHeader active={sort.key === "pick"} align="left" direction={sort.direction} onClick={() => setSort((current) => nextSort(current, "pick"))}>Slot</SortHeader>
           <div className="flex shrink-0 items-center gap-3">
-            <span className="hidden w-16 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground sm:inline">Slot val</span>
-            <span className="hidden w-16 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground sm:inline">Cur val</span>
+            <span className="hidden w-16 text-right text-xs font-medium text-muted-foreground sm:inline">Slot val</span>
+            <span className="hidden w-16 text-right text-xs font-medium text-muted-foreground sm:inline">Cur val</span>
             <div className="w-24">
               <SortHeader active={sort.key === "surplus"} direction={sort.direction} onClick={() => setSort((current) => nextSort(current, "surplus"))}>Surplus</SortHeader>
             </div>
@@ -244,7 +245,7 @@ function PositionBreakdown({ data }: { data: DraftGradeData }) {
         ))}
         {data.byRound.length > 1 ? (
           <div className="mt-1 border-t pt-3">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">By round</p>
+            <p className="mb-2 text-xs font-medium text-muted-foreground">By round</p>
             <div className="flex flex-col gap-2">
               {data.byRound.map((row) => (
                 <div className="grid grid-cols-[3rem_minmax(0,1fr)_5rem] items-center gap-3" key={row.round}>
@@ -340,9 +341,9 @@ function DraftBoard({ data, onSelect }: { data: DraftGradeData; onSelect: (roste
           <TableBody>
             {picks.map((pick) => (
               <TableRow className="cursor-pointer" key={pick.id} onClick={() => onSelect(pick.rosterId)}>
-                <TableCell className="font-mono text-xs text-muted-foreground tabular-nums">{pick.pick}</TableCell>
+                <TableCell className="text-xs text-muted-foreground tabular-nums">{pick.pick}</TableCell>
                 <TableCell>
-                  <div className="flex min-w-0 items-center gap-2.5">
+                  <button type="button" aria-label={`View draft grades for ${pick.player}, picked by ${pick.manager}`} onClick={(event) => { event.stopPropagation(); onSelect(pick.rosterId); }} className="flex w-full min-w-0 items-center gap-2.5 rounded-md text-left focus-visible:outline-2 focus-visible:outline-ring">
                     <PlayerHeadshot className="size-8 shrink-0" playerId={pick.playerId} position={pick.position} />
                     <div className="min-w-0">
                       <p className="truncate font-medium">{pick.player}</p>
@@ -351,7 +352,7 @@ function DraftBoard({ data, onSelect }: { data: DraftGradeData; onSelect: (roste
                         <span className="truncate">{pick.team ?? "FA"}</span>
                       </p>
                     </div>
-                  </div>
+                  </button>
                 </TableCell>
                 <TableCell className="hidden max-w-40 md:table-cell">
                   <span className="flex min-w-0 items-center gap-1 truncate text-sm text-primary">
@@ -480,12 +481,12 @@ export function DraftWorkspace({ data, basePath }: { data: DraftGradeData; baseP
 
       <Tabs value={view} onValueChange={setView} className="gap-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <TabsList aria-label="Draft views">
-            <TabsTrigger value="grades">Leaderboard</TabsTrigger>
-            <TabsTrigger value="board">Draft results</TabsTrigger>
-            <TabsTrigger value="trends">Class trends</TabsTrigger>
-            {data.career.length ? <TabsTrigger value="career">Career</TabsTrigger> : null}
-          </TabsList>
+          <ResponsiveTabs label="Draft views" value={view} onValueChange={setView} items={[
+            { value: "grades", label: "Leaderboard" },
+            { value: "board", label: "Draft results" },
+            { value: "trends", label: "Class trends" },
+            ...(data.career.length ? [{ value: "career", label: "Career" }] : []),
+          ]} />
           {/* Season is URL state, matching the rankings filters: a graded class stays shareable. */}
           {data.drafts.length > 1 ? (
             <ButtonGroup aria-label="Draft season">

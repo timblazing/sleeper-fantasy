@@ -23,13 +23,13 @@ function PlayerMove({ kind, player }: { kind: "add" | "drop"; player: NflPlayer 
     <div className="flex items-center gap-2.5">
       <Avatar className="size-9 shrink-0">
         <AvatarImage alt="" src={headshotUrl(player)} />
-        <AvatarFallback className="text-[0.6rem]">{player.position ?? "NFL"}</AvatarFallback>
+        <AvatarFallback className="text-xs">{player.position ?? "NFL"}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <p className={cn("flex items-center gap-1 text-[0.65rem] font-medium uppercase tracking-wide", kind === "add" ? "text-positive" : "text-negative")}>
+        <p className={cn("flex items-center gap-1 text-xs font-medium", kind === "add" ? "text-positive" : "text-negative")}>
           <Icon className="size-3" aria-hidden="true" />{kind}
         </p>
-        <p className="truncate text-sm font-semibold">{player.name}</p>
+        <p className="truncate text-sm font-medium">{player.name}</p>
         <p className="text-xs text-muted-foreground">{[player.position, player.team].filter(Boolean).join(" · ") || "NFL player"}</p>
       </div>
     </div>
@@ -46,7 +46,7 @@ function ActivityRow({ item, leagueId, username }: { item: ActivityItem; leagueI
   return (
     <li className="border-b py-3 first:pt-0 last:border-b-0 last:pb-0">
       <div className="flex min-w-0 items-baseline gap-x-2 gap-y-0.5 text-xs">
-        <span className="truncate font-semibold">
+        <span className="truncate font-medium">
           {item.teams.length && leagueId ? item.teams.map((team, index) => (
             <span key={team.rosterId}>
               {index ? <span className="px-1 text-muted-foreground">↔</span> : null}
@@ -54,7 +54,7 @@ function ActivityRow({ item, leagueId, username }: { item: ActivityItem; leagueI
             </span>
           )) : item.team ?? (item.kind === "trade" ? "League trade" : "League")}
         </span>
-        <span className="shrink-0 uppercase tracking-wide text-muted-foreground">{item.type}</span>
+        <span className="shrink-0 text-muted-foreground">{item.type}</span>
         <span className="ml-auto shrink-0 text-muted-foreground">{item.time}</span>
       </div>
       <div className="mt-2 flex items-start gap-2.5">
@@ -70,8 +70,8 @@ function ActivityRow({ item, leagueId, username }: { item: ActivityItem; leagueI
         </div>
         {item.bid !== null ? (
           <div className="shrink-0 text-right">
-            <p className="text-[0.65rem] uppercase tracking-wide text-muted-foreground">Bid</p>
-            <p className="font-mono text-sm font-semibold tabular-nums">${item.bid}</p>
+            <p className="text-xs text-muted-foreground">Bid</p>
+            <p className="tabular-nums text-sm font-medium">${item.bid}</p>
           </div>
         ) : null}
       </div>

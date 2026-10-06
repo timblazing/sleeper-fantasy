@@ -13,15 +13,10 @@ const STATUS_LABEL: Record<ResourceStatus, string> = {
   outdated: "Verify",
 };
 
-// Status is advisory, so these lean on hue rather than the semantic tokens:
-// "paid" is not a destructive action and "integrated" is not a success state.
-const STATUS_CLASS: Record<ResourceStatus, string> = {
-  integrated: "bg-positive/15 text-positive",
-  free: "bg-muted text-muted-foreground",
-  free_tier: "bg-series-1/15 text-series-1",
-  paid: "bg-orange-500/15 text-orange-700 dark:text-orange-300",
-  scrape_required: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300",
-  outdated: "bg-negative/15 text-negative",
+// Advisory states share the same vocabulary as the rest of the interface.
+const STATUS_VARIANT: Record<ResourceStatus, "success" | "secondary" | "info" | "warning"> = {
+  integrated: "success", free: "secondary", free_tier: "info", paid: "secondary",
+  scrape_required: "warning", outdated: "warning",
 };
 
 function hostOf(url: string): string {
@@ -63,7 +58,7 @@ export function ResourceCard({
           <div className="flex items-start justify-between gap-3">
             <a
               className={cn(
-                "min-w-0 flex-1 break-words font-semibold hover:underline",
+                "min-w-0 flex-1 break-words font-medium hover:underline",
                 featured ? "text-base text-primary" : "text-sm text-foreground",
               )}
               href={resource.url}
@@ -78,10 +73,7 @@ export function ResourceCard({
                 {resource.status.map((status) => (
                   <Badge
                     key={status}
-                    className={cn(
-                      "text-[10px] font-semibold tracking-wide uppercase",
-                      STATUS_CLASS[status],
-                    )}
+                    variant={STATUS_VARIANT[status]}
                   >
                     {STATUS_LABEL[status]}
                   </Badge>
@@ -89,7 +81,7 @@ export function ResourceCard({
               </div>
             )}
           </div>
-          <span className="font-mono text-xs text-muted-foreground">{hostOf(resource.url)}</span>
+          <span className="tabular-nums text-xs text-muted-foreground">{hostOf(resource.url)}</span>
           {resource.note && (
             <p className="text-xs leading-relaxed text-muted-foreground">{resource.note}</p>
           )}

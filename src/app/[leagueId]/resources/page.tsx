@@ -55,7 +55,7 @@ export default async function ResourcesPage({
   })).filter((section) => section.items.length > 0);
 
   return (
-    <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-8 p-4 md:p-6 lg:p-8">
+    <div className="mx-auto flex w-full max-w-[1288px] flex-col gap-8 p-4 md:p-6">
       <PageHeader description="Tools, rankings, and analysis worth bookmarking, filtered to your league format." title="Resources" />
 
       <div className="flex flex-wrap items-center gap-2">

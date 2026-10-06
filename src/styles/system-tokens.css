@@ -1,0 +1,32 @@
+/* Shared foundations, sourced from the pinned reference below. */
+
+@import "./reference/variables.css";
+
+@import "./system-theme.css";
+
+:root {
+  --success-foreground: #166534;
+  --info-foreground: #1d4ed8;
+  --destructive-text: #b91c1c;
+  --warning-foreground: #92400e;
+  --spacing: 0.25rem;
+  --tracking-normal: 0em;
+  --letter-spacing: 0em;
+  --duration-hover: 150ms;
+  --duration-state: 200ms;
+  --duration-disclosure: 250ms;
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+
+  --font-display: var(--font-dm-sans), "SF Pro Display", -apple-system, system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root { --success-foreground: var(--success); --warning-foreground: var(--warning); --info-foreground: var(--info); --destructive-text: var(--destructive); }
+}

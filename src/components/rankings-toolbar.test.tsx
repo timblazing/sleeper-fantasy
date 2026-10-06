@@ -38,4 +38,9 @@ describe("RankingsToolbar position filters", () => {
     render(<RankingsToolbar basis="dynasty" leagueId="L1" query={{ ...QUERY, username: "tim" }} />);
     expect(screen.getByText("Rookies").closest("a")).toHaveAttribute("href", "/L1/players?position=rookies&username=tim");
   });
+
+  it("clears position, search and age filters together while preserving identity", () => {
+    render(<RankingsToolbar basis="dynasty" leagueId="L1" query={{ ...QUERY, position: "rookies", search: "robinson", minAge: 20, maxAge: 25, page: 3, username: "tim" }} />);
+    expect(screen.getByRole("button", { name: "Clear filters" })).toHaveAttribute("href", "/L1/players?username=tim");
+  });
 });

@@ -39,7 +39,7 @@ export default async function PlayersPage({ params, searchParams }: { params: Pr
   // The sidebar and chrome come from src/app/[leagueId]/layout.tsx, so this page renders
   // only its own content inside the standard container.
   return (
-    <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6 p-4 md:p-6 lg:p-8">
+    <div className="mx-auto flex w-full max-w-[1288px] flex-col gap-6 p-4 md:p-6">
       <PageHeader description={meta.blurb} title="Players" />
 
       {result.ok ? (

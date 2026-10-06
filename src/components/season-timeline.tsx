@@ -37,10 +37,10 @@ export function SeasonTimelineCard({ timeline }: { timeline: SeasonTimeline }) {
             <div className={cn("rounded-lg p-3 ring-1", marker.state === "now" ? "bg-muted/60 ring-foreground/20" : "bg-muted/30 ring-foreground/5")} key={marker.id}>
               <div className="flex items-start justify-between gap-2">
                 <p className={cn("font-medium", marker.state === "past" && "text-muted-foreground")}>{marker.label}</p>
-                {marker.state === "now" ? <Badge className="text-[0.6rem]" variant="secondary">Now</Badge> : null}
+                {marker.state === "now" ? <Badge className="text-xs" variant="secondary">Now</Badge> : null}
                 {marker.state === "past" ? <CheckIcon className="size-3.5 text-muted-foreground" aria-hidden="true" /> : null}
               </div>
-              <p className="mt-1 font-mono text-xs uppercase tracking-wide text-muted-foreground">{marker.week === 0 ? "Current phase" : `Week ${marker.week}`}</p>
+              <p className="mt-1 tabular-nums text-xs text-muted-foreground">{marker.week === 0 ? "Current phase" : `Week ${marker.week}`}</p>
             </div>
           ))}
         </div>

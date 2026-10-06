@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { Metric } from "@/components/metric";
+import { PlayerIdentity } from "@/components/player-identity";
 import { PositionBadge } from "@/components/position-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -23,16 +24,6 @@ type TeamDetailProps = {
   username?: string;
 };
 
-function Metric({ label, value, detail }: { label: string; value: string; detail: string }) {
-  return (
-    <div className="bg-card px-3 py-3 text-center">
-      <dt className="text-[0.65rem] uppercase tracking-wide text-muted-foreground">{label}</dt>
-      <dd className="mt-1 font-mono text-sm font-semibold tabular-nums sm:text-base">{value}</dd>
-      <p className="mt-0.5 hidden text-[0.65rem] text-muted-foreground sm:block">{detail}</p>
-    </div>
-  );
-}
-
 function TeamHero({ team, leagueName, season, teams, valuesReady }: Pick<TeamDetailProps, "team" | "leagueName" | "season" | "teams" | "valuesReady">) {
   return (
     <Card accent>
@@ -40,18 +31,18 @@ function TeamHero({ team, leagueName, season, teams, valuesReady }: Pick<TeamDet
         <div className="flex min-w-0 items-center gap-4">
           <Avatar className="size-20 shrink-0 sm:size-24">
             {team.avatar ? <AvatarImage alt="" src={avatarUrl(team.avatar)} /> : null}
-            <AvatarFallback className="text-2xl font-bold tracking-tight">{initials(team.name)}</AvatarFallback>
+            <AvatarFallback className="text-2xl font-medium tracking-tight">{initials(team.name)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <h1 className="break-words text-2xl font-bold tracking-tight sm:text-3xl">{team.name}</h1>
+            <h1 className="type-heading break-words">{team.name}</h1>
             <p className="mt-1 truncate text-sm text-muted-foreground">@{team.manager}</p>
             <p className="mt-1 text-sm text-muted-foreground">{leagueName} · {season}</p>
           </div>
         </div>
         <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-lg bg-border ring-1 ring-border md:min-w-96">
-          <Metric detail={`${team.pointsFor.toFixed(1)} points for`} label="Record" value={`${team.wins}-${team.losses}${team.ties ? `-${team.ties}` : ""}`} />
-          <Metric detail={valuesReady ? formatValue(team.value) : "Values unavailable"} label="Roster value" value={valuesReady ? `#${team.valueRank} / ${teams}` : "—"} />
-          <Metric detail={`${team.pointsFor.toFixed(1)} points for`} label="Scoring" value={`#${team.powerRank} / ${teams}`} />
+          <Metric className="bg-card px-3 py-3 text-center" valueClassName="text-base" detail={`${team.pointsFor.toFixed(1)} points for`} label="Record" value={`${team.wins}-${team.losses}${team.ties ? `-${team.ties}` : ""}`} />
+          <Metric className="bg-card px-3 py-3 text-center" valueClassName="text-base" detail={valuesReady ? formatValue(team.value) : "Values unavailable"} label="Roster value" value={valuesReady ? `#${team.valueRank} / ${teams}` : "—"} />
+          <Metric className="bg-card px-3 py-3 text-center" valueClassName="text-base" detail={`${team.pointsFor.toFixed(1)} points for`} label="Scoring" value={`#${team.powerRank} / ${teams}`} />
         </dl>
       </CardContent>
     </Card>
@@ -72,9 +63,9 @@ function PositionRooms({ team, teams, valuesReady }: Pick<TeamDetailProps, "team
             <div className="rounded-lg border p-4" key={room.position}>
               <div className="flex items-center justify-between gap-3">
                 <PositionBadge position={room.position} />
-                <span className="font-mono text-sm font-semibold">#{room.rank} / {teams}</span>
+                <span className="tabular-nums text-sm font-medium">#{room.rank} / {teams}</span>
               </div>
-              <p className="mt-4 font-mono text-xl font-semibold tabular-nums">{valuesReady ? formatValue(room.value) : "—"}</p>
+              <p className="mt-4 tabular-nums text-xl font-medium">{valuesReady ? formatValue(room.value) : "—"}</p>
               <Progress className="mt-2" value={Math.max(4, strength)} />
               <p className="mt-2 text-xs text-muted-foreground">{room.players} {room.players === 1 ? "player" : "players"} · {room.avgAge === null ? "Age unavailable" : `${room.avgAge.toFixed(1)} avg age`}</p>
             </div>
@@ -107,19 +98,10 @@ function RosterTable({ entries, leagueId, username, valuesReady }: { entries: Va
         {entries.map((entry) => (
           <TableRow key={entry.player.id}>
             <TableCell>
-              <div className="flex min-w-0 items-center gap-3">
-                <Avatar className="bg-muted">
-                  <AvatarImage alt="" src={headshotUrl(entry.player)} />
-                  <AvatarFallback className="text-[0.65rem]">{entry.player.position ?? "—"}</AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  <Link className="block truncate font-medium hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" href={withUsername(`/${leagueId}/players/${entry.player.id}`, username)}>{entry.player.name}</Link>
-                  <p className="truncate text-xs text-muted-foreground">{entry.player.team ?? "FA"}{entry.rankPosition ? ` · ${entry.player.position}${entry.rankPosition}` : ""}</p>
-                </div>
-              </div>
+              <PlayerIdentity name={entry.player.name} photoUrl={headshotUrl(entry.player)} href={withUsername(`/${leagueId}/players/${entry.player.id}`, username)} metadata={<>{entry.player.team ?? "FA"}{entry.rankPosition ? ` · ${entry.player.position}${entry.rankPosition}` : ""}</>} />
             </TableCell>
             <TableCell className="hidden sm:table-cell"><PositionBadge position={entry.player.position} /></TableCell>
-            <TableCell className={cn("pr-4 text-right font-mono font-medium tabular-nums", !valuesReady && "text-muted-foreground")}>{valuesReady ? formatValue(entry.value) : "—"}</TableCell>
+            <TableCell className={cn("pr-4 text-right tabular-nums font-medium", !valuesReady && "text-muted-foreground")}>{valuesReady ? formatValue(entry.value) : "—"}</TableCell>
           </TableRow>
         ))}
       </TableBody>

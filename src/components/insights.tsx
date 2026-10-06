@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 const TONE_CHIP: Record<Tone, string> = {
   positive: "bg-positive/10 text-positive",
-  warning: "bg-warning/10 text-warning",
+  warning: "bg-warning/10 text-warning-foreground",
   critical: "bg-destructive/10 text-destructive",
   neutral: "bg-muted text-muted-foreground",
 };
@@ -58,21 +58,21 @@ function ScarcityColumn({ leagueId, scarcity, username }: { leagueId: string; sc
   return (
     <section className="min-w-0">
       <div className="mb-3 flex items-baseline gap-2">
-        <h3 className={cn("font-semibold", style.text)}>{scarcity.position}</h3>
+        <h3 className={cn("font-medium", style.text)}>{scarcity.position}</h3>
         <p className="text-xs text-muted-foreground">Top 3 control {scarcity.topThreeShare}%</p>
       </div>
       <div className="flex flex-col gap-2.5">
         {scarcity.rows.map((row, index) => (
           <div className="grid grid-cols-[0.75rem_minmax(0,1fr)_minmax(1.5rem,3.5rem)_2.25rem] items-center gap-1.5 text-xs sm:grid-cols-[1rem_minmax(0,1fr)_minmax(2rem,4rem)_2.5rem]" key={row.rosterId}>
-            <span className="text-center font-mono text-[0.65rem] text-muted-foreground">{index + 1}</span>
+            <span className="text-center tabular-nums text-xs text-muted-foreground">{index + 1}</span>
             <div className="min-w-0">
-              <TeamLink className={cn("block truncate", row.isUser ? "font-semibold text-primary" : "text-muted-foreground")} leagueId={leagueId} rosterId={row.rosterId} username={username}>{row.name}</TeamLink>
-              <span className="block truncate text-[0.6rem] text-muted-foreground">{row.manager}</span>
+              <TeamLink className={cn("block truncate", row.isUser ? "font-medium text-primary" : "text-muted-foreground")} leagueId={leagueId} rosterId={row.rosterId} username={username}>{row.name}</TeamLink>
+              <span className="block truncate text-xs text-muted-foreground">{row.manager}</span>
             </div>
             <span className="h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden="true">
               <span className={cn("block h-full rounded-full", row.isUser ? style.highlight : style.bar)} style={{ width: `${Math.max(3, (row.value / max) * 100)}%` }} />
             </span>
-            <span className={cn("text-right font-mono text-[0.65rem] tabular-nums", row.isUser ? "font-semibold text-foreground" : "text-muted-foreground")}>{compactValue(row.value)}</span>
+            <span className={cn("text-right tabular-nums text-xs ", row.isUser ? "font-medium text-foreground" : "text-muted-foreground")}>{compactValue(row.value)}</span>
           </div>
         ))}
       </div>

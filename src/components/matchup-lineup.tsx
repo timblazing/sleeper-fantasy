@@ -34,19 +34,19 @@ function PlayerSide({ entry, reverse, leagueId, username }: { entry: RosterSlot;
     <div className={cn("flex min-w-0 items-center gap-1.5 rounded-lg bg-background/40 px-1.5 py-1.5 sm:gap-2 sm:px-2 sm:py-2", reverse && "flex-row-reverse text-right")}>
       <Avatar className="size-6 shrink-0 bg-muted sm:size-8">
         {player ? <AvatarImage alt="" src={headshotUrl(player)} /> : null}
-        <AvatarFallback className="text-[0.6rem]">{player?.position ?? "—"}</AvatarFallback>
+        <AvatarFallback className="text-xs">{player?.position ?? "—"}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 text-xs font-medium leading-tight sm:text-sm">
           {href ? <Link className="hover:underline" href={href}>{name}</Link> : name}
         </p>
-        <p className="truncate text-[0.65rem] leading-tight text-muted-foreground sm:text-xs">
+        <p className="truncate text-xs leading-tight text-muted-foreground sm:text-xs">
           {opponentLabel(entry)}
         </p>
       </div>
-      <div className="hidden shrink-0 font-mono text-right tabular-nums sm:block">
-        <p className="text-xs font-semibold leading-tight sm:text-sm">{points(entry)}</p>
-        <p aria-label={`Projected ${projection(entry)} points`} className="text-[0.6rem] leading-tight text-muted-foreground">{projection(entry)}</p>
+      <div className="hidden shrink-0 tabular-nums text-right sm:block">
+        <p className="text-xs font-medium leading-tight sm:text-sm">{points(entry)}</p>
+        <p aria-label={`Projected ${projection(entry)} points`} className="text-xs leading-tight text-muted-foreground">{projection(entry)}</p>
       </div>
     </div>
   );

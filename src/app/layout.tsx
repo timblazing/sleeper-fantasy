@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: { default: "Sleeper Fantasy", templat
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={cn("dark", dmSans.variable, "font-sans")} style={{ colorScheme: "dark" }}>
+    <html lang="en" className={cn(dmSans.variable, "font-sans")}>
       <body>
         <TooltipProvider>{children}</TooltipProvider>
       </body>

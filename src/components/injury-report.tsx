@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SearchX } from "lucide-react";
 import { PositionBadge } from "@/components/position-badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PlayerIdentity } from "@/components/player-identity";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { clearedInjuryQuery, injuriesHref, SEVERITY_LABELS, type InjuryQuery, ty
 import { practiceLabel, type InjuryEntry, type InjuryReport } from "@/lib/injury-report";
 import { cn, withUsername } from "@/lib/utils";
 
-const SEVERITY_BADGE: Record<Severity, "red" | "secondary" | "outline"> = { out: "red", risk: "secondary", watch: "outline" };
+const SEVERITY_BADGE: Record<Severity, "destructive" | "warning" | "info"> = { out: "destructive", risk: "warning", watch: "info" };
 
 function InjuryRow({ entry, leagueId, username }: { entry: InjuryEntry; leagueId: string; username?: string }) {
   const practice = practiceLabel(entry.player.practiceParticipation);
@@ -20,29 +20,15 @@ function InjuryRow({ entry, leagueId, username }: { entry: InjuryEntry; leagueId
   // A "Did Not Participate" is the strongest practice signal there is; colouring it keeps the
   // reader from having to read three words to find the one that matters.
   const practiceTone = practice?.toLowerCase().startsWith("did not") ? "text-destructive"
-    : practice?.toLowerCase().startsWith("limited") ? "text-warning"
+    : practice?.toLowerCase().startsWith("limited") ? "text-warning-foreground"
     : undefined;
 
   return (
     <TableRow>
       <TableCell>
-        <div className="flex items-center gap-3">
-          <Avatar className="bg-muted">
-            <AvatarImage alt="" src={headshotUrl(entry.player)} />
-            <AvatarFallback className="text-[0.65rem]">{entry.player.position ?? "—"}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <Link className="block max-w-56 truncate font-medium hover:underline" href={withUsername(`/${leagueId}/players/${entry.player.id}`, username)}>
-              {entry.player.name}
-            </Link>
-            <p className="truncate text-xs text-muted-foreground">
-              {[entry.player.team ?? "FA", game || null].filter(Boolean).join(" · ")}
-            </p>
-            <p className="break-words text-xs leading-tight text-muted-foreground sm:hidden">
-              {[entry.player.injuryBodyPart ?? "Injury not reported", entry.fantasyTeam].join(" · ")}
-            </p>
-          </div>
-        </div>
+        <PlayerIdentity name={entry.player.name} photoUrl={headshotUrl(entry.player)} href={withUsername(`/${leagueId}/players/${entry.player.id}`, username)} metadata={[entry.player.team ?? "FA", game || null].filter(Boolean).join(" · ")}>
+          <p className="break-words text-xs leading-tight text-muted-foreground sm:hidden">{[entry.player.injuryBodyPart ?? "Injury not reported", entry.fantasyTeam].join(" · ")}</p>
+        </PlayerIdentity>
       </TableCell>
       <TableCell className="max-sm:hidden"><PositionBadge position={entry.player.position} /></TableCell>
       <TableCell className="max-sm:pr-4">
@@ -52,8 +38,8 @@ function InjuryRow({ entry, leagueId, username }: { entry: InjuryEntry; leagueId
           {entry.onTaxi ? <Badge variant="outline">Taxi</Badge> : null}
         </div>
       </TableCell>
-      <TableCell className={cn("max-sm:hidden", !entry.player.injuryBodyPart && "text-muted-foreground/60")}>{entry.player.injuryBodyPart ?? "Not reported"}</TableCell>
-      <TableCell className={cn("hidden md:table-cell", practiceTone ?? (!practice && "text-muted-foreground/60"))}>{practice ?? "Not reported"}</TableCell>
+      <TableCell className={cn("max-sm:hidden", !entry.player.injuryBodyPart && "text-muted-foreground")}>{entry.player.injuryBodyPart ?? "Not reported"}</TableCell>
+      <TableCell className={cn("hidden md:table-cell", practiceTone ?? (!practice && "text-muted-foreground"))}>{practice ?? "Not reported"}</TableCell>
       <TableCell className="max-sm:hidden">
         <div className="flex items-center gap-1.5">
           <span className="truncate">{entry.fantasyTeam}</span>

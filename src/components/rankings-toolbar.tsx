@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { RankingsSearch } from "@/components/rankings-search";
+import { FilterToolbar } from "@/components/filter-toolbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import { describeAgeRange, rankingsHref, rankingsPositionsFor, type RankingsQuery } from "@/lib/rankings-query";
 import type { ValueBasis } from "@/lib/value-basis";
 
@@ -19,30 +19,20 @@ export function RankingsToolbar({ basis, leagueId, query }: { basis: ValueBasis;
   const ageLabel = describeAgeRange(query);
   const positions = rankingsPositionsFor(basis);
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-        <ButtonGroup aria-label="Position">
-          {positions.map((position) => (
-            <Button key={position} nativeButton={false} size="sm" variant={query.position === position ? "default" : "outline"} aria-current={query.position === position ? "page" : undefined} render={<Link href={rankingsHref(leagueId, query, { position })} />}>
-              {positionLabel(position)}
-            </Button>
-          ))}
-        </ButtonGroup>
-        <div className="flex w-full items-center gap-2 sm:w-auto sm:flex-1 sm:justify-end">
-          <RankingsSearch leagueId={leagueId} query={query} />
-        </div>
-      </div>
-      {ageLabel ? (
-        <div className="flex flex-wrap items-center gap-2">
+    <FilterToolbar
+      options={positions.map((position) => ({ value: position, label: positionLabel(position), href: rankingsHref(leagueId, query, { position }) }))}
+      value={query.position}
+      search={<RankingsSearch leagueId={leagueId} query={query} />}
+      resetHref={query.position !== "all" || query.search || ageLabel ? rankingsHref(leagueId, query, { position: "all", search: "", minAge: undefined, maxAge: undefined }) : undefined}
+      activeFilters={ageLabel ? (
           <Badge className="gap-1 pr-1 font-normal" variant="secondary">
             Age {ageLabel}
             <Button aria-label="Clear age filter" className="size-4 rounded-sm" nativeButton={false} size="icon-xs" variant="ghost" render={<Link href={rankingsHref(leagueId, query, { minAge: undefined, maxAge: undefined })} />}>
               <X aria-hidden="true" />
             </Button>
           </Badge>
-        </div>
       ) : null}
-    </div>
+    />
   );
 }
 

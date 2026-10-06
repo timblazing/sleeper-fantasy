@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { ResponsiveTabs } from "@/components/responsive-tabs";
 import { PlayerAdvanced, PlayerCareerTable } from "@/components/player/player-advanced";
 import { PlayerHero } from "@/components/player/player-hero";
 import { PlayerTradeMarketCard, PlayerRelatedCards } from "@/components/player/player-market";
@@ -10,7 +12,7 @@ import { PlayerSnapTrend } from "@/components/player/player-usage";
 import { PlayerValueChart } from "@/components/player/player-value-chart";
 import { PlayerWeeklyChart } from "@/components/player/player-weekly-chart";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import type { PlayerLeagueContext } from "@/lib/player-league-context";
 import type { PlayerProfile } from "@/lib/roster-audit";
 
@@ -34,6 +36,7 @@ function TabEmpty({ title, description }: { title: string; description: string }
  * tab, so a deep payload does not become a page nobody scrolls to the bottom of.
  */
 export function PlayerDetail({ profile, context, leagueId, isSuperflex, username }: { profile: PlayerProfile; context: PlayerLeagueContext; leagueId: string; isSuperflex: boolean; username?: string }) {
+  const [tab, setTab] = useState("overview");
   const hasProduction = profile.weekly.length > 1 || profile.career.length > 0 || Object.keys(profile.advanced).length > 0;
   const hasProfileTab = Boolean(profile.injury || profile.contract || profile.combine || profile.cliffRisk);
   const hasMarket = Boolean(profile.tradeMarket?.trades.length || profile.related);
@@ -44,13 +47,11 @@ export function PlayerDetail({ profile, context, leagueId, isSuperflex, username
 
       <PlayerValueChart history={profile.history} isSuperflex={isSuperflex} valueHistory={profile.valueHistory} />
 
-      <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="production">Production</TabsTrigger>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="market">Market</TabsTrigger>
-        </TabsList>
+      <Tabs value={tab} onValueChange={setTab}>
+        <ResponsiveTabs label="Player details" value={tab} onValueChange={setTab} items={[
+          { value: "overview", label: "Overview" }, { value: "production", label: "Production" },
+          { value: "profile", label: "Profile" }, { value: "market", label: "Market" },
+        ]} />
 
         <TabsContent className="flex flex-col gap-4" value="overview">
           <PlayerPercentiles metrics={profile.rankMetrics} position={profile.player.position} season={profile.rankSeason ?? profile.season} />

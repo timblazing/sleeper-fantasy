@@ -46,14 +46,14 @@ export function HistoryChampions({ leagueId, managers, seasons, username }: { le
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {banners.map(({ season, champion, line, runnerUp }) => (
             <div
-              className="relative flex flex-col gap-2.5 overflow-hidden rounded-lg border border-primary/25 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-3.5"
+              className="relative flex flex-col gap-2.5 overflow-hidden rounded-lg border border-primary/25 bg-muted/40 p-3.5"
               key={season.season}
             >
               {/* A soft corner glow so the banner reads as a trophy case, not another stat tile. */}
               <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-8 size-24 rounded-full bg-primary/15 blur-2xl" />
 
               <div className="flex items-center justify-between gap-2">
-                <span className="font-mono text-sm font-semibold tabular-nums text-primary">{season.season}</span>
+                <span className="tabular-nums text-sm font-medium text-primary">{season.season}</span>
                 <Crown className="size-4 text-primary" />
               </div>
 
@@ -63,12 +63,12 @@ export function HistoryChampions({ leagueId, managers, seasons, username }: { le
                   <AvatarFallback className="text-xs">{initials(champion.name)}</AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                  <TeamLink className="block truncate text-sm font-semibold" leagueId={leagueId} rosterId={champion.rosterId} username={username}>{champion.name}</TeamLink>
+                  <TeamLink className="block truncate text-sm font-medium" leagueId={leagueId} rosterId={champion.rosterId} username={username}>{champion.name}</TeamLink>
                   <div className="truncate text-xs text-muted-foreground">{champion.manager}</div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 border-t border-primary/15 pt-2 font-mono text-[0.6875rem] tabular-nums text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 border-t border-primary/15 pt-2 tabular-nums text-xs text-muted-foreground">
                 {line ? <span>{line.wins}-{line.losses}{line.ties ? `-${line.ties}` : ""}</span> : null}
                 {line ? <span className="text-muted-foreground/50">·</span> : null}
                 {line ? <span>{line.pointsFor.toFixed(0)} PF</span> : null}
@@ -90,7 +90,7 @@ export function HistoryChampions({ leagueId, managers, seasons, username }: { le
               <span className={cn("inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary")} key={row.ownerId}>
                 <Crown className="size-3" />
                 <TeamLink leagueId={leagueId} rosterId={row.rosterId} username={username}>{row.name}</TeamLink>
-                <span className="font-mono tabular-nums">×{row.championships}</span>
+                <span className="tabular-nums">×{row.championships}</span>
               </span>
             ))}
           </div>

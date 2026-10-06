@@ -42,7 +42,7 @@ export function ConnectAccountDialog() {
     <Dialog open modal disablePointerDismissal>
       <DialogContent className="sm:max-w-md" overlayClassName="bg-background/20 supports-backdrop-filter:backdrop-blur-sm" showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle className="font-display text-[1.75rem] leading-tight tracking-[-0.05em]">Connect your Sleeper account</DialogTitle>
+          <DialogTitle className="type-title">Connect your Sleeper account</DialogTitle>
           <DialogDescription>Enter your Sleeper username. We&rsquo;ll find your current NFL leagues and open your dashboard.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit}>

@@ -13,12 +13,12 @@ const avatarUrl = (id: string) => `https://sleepercdn.com/avatars/thumbs/${id}`;
 const initials = (name: string) => name.split(/\s|&/).filter(Boolean).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
 const pct = (value: number) => (value >= 99.95 ? ">99.9%" : value < 0.05 && value > 0 ? "<0.1%" : `${value.toFixed(1)}%`);
 
-const OUTLOOK: Record<PlayoffOutlook, { label: string; chip: string; bar: string }> = {
-  locked: { label: "Clinched", chip: "border-transparent bg-positive/12 text-positive", bar: "bg-positive" },
-  likely: { label: "Likely", chip: "border-transparent bg-series-1/12 text-series-1", bar: "bg-series-1" },
-  bubble: { label: "Bubble", chip: "border-transparent bg-warning/12 text-warning", bar: "bg-warning" },
-  longshot: { label: "Long shot", chip: "border-transparent bg-muted text-muted-foreground", bar: "bg-muted-foreground/50" },
-  eliminated: { label: "Eliminated", chip: "border-transparent bg-destructive/10 text-destructive", bar: "bg-destructive/40" },
+const OUTLOOK: Record<PlayoffOutlook, { label: string; variant: "success" | "info" | "warning" | "secondary" | "destructive"; bar: string }> = {
+  locked: { label: "Clinched", variant: "success", bar: "bg-positive" },
+  likely: { label: "Likely", variant: "info", bar: "bg-info" },
+  bubble: { label: "Bubble", variant: "warning", bar: "bg-warning" },
+  longshot: { label: "Long shot", variant: "secondary", bar: "bg-muted-foreground/50" },
+  eliminated: { label: "Eliminated", variant: "destructive", bar: "bg-destructive/40" },
 };
 
 const METRIC = {
@@ -30,7 +30,7 @@ function TeamAvatar({ row, className }: { row: Pick<PlayoffRow, "avatar" | "name
   return (
     <Avatar className={cn("size-6", className)}>
       {row.avatar ? <AvatarImage alt="" src={avatarUrl(row.avatar)} /> : null}
-      <AvatarFallback className="text-[0.5rem]">{initials(row.name)}</AvatarFallback>
+      <AvatarFallback className="text-xs">{initials(row.name)}</AvatarFallback>
     </Avatar>
   );
 }
@@ -50,7 +50,7 @@ export function PlayoffRace({ leagueId, picture, username }: { leagueId: string;
         <CardDescription>{METRIC.description} — {picture.simulations.toLocaleString()} simulations</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-[1.5rem_minmax(7rem,1fr)_minmax(3rem,6rem)_3.5rem] items-center gap-x-3 border-b pb-2 text-[0.625rem] font-medium uppercase tracking-wide text-muted-foreground sm:grid-cols-[1.5rem_minmax(9rem,1.4fr)_minmax(5rem,1fr)_3.5rem_5.5rem_4.5rem_4rem]">
+        <div className="grid grid-cols-[1.5rem_minmax(7rem,1fr)_minmax(3rem,6rem)_3.5rem] items-center gap-x-3 border-b pb-2 text-xs font-medium text-muted-foreground sm:grid-cols-[1.5rem_minmax(9rem,1.4fr)_minmax(5rem,1fr)_3.5rem_5.5rem_4.5rem_4rem]">
           <span className="text-center">#</span>
           <span>Team</span>
           <span>{METRIC.label}</span>
@@ -71,15 +71,15 @@ export function PlayoffRace({ leagueId, picture, username }: { leagueId: string;
                     row.isUser && "-mx-2 rounded-md bg-primary/[0.07] px-2",
                   )}
                 >
-                  <span className="text-center font-mono text-xs tabular-nums text-muted-foreground">{index + 1}</span>
+                  <span className="text-center tabular-nums text-xs text-muted-foreground">{index + 1}</span>
 
                   <div className="flex min-w-0 items-center gap-2">
                     <TeamAvatar row={row} />
                     <div className="min-w-0">
                       <TeamLink className={cn("block break-words text-xs font-medium leading-tight sm:truncate sm:text-[0.8125rem]", row.isUser && "text-primary")} leagueId={leagueId} rosterId={row.rosterId} username={username}>{row.name}</TeamLink>
-                      <p className="break-all text-[0.625rem] leading-tight text-muted-foreground sm:truncate sm:text-[0.6875rem]">
+                      <p className="break-all text-xs leading-tight text-muted-foreground sm:truncate sm:text-xs">
                         {row.manager}
-                        {picture.started ? <span className="ml-1.5 font-mono tabular-nums">{row.wins}–{row.losses}{row.ties ? `–${row.ties}` : ""}</span> : null}
+                        {picture.started ? <span className="ml-1.5 tabular-nums">{row.wins}–{row.losses}{row.ties ? `–${row.ties}` : ""}</span> : null}
                       </p>
                     </div>
                   </div>
@@ -91,21 +91,21 @@ export function PlayoffRace({ leagueId, picture, username }: { leagueId: string;
                     />
                   </span>
 
-                  <span className={cn("text-right font-mono text-xs font-medium tabular-nums", row.playoffOdds === 0 && "text-muted-foreground")}>
+                  <span className={cn("text-right tabular-nums text-xs font-medium", row.playoffOdds === 0 && "text-muted-foreground")}>
                     {pct(row.playoffOdds)}
                   </span>
 
                   <span className="max-sm:hidden">
-                    <Badge className={cn("px-1.5 text-[0.625rem] font-medium", OUTLOOK[row.outlook].chip)} variant="outline">
+                    <Badge variant={OUTLOOK[row.outlook].variant}>
                       {OUTLOOK[row.outlook].label}
                     </Badge>
                   </span>
 
-                  <span className="text-right font-mono text-xs tabular-nums text-muted-foreground max-sm:hidden">
+                  <span className="text-right tabular-nums text-xs text-muted-foreground max-sm:hidden">
                     {row.projectedWins.toFixed(1)}
                   </span>
 
-                  <span className="text-right font-mono text-xs tabular-nums text-muted-foreground max-sm:hidden">
+                  <span className="text-right tabular-nums text-xs text-muted-foreground max-sm:hidden">
                     #{row.averageSeed.toFixed(1)}
                   </span>
                 </div>
@@ -113,7 +113,7 @@ export function PlayoffRace({ leagueId, picture, username }: { leagueId: string;
                 {cutline ? (
                   <div aria-hidden="true" className="relative my-1 flex items-center gap-2">
                     <Separator className="flex-1 border-dashed bg-primary/30" />
-                    <span className="text-[0.625rem] font-medium uppercase tracking-wide text-primary/70">Playoff cutline · top {picture.playoffTeams}</span>
+                    <span className="text-xs font-medium text-primary/70">Playoff cutline · top {picture.playoffTeams}</span>
                     <Separator className="flex-1 bg-primary/30" />
                   </div>
                 ) : null}

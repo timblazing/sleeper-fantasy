@@ -1,0 +1,15 @@
+{
+  "baseUrl": "https://components.blasingame.dev/design/",
+  "reviewedAt": "2026-10-06",
+  "files": {
+    "variables.css": {
+      "url": "https://components.blasingame.dev/design/variables.css",
+      "sha256": "d48e8b21213bb126e88c46949f51ff112ed8574ba1c4b1f6ac62fe3206e26ffa"
+    },
+    "DESIGN.md": {
+      "url": "https://components.blasingame.dev/design/DESIGN.md",
+      "sha256": "4729da0d6491d200598d37bd7d0b621a566216d73286b09d36bbdd43bb1d7272"
+    }
+  },
+  "policy": "Pinned published artifacts; review the diff and both themes before committing a refresh."
+}

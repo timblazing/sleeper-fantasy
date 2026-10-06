@@ -4,11 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { PlayerCliffRisk, PlayerCombine, PlayerContract, PlayerInjuryHistory } from "@/lib/roster-audit";
 import { cn } from "@/lib/utils";
 
-/** Severity → text colour. Amber has no semantic token, so it uses the Tailwind pair directly. */
+/** Severity uses shared semantic tones. */
 const RISK_TONE: Record<string, string> = {
   low: "text-positive",
-  moderate: "text-warning",
-  medium: "text-warning",
+  moderate: "text-warning-foreground",
+  medium: "text-warning-foreground",
   high: "text-negative",
   extreme: "text-negative",
 };
@@ -33,7 +33,7 @@ export function PlayerCliffRiskCard({ cliffRisk }: { cliffRisk: PlayerCliffRisk 
         <CardTitle className="flex items-center gap-2">
           <Icon className={cn("size-4", tone)} />
           Cliff risk
-          <Badge className="ml-1 capitalize" variant="secondary">{cliffRisk.level}</Badge>
+          <Badge className="ml-1 capitalize" variant={level === "low" ? "success" : level === "high" || level === "extreme" ? "destructive" : "warning"}>{cliffRisk.level}</Badge>
         </CardTitle>
         <CardDescription>Risk score {cliffRisk.score} of 100 — the chance production falls off before the value does</CardDescription>
       </CardHeader>
@@ -68,8 +68,8 @@ export function PlayerInjuryCard({ injury }: { injury: PlayerInjuryHistory | nul
         </CardDescription>
         {injury.grade ? (
           <div className="ml-auto flex flex-col items-end">
-            <span className="text-[0.7rem] font-medium tracking-wide text-muted-foreground uppercase">Durability</span>
-            <span className="font-mono text-2xl leading-none font-semibold">{injury.grade}</span>
+            <span className="text-xs font-medium text-muted-foreground">Durability</span>
+            <span className="tabular-nums text-2xl leading-none font-medium">{injury.grade}</span>
           </div>
         ) : null}
       </CardHeader>
@@ -92,7 +92,7 @@ export function PlayerInjuryCard({ injury }: { injury: PlayerInjuryHistory | nul
         ) : null}
         {injury.preNfl.length ? (
           <div className="border-t pt-3">
-            <p className="mb-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">Before the NFL</p>
+            <p className="mb-1.5 text-xs font-medium text-muted-foreground">Before the NFL</p>
             {injury.preNfl.map((event, index) => (
               <p className="text-sm text-muted-foreground" key={index}>{event.year ? `${event.year} — ` : ""}{event.description}</p>
             ))}
@@ -114,7 +114,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: str
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <span className={cn("font-mono text-base font-medium tabular-nums", tone)}>{value}</span>
+      <span className={cn("tabular-nums text-base font-medium", tone)}>{value}</span>
     </div>
   );
 }
@@ -134,7 +134,7 @@ export function PlayerContractCard({ contract }: { contract: PlayerContract | nu
         <CardTitle className="flex items-center gap-2">
           Contract
           {contract.isRookieDeal ? <Badge variant="secondary">Rookie deal</Badge> : null}
-          {contract.isExpiring ? <Badge variant="destructive">Expiring</Badge> : null}
+          {contract.isExpiring ? <Badge variant="warning">Expiring</Badge> : null}
         </CardTitle>
         <CardDescription>
           {contract.team ? `${contract.team} · ` : ""}{contract.years ? `${contract.years} years` : ""}

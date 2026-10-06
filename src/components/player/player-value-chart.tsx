@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { PanelHeader } from "@/components/panel-header";
+import { Card, CardContent } from "@/components/ui/card";
+import { CHART_AXIS, CHART_GRID, SINGLE_SERIES_COLOR, chartValue, formatChartNumber, summarizeChartValues } from "@/lib/chart-style";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, useChartAnimation, type ChartConfig } from "@/components/ui/chart";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { formatValue } from "@/lib/display";
 import type { PlayerHistoryPoint, PlayerValuePoint } from "@/lib/roster-audit";
@@ -11,7 +13,7 @@ import type { PlayerHistoryPoint, PlayerValuePoint } from "@/lib/roster-audit";
 type Range = "recent" | "career";
 
 const config = {
-  value: { label: "Value", color: "var(--series-1)" },
+  value: { label: "Value", color: SINGLE_SERIES_COLOR },
 } satisfies ChartConfig;
 
 const monthDay = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -29,6 +31,7 @@ const monthYear = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateStrin
  * means nothing on its own, "#4 overall" does.
  */
 export function PlayerValueChart({ valueHistory, history, isSuperflex }: { valueHistory: PlayerValuePoint[]; history: PlayerHistoryPoint[]; isSuperflex: boolean }) {
+  const animate = useChartAnimation();
   const [range, setRange] = useState<Range>("recent");
   const [format, setFormat] = useState<"sf" | "one_qb">(isSuperflex ? "sf" : "one_qb");
 
@@ -37,33 +40,29 @@ export function PlayerValueChart({ valueHistory, history, isSuperflex }: { value
 
   const data = useMemo(() => {
     if (active === "career")
-      return history.map((point) => ({ date: point.date, value: point.value, rankOverall: point.rankOverall, rankPosition: point.rankPosition }));
-    return valueHistory.map((point) => ({ date: point.date, value: format === "sf" ? point.valueSf : point.value1qb, rankOverall: null, rankPosition: null }));
+      return history.map((point) => ({ date: point.date, value: chartValue(point.value), rankOverall: point.rankOverall, rankPosition: point.rankPosition }));
+    return valueHistory.map((point) => ({ date: point.date, value: chartValue(format === "sf" ? point.valueSf : point.value1qb), rankOverall: null, rankPosition: null }));
   }, [active, format, history, valueHistory]);
 
   if (data.length < 2) return null;
 
-  const values = data.map((point) => point.value);
-  const first = values[0];
-  const last = values[values.length - 1];
-  const change = last - first;
+  const stats = summarizeChartValues(data.map((point) => point.value));
+  if (!stats || stats.count < 2) return null;
+  const change = stats.last - stats.first;
   // A dynasty value never approaches zero, so a zero-based axis wastes the whole plot area on
   // empty space and flattens the line that is the entire point of the chart.
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  const min = stats.min;
+  const max = stats.max;
   const pad = Math.max(Math.round((max - min) * 0.15), 50);
 
   return (
     <Card accent>
-      <CardHeader>
-        <CardTitle>Value history</CardTitle>
-        <CardDescription>
+      <PanelHeader title="Value history" description={<>
           {active === "career" ? "Every month since the rookie season" : "Weekly marks over the last few months"}
           {" · "}
           <span className={change >= 0 ? "text-positive" : "text-negative"}>{change >= 0 ? "+" : ""}{Math.round(change).toLocaleString("en-US")}</span>
           {" over this window"}
-        </CardDescription>
-        <CardAction className="flex flex-wrap items-center gap-2">
+        </>} actions={<>
           {/* The career series exists only in SF, so the format toggle hides there rather than
               silently showing SF numbers under a "1QB" label. */}
           {active === "recent" ? (
@@ -78,33 +77,26 @@ export function PlayerValueChart({ valueHistory, history, isSuperflex }: { value
               <ToggleGroupItem value="career">Career</ToggleGroupItem>
             </ToggleGroup>
           ) : null}
-        </CardAction>
-      </CardHeader>
+        </>} />
       <CardContent>
         <ChartContainer className="aspect-auto h-64 w-full" config={config}>
           <AreaChart accessibilityLayer data={data} margin={{ left: 4, right: 4, top: 4 }}>
-            <defs>
-              <linearGradient id="player-value-fill" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="var(--color-value)" stopOpacity={0.28} />
-                <stop offset="100%" stopColor="var(--color-value)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid vertical={false} />
-            <XAxis axisLine={false} dataKey="date" minTickGap={32} tickFormatter={active === "career" ? monthYear : monthDay} tickLine={false} tickMargin={8} />
-            <YAxis axisLine={false} domain={[Math.max(0, min - pad), max + pad]} tickFormatter={(entry: number) => formatValue(entry)} tickLine={false} tickMargin={8} width={44} />
+            <CartesianGrid {...CHART_GRID} />
+            <XAxis {...CHART_AXIS} dataKey="date" minTickGap={32} tickFormatter={active === "career" ? monthYear : monthDay} />
+            <YAxis {...CHART_AXIS} domain={[Math.max(0, min - pad), max + pad]} tickFormatter={(entry: number) => formatValue(entry)} width={44} />
             <ChartTooltip
               content={
                 <ChartTooltipContent
                   formatter={(entry, _name, item) => {
                     const row = item?.payload as { rankOverall: number | null; rankPosition: number | null } | undefined;
                     const rank = row?.rankOverall ? ` · #${row.rankOverall} overall` : "";
-                    return <span className="font-mono tabular-nums">{Number(entry).toLocaleString("en-US")}<span className="text-muted-foreground">{rank}</span></span>;
+                    return <span className="tabular-nums">{formatChartNumber(entry)}<span className="text-muted-foreground">{rank}</span></span>;
                   }}
                   labelFormatter={(label) => new Date(`${String(label)}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                 />
               }
             />
-            <Area dataKey="value" fill="url(#player-value-fill)" stroke="var(--color-value)" strokeWidth={2} type="monotone" />
+            <Area connectNulls={false} isAnimationActive={animate} dataKey="value" fill="var(--color-value)" fillOpacity={0.12} stroke="var(--color-value)" strokeWidth={2} type="monotone" />
           </AreaChart>
         </ChartContainer>
       </CardContent>

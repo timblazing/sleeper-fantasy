@@ -25,17 +25,17 @@ const formatMetricValue = (metric: PlayerRankMetric) => {
 };
 
 function MetricRow({ metric }: { metric: PlayerRankMetric }) {
-  const percentile = metric.percentile ?? 0;
+  const percentile = metric.percentile == null ? 0 : Math.min(100, Math.max(0, metric.percentile));
   const peers = [...metric.above.slice(-1), ...metric.below.slice(0, 1)];
 
   const row = (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
         <span className="truncate text-sm font-medium">{metric.label}</span>
-        <span className="shrink-0 font-mono text-sm tabular-nums">{formatMetricValue(metric)}</span>
+        <span className="shrink-0 text-sm tabular-nums">{formatMetricValue(metric)}</span>
       </div>
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        <div className={cn("h-full rounded-full transition-all", toneFor(metric.percentile))} style={{ width: `${Math.max(percentile, 2)}%` }} />
+        <div className={cn("h-full rounded-full transition-[width] motion-reduce:transition-none", toneFor(metric.percentile))} style={{ width: `${percentile}%` }} />
       </div>
       <div className="flex items-baseline justify-between gap-2 text-xs text-muted-foreground">
         <span className="tabular-nums">#{metric.rank} of {metric.of}</span>

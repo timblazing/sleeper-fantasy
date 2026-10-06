@@ -23,18 +23,18 @@ const TONE_CLASS: Record<Tone, string> = {
  */
 function HeroRecord({ icon: Icon, label, value, unit, name, meta, rosterId, tone, leagueId, username }: { icon: LucideIcon; label: string; value: string; unit?: string; name: string; meta: string; rosterId: number | null; tone: Tone; leagueId: string; username?: string }) {
   return (
-    <div className="relative flex flex-col gap-2 overflow-hidden rounded-lg border bg-gradient-to-br from-muted/40 to-transparent p-4">
+    <div className="relative flex flex-col gap-2 overflow-hidden rounded-lg border bg-muted/40 p-4">
       <div className="flex items-center gap-1.5 text-muted-foreground">
         <Icon className="size-3.5" />
-        <span className="text-[0.6875rem] font-medium uppercase tracking-wide">{label}</span>
+        <span className="text-xs font-medium">{label}</span>
       </div>
       <div className="flex items-baseline gap-1">
-        <span className={cn("font-mono text-3xl font-semibold tabular-nums leading-none", TONE_CLASS[tone])}>{value}</span>
+        <span className={cn("tabular-nums text-3xl font-medium  leading-none", TONE_CLASS[tone])}>{value}</span>
         {unit ? <span className="text-xs font-medium text-muted-foreground">{unit}</span> : null}
       </div>
       <div className="mt-auto flex flex-col gap-0.5">
         <TeamLink className="block break-words text-sm font-medium sm:truncate" leagueId={leagueId} rosterId={rosterId} username={username}>{name}</TeamLink>
-        <span className="break-words font-mono text-[0.6875rem] tabular-nums text-muted-foreground sm:truncate">{meta}</span>
+        <span className="break-words tabular-nums text-xs text-muted-foreground sm:truncate">{meta}</span>
       </div>
     </div>
   );
@@ -46,11 +46,11 @@ function CompactRecord({ icon: Icon, label, value, name, meta, rosterId, tone, l
     <div className="flex items-center gap-3 rounded-lg border px-3 py-2.5">
       <Icon className="size-4 shrink-0 text-muted-foreground" />
       <div className="min-w-0 flex-1">
-        <div className="text-[0.6875rem] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
+        <div className="text-xs font-medium text-muted-foreground">{label}</div>
         <TeamLink className="block break-words text-xs font-medium sm:truncate" leagueId={leagueId} rosterId={rosterId} username={username}>{name}</TeamLink>
-        <div className="break-words font-mono text-[0.625rem] tabular-nums text-muted-foreground sm:truncate">{meta}</div>
+        <div className="break-words tabular-nums text-xs text-muted-foreground sm:truncate">{meta}</div>
       </div>
-      <span className={cn("shrink-0 font-mono text-base font-semibold tabular-nums", TONE_CLASS[tone])}>{value}</span>
+      <span className={cn("shrink-0 tabular-nums text-base font-medium", TONE_CLASS[tone])}>{value}</span>
     </div>
   );
 }

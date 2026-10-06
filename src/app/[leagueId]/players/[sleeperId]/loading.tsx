@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  *  reflow when the profile lands. */
 export default function PlayerProfileLoading() {
   return (
-    <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-4 p-4 md:p-6 lg:p-8">
+    <div className="mx-auto flex w-full max-w-[1288px] flex-col gap-4 p-4 md:p-6">
       <Skeleton className="h-8 w-28" />
 
       <Card accent>

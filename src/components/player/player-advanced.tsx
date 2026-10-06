@@ -51,7 +51,7 @@ export function PlayerAdvanced({ advanced }: { advanced: Record<string, number |
         {entries.map(([key, value]) => (
           <div className="flex flex-col gap-0.5" key={key}>
             <span className="truncate text-xs text-muted-foreground">{ADVANCED_LABELS[key].label}</span>
-            <span className="font-mono text-lg font-medium tabular-nums">{formatAdvanced(key, value)}</span>
+            <span className="tabular-nums text-lg font-medium">{formatAdvanced(key, value)}</span>
           </div>
         ))}
       </CardContent>
@@ -110,7 +110,7 @@ export function PlayerCareerTable({ career }: { career: PlayerCareerSeason[] }) 
                 <TableCell className="font-medium">{season.season ?? "—"}</TableCell>
                 {columns.map((column) => {
                   const value = season.stats[column.key];
-                  return <TableCell className="text-right font-mono tabular-nums" key={column.key}>{value == null ? "—" : column.digits ? value.toFixed(column.digits) : value.toLocaleString("en-US")}</TableCell>;
+                  return <TableCell className="text-right tabular-nums" key={column.key}>{value == null ? "—" : column.digits ? value.toFixed(column.digits) : value.toLocaleString("en-US")}</TableCell>;
                 })}
               </TableRow>
             ))}

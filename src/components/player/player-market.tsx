@@ -49,13 +49,13 @@ export function PlayerTradeMarketCard({ market }: { market: PlayerTradeMarket | 
             </div>
             <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
               <div className="min-w-0 flex-1">
-                <p className="text-[0.7rem] font-medium tracking-wide text-muted-foreground uppercase">Cost</p>
+                <p className="text-xs font-medium text-muted-foreground">Cost</p>
                 <p className="text-sm">{assetLine(trade.cost)}</p>
               </div>
               <ArrowRight className="hidden size-4 shrink-0 text-muted-foreground sm:block" />
               {trade.alongside.players.length || trade.alongside.picks.length ? (
                 <div className="min-w-0 flex-1">
-                  <p className="text-[0.7rem] font-medium tracking-wide text-muted-foreground uppercase">Moved alongside</p>
+                  <p className="text-xs font-medium text-muted-foreground">Moved alongside</p>
                   <p className="text-sm">{assetLine(trade.alongside)}</p>
                 </div>
               ) : (
@@ -83,7 +83,7 @@ function RelatedList({ title, description, players, leagueId, username }: { titl
             <PositionBadge position={player.position} />
             <span className="min-w-0 flex-1 truncate text-sm font-medium">{player.name}</span>
             <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{[player.team, player.age ? `${player.age.toFixed(1)}y` : null].filter(Boolean).join(" · ")}</span>
-            <span className="w-14 shrink-0 text-right font-mono text-sm tabular-nums">{player.valueSf == null ? "—" : formatValue(player.valueSf)}</span>
+            <span className="w-14 shrink-0 text-right tabular-nums text-sm">{player.valueSf == null ? "—" : formatValue(player.valueSf)}</span>
           </Link>
         ))}
       </CardContent>

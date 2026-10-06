@@ -26,7 +26,7 @@ const SORTS: { id: SortKey; label: string; description: string }[] = [
 function Signed({ value, digits = 2 }: { value: number; digits?: number }) {
   const rounded = Number(value.toFixed(digits));
   return (
-    <span className={cn("font-mono tabular-nums", rounded > 0 ? "text-[var(--positive)]" : rounded < 0 ? "text-[var(--negative)]" : "text-muted-foreground")}>
+    <span className={cn("tabular-nums ", rounded > 0 ? "text-[var(--positive)]" : rounded < 0 ? "text-[var(--negative)]" : "text-muted-foreground")}>
       {rounded > 0 ? "+" : ""}{rounded.toFixed(digits)}
     </span>
   );
@@ -86,12 +86,12 @@ export function HistoryLeaderboard({ leagueId, rows, seasonCount, username }: { 
           <TableBody>
             {sorted.map((row, index) => (
               <TableRow key={row.ownerId} className={cn(!row.active && "opacity-60")}>
-                <TableCell className="text-center font-mono tabular-nums text-muted-foreground">{index + 1}</TableCell>
+                <TableCell className="text-center tabular-nums text-muted-foreground">{index + 1}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2.5">
                     <Avatar>
                       {row.avatar ? <AvatarImage alt="" src={avatarUrl(row.avatar)} /> : null}
-                      <AvatarFallback className="text-[0.5rem]">{initials(row.name)}</AvatarFallback>
+                      <AvatarFallback className="text-xs">{initials(row.name)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
@@ -104,19 +104,19 @@ export function HistoryLeaderboard({ leagueId, rows, seasonCount, username }: { 
                         ) : null}
                         {!row.active ? <Badge className="shrink-0 max-sm:hidden" variant="outline">Former</Badge> : null}
                       </div>
-                      <span className="block break-all text-[0.625rem] leading-tight text-muted-foreground sm:truncate sm:text-xs">{row.manager}</span>
+                      <span className="block break-all text-xs leading-tight text-muted-foreground sm:truncate sm:text-xs">{row.manager}</span>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  <span className="font-mono tabular-nums">{row.wins}–{row.losses}{row.ties ? `–${row.ties}` : ""}</span>
+                  <span className="tabular-nums">{row.wins}–{row.losses}{row.ties ? `–${row.ties}` : ""}</span>
                   <span className="ml-1.5 text-xs text-muted-foreground max-sm:hidden">{row.games ? `${(row.winPct * 100).toFixed(0)}%` : "—"}</span>
                 </TableCell>
-                <TableCell className="text-right font-mono tabular-nums max-sm:hidden max-md:pr-4">{row.games ? row.pointsPerGame.toFixed(1) : "—"}</TableCell>
+                <TableCell className="text-right tabular-nums max-sm:hidden max-md:pr-4">{row.games ? row.pointsPerGame.toFixed(1) : "—"}</TableCell>
                 <TableCell className="text-right max-md:hidden">{row.games ? <Signed value={row.winsAboveExpected} /> : <span className="text-muted-foreground">—</span>}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums max-md:hidden max-lg:pr-4">{row.games ? `${(row.managerEfficiency * 100).toFixed(0)}%` : "—"}</TableCell>
+                <TableCell className="text-right tabular-nums max-md:hidden max-lg:pr-4">{row.games ? `${(row.managerEfficiency * 100).toFixed(0)}%` : "—"}</TableCell>
                 <TableCell className="text-right max-lg:hidden">
-                  <span className="font-mono text-xs tabular-nums text-muted-foreground">{row.seasons.map((season) => season.season).join(" · ")}</span>
+                  <span className="tabular-nums text-xs text-muted-foreground">{row.seasons.map((season) => season.season).join(" · ")}</span>
                 </TableCell>
               </TableRow>
             ))}

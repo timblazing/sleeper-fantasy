@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { SearchX, TrendingDown, TrendingUp } from "lucide-react";
+import { PlayerIdentity } from "@/components/player-identity";
 import { PositionBadge } from "@/components/position-badge";
 import { RankingsPagination } from "@/components/rankings-toolbar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -14,12 +15,11 @@ import { describeRankingsFilters, rankingsHref, type RankingsQuery } from "@/lib
 import { basisMeta } from "@/lib/value-basis";
 import { withUsername } from "@/lib/utils";
 
-const initials = (name: string) => name.split(/\s|&/).filter(Boolean).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
 
 function Trend({ value }: { value: number }) {
   if (!value) return null; // A zero trend is not a trend — render nothing rather than a 0.
   const Icon = value > 0 ? TrendingUp : TrendingDown;
-  return <span className={`inline-flex items-center gap-1 font-mono text-xs ${value > 0 ? "text-positive" : "text-destructive"}`}><Icon aria-hidden="true" className="size-3" />{value > 0 ? "+" : ""}{value.toLocaleString()}</span>;
+  return <span className={`inline-flex items-center gap-1 tabular-nums text-xs ${value > 0 ? "text-positive" : "text-destructive"}`}><Icon aria-hidden="true" className="size-3" />{value > 0 ? "+" : ""}{value.toLocaleString()}</span>;
 }
 
 function RankingsRowCells({ row, leagueId, username, maxValue, showTrend }: { row: RankingsRow; leagueId: string; username?: string; maxValue: number; showTrend: boolean }) {
@@ -28,26 +28,19 @@ function RankingsRowCells({ row, leagueId, username, maxValue, showTrend }: { ro
 
   return (
     <TableRow className={mine ? "border-l-2 border-l-primary bg-muted/40" : undefined}>
-      <TableCell className="font-mono font-medium text-muted-foreground">{row.rank}</TableCell>
+      <TableCell className="tabular-nums font-medium text-muted-foreground">{row.rank}</TableCell>
       <TableCell>
         {row.kind === "pick" ? (
           <div className="flex items-center gap-3"><Avatar><AvatarFallback>PK</AvatarFallback></Avatar><div className="min-w-0"><p className="truncate font-medium">{row.label}</p><p className="text-xs text-muted-foreground">Draft pick</p></div></div>
         ) : (
-          <div className="flex items-center gap-3">
-            <Avatar>{row.photoUrl ? <AvatarImage alt="" src={row.photoUrl} /> : null}<AvatarFallback>{initials(row.name)}</AvatarFallback></Avatar>
-            <div className="min-w-0">
-              <Link className="max-w-56 truncate font-medium hover:underline" href={withUsername(`/${leagueId}/players/${row.sleeperId}`, username)}>{row.name}</Link>
-              <p className="truncate text-[0.6875rem] text-muted-foreground sm:text-xs">{row.team ?? "FA"}{row.owner ? ` · ${row.owner.teamName}` : ""}</p>
-            </div>
-            {mine ? <Badge className="max-sm:hidden" variant="secondary">MY TEAM</Badge> : null}
-          </div>
+          <PlayerIdentity name={row.name} photoUrl={row.photoUrl} href={withUsername(`/${leagueId}/players/${row.sleeperId}`, username)} metadata={<>{row.team ?? "FA"}{row.owner ? ` · ${row.owner.teamName}` : ""}</>} badges={mine ? <Badge className="max-sm:hidden" variant="secondary">Your team</Badge> : null} />
         )}
       </TableCell>
       <TableCell className="max-sm:hidden">
-        {row.kind === "pick" ? <Badge size="position" variant="outline">PICK</Badge> : <PositionBadge label={row.position} position={row.position} />}
+        {row.kind === "pick" ? <Badge size="position" variant="outline">Pick</Badge> : <PositionBadge label={row.position} position={row.position} />}
       </TableCell>
       <TableCell className="max-md:pr-4">
-        <div className="flex min-w-20 flex-col gap-1 sm:min-w-28"><span className="font-mono font-medium tabular-nums">{row.value.toLocaleString()}</span><Progress className="w-full max-sm:hidden" value={share} /></div>
+        <div className="flex min-w-20 flex-col gap-1 sm:min-w-28"><span className="tabular-nums font-medium">{row.value.toLocaleString()}</span><Progress className="w-full max-sm:hidden" value={share} /></div>
       </TableCell>
       <TableCell className="hidden text-muted-foreground md:table-cell max-lg:pr-4">{row.kind === "pick" ? "—" : row.age !== null ? row.age.toFixed(1) : "—"}</TableCell>
       {showTrend ? <TableCell className="hidden lg:table-cell">{row.kind === "pick" ? <span className="text-muted-foreground">—</span> : <Trend value={row.trend7d} />}</TableCell> : null}

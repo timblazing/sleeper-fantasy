@@ -17,7 +17,7 @@ function MatchupDialog({ matchup, week, leagueId, username }: { matchup: Matchup
       </div>
       <div className="min-h-0 min-w-0 overflow-y-auto px-4 pb-5 sm:px-6">
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-sm font-semibold">Starters</p>
+          <p className="text-sm font-medium">Starters</p>
           <p className="text-xs text-muted-foreground">Live points · projected below</p>
         </div>
         <MatchupLineup leagueId={leagueId} matchup={matchup} username={username} />

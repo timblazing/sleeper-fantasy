@@ -12,7 +12,7 @@ export default async function DraftPage({ params, searchParams }: { params: Prom
   const data = await getDraftGradeData(leagueId, requested);
 
   return (
-    <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6 p-4 md:p-6 lg:p-8">
+    <div className="mx-auto flex w-full max-w-[1288px] flex-col gap-6 p-4 md:p-6">
       <PageHeader
         description={
           data.selectedDraftId

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
+import { formatChartNumber } from "@/lib/chart-style";
 import { cn } from "@/lib/utils";
 
 /**
@@ -92,6 +93,18 @@ function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
   );
 }
 
+// Start without animation during SSR/hydration, then follow the live motion preference.
+const subscribeMotion = (callback: () => void) => {
+  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  media.addEventListener("change", callback);
+  return () => media.removeEventListener("change", callback);
+};
+const motionSnapshot = () => !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const serverMotionSnapshot = () => false;
+function useChartAnimation() {
+  return React.useSyncExternalStore(subscribeMotion, motionSnapshot, serverMotionSnapshot);
+}
+
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
 /**
@@ -112,7 +125,7 @@ type LegendItem = { value?: string; dataKey?: string | number; color?: string };
  * The themed tooltip body.
  *
  * Recharts' default tooltip is a white box with a grey border that ignores dark mode entirely.
- * This one is a popover surface with a color swatch per series and monospaced figures, so numbers
+ * This one is a popover surface with a color swatch per series and tabular figures, so numbers
  * line up column-wise when several series are stacked in one hover.
  */
 function ChartTooltipContent({
@@ -150,9 +163,9 @@ function ChartTooltipContent({
     const [item] = payload;
     const key = `${labelKey || item?.dataKey || item?.name || "value"}`;
     const itemConfig = config[key];
-    const value = !labelKey && typeof label === "string" ? (config[label]?.label ?? label) : itemConfig?.label;
+    const value = !labelKey && (typeof label === "string" || typeof label === "number") ? (config[String(label)]?.label ?? label) : itemConfig?.label;
     if (labelFormatter) return <div className={cn("font-medium", labelClassName)}>{labelFormatter(value, payload)}</div>;
-    if (!value) return null;
+    if (value == null || value === "") return null;
     return <div className={cn("font-medium", labelClassName)}>{value}</div>;
   }, [label, labelFormatter, payload, hideLabel, labelClassName, config, labelKey]);
 
@@ -163,7 +176,7 @@ function ChartTooltipContent({
   return (
     <div
       className={cn(
-        "grid min-w-[9rem] items-start gap-1.5 rounded-lg border bg-popover px-2.5 py-1.5 text-xs text-popover-foreground shadow-lg",
+        "grid min-w-[9rem] items-start gap-1.5 rounded-lg border bg-popover px-2.5 py-1.5 text-xs text-popover-foreground",
         className,
       )}
     >
@@ -205,8 +218,8 @@ function ChartTooltipContent({
                       <span className="text-muted-foreground">{itemConfig?.label || item.name}</span>
                     </div>
                     {item.value !== undefined ? (
-                      <span className="font-mono font-medium tabular-nums text-foreground">
-                        {typeof item.value === "number" ? item.value.toLocaleString() : item.value}
+                      <span className="font-medium tabular-nums text-foreground">
+                        {typeof item.value === "number" ? formatChartNumber(item.value) : item.value}
                       </span>
                     ) : null}
                   </div>
@@ -257,4 +270,4 @@ function ChartLegendContent({
   );
 }
 
-export { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, ChartStyle };
+export { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, ChartStyle, useChartAnimation };

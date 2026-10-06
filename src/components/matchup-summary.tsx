@@ -25,19 +25,19 @@ function CompactTeam({ probability, reverse, side, leagueId, username }: { proba
     <div className={cn("flex min-w-0 flex-1 items-center gap-2 sm:gap-3", reverse && "flex-row-reverse text-right")}>
       <TeamAvatar side={side} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[0.65rem] leading-tight text-muted-foreground sm:text-xs">@{side.team.manager}</p>
+        <p className="truncate text-xs leading-tight text-muted-foreground sm:text-xs">@{side.team.manager}</p>
         {leagueId ? (
-          <Link className="mt-0.5 block line-clamp-2 text-xs font-semibold leading-tight hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-base" href={withUsername(`/${leagueId}/teams/${side.team.rosterId}`, username)}>
+          <Link className="mt-0.5 block line-clamp-2 text-xs font-medium leading-tight hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-base" href={withUsername(`/${leagueId}/teams/${side.team.rosterId}`, username)}>
             {side.team.name}
           </Link>
         ) : (
-          <p className="mt-0.5 line-clamp-2 text-xs font-semibold leading-tight sm:text-base">{side.team.name}</p>
+          <p className="mt-0.5 line-clamp-2 text-xs font-medium leading-tight sm:text-base">{side.team.name}</p>
         )}
         <div className={cn("mt-1.5 flex items-center gap-1.5 sm:mt-2 sm:gap-2", reverse && "flex-row-reverse")}>
           <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
             <div className={cn("h-full rounded-full", probabilityTone(probability))} style={{ width: `${probability ?? 50}%` }} />
           </div>
-          <span className="w-8 shrink-0 font-mono text-[0.65rem] font-semibold tabular-nums">{probability == null ? "—" : `${probability}%`}</span>
+          <span className="w-8 shrink-0 tabular-nums text-xs font-medium">{probability == null ? "—" : `${probability}%`}</span>
         </div>
       </div>
     </div>
@@ -46,9 +46,9 @@ function CompactTeam({ probability, reverse, side, leagueId, username }: { proba
 
 function TeamScore({ side }: { side: MatchupSide }) {
   return (
-    <div className="flex min-w-8 flex-col items-center font-mono tabular-nums sm:min-w-10">
-      <span className="text-sm font-semibold">{liveScore(side)}</span>
-      <span aria-label={`Projected ${score(side.projectedScore)} points`} className="text-[0.65rem] text-muted-foreground">{score(side.projectedScore)}</span>
+    <div className="flex min-w-8 flex-col items-center tabular-nums sm:min-w-10">
+      <span className="text-sm font-medium">{liveScore(side)}</span>
+      <span aria-label={`Projected ${score(side.projectedScore)} points`} className="text-xs text-muted-foreground">{score(side.projectedScore)}</span>
     </div>
   );
 }

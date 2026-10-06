@@ -47,7 +47,7 @@ const pickAsset = (pick: PickOption): StagedAsset => ({
 const gradeTone = (grade: string) => grade.startsWith("A") || grade.startsWith("B")
   ? "border-positive/30 bg-positive/10 text-positive"
   : grade.startsWith("C")
-    ? "border-warning/30 bg-warning/10 text-warning"
+    ? "border-warning/30 bg-warning/10 text-warning-foreground"
     : "border-negative/30 bg-negative/10 text-negative";
 
 function TeamSelect({ label, teams, value, onChange }: { label: string; teams: TradeLabData["teams"]; value: string; onChange: (value: string) => void }) {
@@ -64,7 +64,7 @@ function TeamSelect({ label, teams, value, onChange }: { label: string; teams: T
 function AssetAvatar({ asset }: { asset: Pick<StagedAsset, "imageUrl" | "name" | "position"> }) {
   return <Avatar className="size-9 bg-muted">
     {asset.imageUrl ? <AvatarImage alt="" src={asset.imageUrl} /> : null}
-    <AvatarFallback className="text-[0.65rem] font-medium">{asset.position ?? "PK"}</AvatarFallback>
+    <AvatarFallback className="text-xs font-medium">{asset.position ?? "PK"}</AvatarFallback>
   </Avatar>;
 }
 
@@ -75,7 +75,7 @@ function SuggestionRow({ asset, onAdd }: { asset: StagedAsset; onAdd: () => void
       <span className="flex items-center gap-1.5 font-medium"><span className="truncate">{asset.name}</span>{asset.position ? <PositionBadge position={asset.position} /> : null}</span>
       <span className="block truncate text-xs font-normal text-muted-foreground">{asset.detail}</span>
     </span>
-    <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{asset.value ? formatter.format(asset.value) : "—"}</span>
+    <span className="shrink-0 tabular-nums text-xs text-muted-foreground">{asset.value ? formatter.format(asset.value) : "—"}</span>
   </Button>;
 }
 
@@ -86,7 +86,7 @@ function StagedRow({ asset, onRemove }: { asset: StagedAsset; onRemove: () => vo
       <span className="flex items-center gap-1.5 font-medium"><span className="truncate">{asset.name}</span>{asset.position ? <PositionBadge position={asset.position} /> : null}</span>
       <span className="block truncate text-xs text-muted-foreground">{asset.detail}</span>
     </span>
-    <span className="font-mono text-sm tabular-nums">{asset.value ? formatter.format(asset.value) : "—"}</span>
+    <span className="tabular-nums text-sm">{asset.value ? formatter.format(asset.value) : "—"}</span>
     <Button aria-label={`Remove ${asset.name}`} className="size-7" onClick={onRemove} size="icon" variant="ghost"><XIcon className="size-4" /></Button>
   </div>;
 }
@@ -150,7 +150,7 @@ function Side({ data, title, description, teamId, onTeamChange, assets, onAdd, o
           : <p className="px-4 py-6 text-center text-sm text-muted-foreground">{hasPicks ? "No assets yet. Add players or picks below." : "No players yet. Add one below."}</p>}
         {assets.length ? <div className="flex items-center justify-between border-t bg-muted/30 px-4 py-2 text-sm">
           <span className="text-muted-foreground">{basisMeta(data.league.basis).hasMarket ? "Market value" : "Points above replacement"}</span>
-          <span className="font-mono font-medium tabular-nums">{formatter.format(total)}</span>
+          <span className="tabular-nums font-medium">{formatter.format(total)}</span>
         </div> : null}
       </div>
 
@@ -190,10 +190,10 @@ function Verdict({ basis, trade }: { basis: TradeLabData["league"]["basis"]; tra
       </div>
 
       {trade.cliffWarnings.length ? <div className="flex flex-col gap-3">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Age and decline risk</p>
+        <p className="text-xs font-medium r text-muted-foreground">Age and decline risk</p>
         {trade.cliffWarnings.map((warning) => <div className="rounded-xl border p-4" key={`${warning.sleeperId}-${warning.side}`}>
           <div className="flex flex-wrap items-center gap-2">
-            <TriangleAlertIcon className="size-4 text-warning" />
+            <TriangleAlertIcon className="size-4 text-warning-foreground" />
             <span className="font-medium">{warning.name}</span>
             <PositionBadge position={warning.position} />
             <Badge variant="secondary">{warning.riskLevel} risk</Badge>

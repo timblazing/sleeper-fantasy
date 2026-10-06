@@ -1,14 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { BinocularsIcon, ChevronDownIcon, CircleAlertIcon, CrosshairIcon, GlobeIcon, HandshakeIcon, LightbulbIcon, TrendingUpIcon, TriangleAlertIcon, UserSearchIcon } from "lucide-react";
+import { BinocularsIcon, CircleAlertIcon, CrosshairIcon, GlobeIcon, HandshakeIcon, LightbulbIcon, TrendingUpIcon, TriangleAlertIcon, UserSearchIcon } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ResponsiveTabs } from "@/components/responsive-tabs";
+import { Disclosure } from "@/components/ui/disclosure";
 import type { InsightGroup, ManagerProfile, RoomNeed, ScoutInsight, ScoutingReport, SignalStrength, Window } from "@/lib/scouting-report";
 import { cn } from "@/lib/utils";
 
@@ -27,23 +27,21 @@ const TIERS = [
   { id: "self", heading: "Self scout", hint: "How the league reads you", dot: "bg-muted-foreground" },
 ] as const;
 
-const WINDOW_VARIANT: Record<Window, string> = {
-  Contender: "bg-series-1/10 text-series-1 border-transparent",
-  Rebuilding: "bg-series-5/10 text-series-5 border-transparent",
-  Fringe: "bg-muted text-muted-foreground border-transparent",
+const WINDOW_VARIANT: Record<Window, "success" | "info" | "outline"> = {
+  Contender: "success", Rebuilding: "info", Fringe: "outline",
 };
 
 const TONE_CHIP: Record<ScoutInsight["tone"], string> = {
   positive: "bg-positive/10 text-positive",
-  warning: "bg-series-5/10 text-series-5",
+  warning: "bg-warning/10 text-warning-foreground",
   critical: "bg-destructive/10 text-destructive",
   neutral: "bg-muted text-muted-foreground",
 };
 
-/** The uppercase tag on an insight card takes the tone's colour, matching the tinted glyph. */
+/** The tag on an insight card takes the tone's colour, matching the tinted glyph. */
 const TONE_TEXT: Record<ScoutInsight["tone"], string> = {
   positive: "text-positive",
-  warning: "text-series-5",
+  warning: "text-warning-foreground",
   critical: "text-destructive",
   neutral: "text-muted-foreground",
 };
@@ -57,11 +55,8 @@ const GROUPS: { id: InsightGroup; heading: string; icon: React.ComponentType<{ s
 
 const STRENGTH_LABEL: Record<SignalStrength, string> = { strong: "Strong signal", moderate: "Moderate signal", weak: "Limited data" };
 
-/** Only a strong signal earns colour; the weaker two stay quiet so "strong" reads at a glance. */
-const STRENGTH_STYLE: Record<SignalStrength, string> = {
-  strong: "border-transparent bg-positive/10 text-positive",
-  moderate: "border-transparent bg-series-5/10 text-series-5",
-  weak: "text-muted-foreground",
+const STRENGTH_VARIANT: Record<SignalStrength, "success" | "warning" | "outline"> = {
+  strong: "success", moderate: "warning", weak: "outline",
 };
 
 function ToneIcon({ tone }: { tone: ScoutInsight["tone"] }) {
@@ -76,10 +71,10 @@ function ToneIcon({ tone }: { tone: ScoutInsight["tone"] }) {
  * one"), not a precise quantity, and a bar invites reading 52 as meaningfully more than 49.
  */
 function LeverageMark({ score, muted, size = "sm" }: { score: number; muted: boolean; size?: "sm" | "lg" }) {
-  const tint = muted || score === 0 ? "bg-muted text-muted-foreground" : score >= 50 ? "bg-positive/12 text-positive" : "bg-series-5/12 text-series-5";
+  const tint = muted || score === 0 ? "bg-muted text-muted-foreground" : score >= 50 ? "bg-positive/12 text-positive" : "bg-warning/12 text-warning-foreground";
   return (
     <span
-      className={cn("flex shrink-0 items-center justify-center rounded-lg font-mono font-semibold tabular-nums", size === "lg" ? "size-14 text-2xl" : "size-11 text-lg", tint)}
+      className={cn("flex shrink-0 items-center justify-center rounded-lg font-medium tabular-nums", size === "lg" ? "size-14 text-2xl" : "size-11 text-lg", tint)}
       title={`Leverage ${score} of 100`}
     >
       {score}
@@ -93,9 +88,9 @@ function InsightCard({ insight }: { insight: ScoutInsight }) {
       <span className={cn("mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md", TONE_CHIP[insight.tone])}><ToneIcon tone={insight.tone} /></span>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className={cn("font-mono text-[0.625rem] font-medium tracking-wide uppercase", TONE_TEXT[insight.tone])}>{insight.label}</span>
-          {insight.thisLeague ? null : <Badge className="text-[0.625rem]" variant="outline">Cross-league</Badge>}
-          <Badge className={cn("text-[0.625rem]", STRENGTH_STYLE[insight.strength])} variant="outline">{STRENGTH_LABEL[insight.strength]}</Badge>
+          <span className={cn("text-xs font-medium", TONE_TEXT[insight.tone])}>{insight.label}</span>
+          {insight.thisLeague ? null : <Badge className="text-xs" variant="outline">Cross-league</Badge>}
+          <Badge variant={STRENGTH_VARIANT[insight.strength]}>{STRENGTH_LABEL[insight.strength]}</Badge>
         </div>
         <p className="mt-1 text-sm font-medium">{insight.title}</p>
         <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">{insight.detail}</p>
@@ -109,12 +104,12 @@ function RoomPills({ label, rooms, teams, tone }: { label: string; rooms: RoomNe
   if (!rooms.length) return null;
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="font-mono text-[0.625rem] tracking-wide text-muted-foreground uppercase">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
       {rooms.map((room) => (
         <span
           key={room.position}
           className={cn(
-            "rounded-md px-1.5 py-0.5 font-mono text-[0.6875rem] font-medium",
+            "rounded-md px-1.5 py-0.5 tabular-nums text-xs font-medium",
             tone === "need" ? "bg-destructive/10 text-destructive" : "bg-positive/10 text-positive",
           )}
           title={`${room.position} ranked #${room.rank} of ${teams}`}
@@ -145,27 +140,9 @@ function angleFor(profile: ManagerProfile): string {
   return "No clean fit";
 }
 
-/**
- * A row in the rail.
- *
- * On desktop, selecting it swaps the dossier in the right pane. On mobile there is no second
- * pane, so the same click expands the dossier inline underneath the card — `expanded` drives the
- * chevron and the aria state, `selected` drives the desktop highlight.
- */
-function ManagerCard({ profile, selected, expanded, onSelect }: { profile: ManagerProfile; selected: boolean; expanded: boolean; onSelect: () => void }) {
-  return (
-    <button
-      aria-current={selected ? "true" : undefined}
-      aria-expanded={expanded}
-      className={cn(
-        "flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left transition-colors",
-        "hover:bg-muted/40 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
-        selected && "border-positive/50 bg-positive/5 hover:bg-positive/5",
-        expanded && "rounded-b-none border-b-0 lg:rounded-b-xl lg:border-b",
-      )}
-      onClick={onSelect}
-      type="button"
-    >
+/** Shared noninteractive identity for the desktop selector and native mobile summary. */
+function ManagerIdentity({ profile }: { profile: ManagerProfile }) {
+  return <div className="flex min-w-0 items-center gap-3">
       <LeverageMark muted={profile.isUser} score={profile.leverage} />
       <Avatar className="size-8 max-sm:hidden">
         <AvatarImage src={profile.avatar ? avatarUrl(profile.avatar) : undefined} alt="" />
@@ -174,14 +151,14 @@ function ManagerCard({ profile, selected, expanded, onSelect }: { profile: Manag
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="truncate font-medium">{profile.manager}</span>
-          <Badge className={WINDOW_VARIANT[profile.window]} variant="outline">{profile.window}</Badge>
-          {profile.isUser ? <Badge className="text-[0.625rem]" variant="secondary">You</Badge> : null}
+          <Badge variant={WINDOW_VARIANT[profile.window]}>{profile.window}</Badge>
+          {profile.isUser ? <Badge className="text-xs" variant="secondary">You</Badge> : null}
         </div>
         <p className="mt-0.5 truncate text-sm text-muted-foreground">{angleFor(profile)}</p>
         <div className="mt-1 flex flex-wrap items-center gap-1">
           {profile.needs.slice(0, 3).map((room) => (
             <span
-              className="rounded-md bg-destructive/10 px-1.5 py-0.5 font-mono text-[0.625rem] font-medium text-destructive"
+              className="rounded-md bg-destructive/10 px-1.5 py-0.5 tabular-nums text-xs font-medium text-destructive"
               key={room.position}
               title={`${room.position} ranked #${room.rank} of ${profile.teams}`}
             >
@@ -190,10 +167,14 @@ function ManagerCard({ profile, selected, expanded, onSelect }: { profile: Manag
           ))}
         </div>
       </div>
-      <ChevronDownIcon
-        aria-hidden="true"
-        className={cn("size-4 shrink-0 text-muted-foreground transition-transform lg:hidden", expanded && "rotate-180")}
-      />
+  </div>;
+}
+
+function ManagerCard({ profile, selected, onSelect }: { profile: ManagerProfile; selected: boolean; onSelect: () => void }) {
+  return (
+    <button type="button" aria-current={selected ? "true" : undefined} onClick={onSelect}
+      className={cn("hidden w-full rounded-xl border bg-card p-3 text-left transition-colors hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-ring lg:block", selected && "border-positive/50 bg-positive/5")}>
+      <ManagerIdentity profile={profile} />
     </button>
   );
 }
@@ -215,12 +196,12 @@ function Dossier({ profile, showHeader = true }: { profile: ManagerProfile; show
           </Avatar>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-semibold tracking-tight">{profile.manager}</h2>
-              <Badge className={WINDOW_VARIANT[profile.window]} variant="outline">{profile.window}</Badge>
+              <h2 className="text-lg font-medium tracking-tight">{profile.manager}</h2>
+              <Badge variant={WINDOW_VARIANT[profile.window]}>{profile.window}</Badge>
               {tend.netPickFlow > 0 ? <Badge variant="outline">+{tend.netPickFlow} picks</Badge> : null}
               {profile.isUser ? <Badge variant="secondary">You</Badge> : null}
             </div>
-            <p className="mt-0.5 font-mono text-xs text-muted-foreground">
+            <p className="mt-0.5 tabular-nums text-xs text-muted-foreground">
               {record.wins}-{record.losses}{record.ties ? `-${record.ties}` : ""} · #{profile.valueRank} of {profile.teams} in value
               {profile.career ? ` · ${profile.career.championships} title${profile.career.championships === 1 ? "" : "s"} in ${profile.career.seasons} seasons` : ""}
             </p>
@@ -232,7 +213,7 @@ function Dossier({ profile, showHeader = true }: { profile: ManagerProfile; show
         <div className="flex items-start gap-3 rounded-lg border border-positive/30 bg-positive/5 p-3">
           <span className="mt-1.5 size-2 shrink-0 rounded-full bg-positive" aria-hidden="true" />
           <div>
-            <p className="font-mono text-[0.625rem] font-medium tracking-wide text-positive uppercase">Your play</p>
+            <p className="text-xs font-medium text-positive">Your play</p>
             <p className="mt-0.5 font-medium">{profile.play}</p>
           </div>
         </div>
@@ -247,7 +228,7 @@ function Dossier({ profile, showHeader = true }: { profile: ManagerProfile; show
 
       {grouped.map((group) => (
         <section key={group.id}>
-          <h3 className="mb-2 flex items-center gap-1.5 font-mono text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase">
+          <h3 className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <group.icon size="12" aria-hidden="true" />
             {group.heading}
           </h3>
@@ -277,9 +258,6 @@ const FILTERS = [
 export function ScoutingReportView({ report }: { report: ScoutingReport }) {
   const [filter, setFilter] = React.useState<string>("all");
   const [selectedId, setSelectedId] = React.useState<number | null>(null);
-  // Mobile only: which card has its dossier open beneath it. Kept separate from `selectedId` so
-  // collapsing a card on mobile does not blank the desktop dossier pane at the same breakpoint.
-  const [expandedId, setExpandedId] = React.useState<number | null>(null);
   const active = FILTERS.find((entry) => entry.id === filter) ?? FILTERS[0];
 
   // The self scout always shows: it is the mirror the rest of the page is read against, and
@@ -300,7 +278,7 @@ export function ScoutingReportView({ report }: { report: ScoutingReport }) {
     <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6 p-4 md:p-6 lg:p-8">
       <PageHeader
         description="Every manager profiled from how they have actually behaved — trade cadence, roster holes, waiver habits, and cross-league tells."
-        title="Scouting Report"
+        title="Scouting report"
       />
 
       {!report.userRosterId ? (
@@ -315,24 +293,8 @@ export function ScoutingReportView({ report }: { report: ScoutingReport }) {
         </Card>
       ) : null}
 
-      <Select onValueChange={(value) => { if (value) setFilter(value); }} value={filter}>
-        <SelectTrigger aria-label="Filter managers" className="w-full md:hidden">
-          <SelectValue>{(value) => FILTERS.find((entry) => entry.id === value)?.label ?? "Filter managers"}</SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {FILTERS.map((entry) => (
-            <SelectItem key={entry.id} value={entry.id}>{entry.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Tabs className="hidden md:flex" onValueChange={(value) => setFilter(value as string)} value={filter}>
-        <TabsList className="h-auto w-full flex-wrap justify-start">
-          {FILTERS.map((entry) => (
-            <TabsTrigger key={entry.id} value={entry.id}>{entry.label}</TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      <ResponsiveTabs label="Filter managers" mode="filter" value={filter} onValueChange={setFilter}
+        items={FILTERS.map((entry) => ({ value: entry.id, label: entry.label }))} />
 
       {visible.length === 0 ? (
         <Empty className="min-h-48 border">
@@ -346,7 +308,7 @@ export function ScoutingReportView({ report }: { report: ScoutingReport }) {
         /* Master–detail: the rail ranks who to work, the dossier explains why. Both columns
            lay out at their natural height so the page itself is the only scroller — a pane that
            scrolls inside itself hides how much dossier is left to read. On narrow screens there
-           is no second pane, so each card expands its own dossier inline instead. */
+           is no second pane, so native disclosures expand each dossier inline instead. */
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
           <div className="flex flex-col gap-4">
             {TIERS.map((tier) => {
@@ -354,29 +316,19 @@ export function ScoutingReportView({ report }: { report: ScoutingReport }) {
               if (!rows.length) return null;
               return (
                 <section className="flex flex-col gap-2" key={tier.id}>
-                  <h2 className="flex items-center gap-2 font-mono text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
+                  <h2 className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                     <span className={cn("size-1.5 rounded-full", tier.dot)} aria-hidden="true" />
                     {tier.heading}
-                    <span className="font-sans text-xs normal-case tracking-normal text-muted-foreground/70">— {tier.hint}</span>
+                    <span className="font-sans text-xs normal-case tracking-normal text-muted-foreground">— {tier.hint}</span>
                   </h2>
                   {rows.map((profile) => {
-                    const isExpanded = expandedId === profile.rosterId;
                     return (
                       <div className="flex flex-col" key={profile.rosterId}>
-                        <ManagerCard
-                          expanded={isExpanded}
-                          onSelect={() => {
-                            setSelectedId(profile.rosterId);
-                            setExpandedId((current) => (current === profile.rosterId ? null : profile.rosterId));
-                          }}
-                          profile={profile}
-                          selected={selected?.rosterId === profile.rosterId}
-                        />
-                        {isExpanded ? (
-                          <div className="rounded-b-xl border border-t-0 border-positive/50 bg-positive/5 p-3 lg:hidden">
-                            <Dossier profile={profile} showHeader={false} />
-                          </div>
-                        ) : null}
+                        <ManagerCard onSelect={() => setSelectedId(profile.rosterId)} profile={profile} selected={selected?.rosterId === profile.rosterId} />
+                        <Disclosure className="lg:hidden" summary={<ManagerIdentity profile={profile} />}
+                          onToggle={(event) => { if (event.currentTarget.open) setSelectedId(profile.rosterId); }}>
+                          <Dossier profile={profile} showHeader={false} />
+                        </Disclosure>
                       </div>
                     );
                   })}
