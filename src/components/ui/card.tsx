@@ -2,13 +2,7 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-/**
- * `accent` is the champion-banner treatment from the League page: a primary-tinted gradient, a
- * primary ring in place of the neutral one, and a soft corner glow. It is opt-in and belongs on
- * page-level surfaces — the cards a page is *made of*. Nested cards (a card inside a card's grid,
- * a roster group, a table shell) stay flat so the hierarchy still reads, and so do cards that
- * carry their own tone: `featured` resources, warning/empty states, dashed placeholders.
- */
+// Accent surfaces use a stronger border, keeping elevation quiet.
 function Card({
   className,
   size = "default",
@@ -22,13 +16,12 @@ function Card({
       data-size={size}
       data-accent={accent ? "" : undefined}
       className={cn(
-        "group/card relative flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(3)] sm:[--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
-        accent && "bg-gradient-to-br from-primary/8 via-primary/4 to-transparent ring-primary/20",
+        "group/card relative flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-border [--card-spacing:--spacing(3)] sm:[--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        accent && "ring-border-strong",
         className
       )}
       {...props}
     >
-      {accent ? <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-primary/8 blur-3xl" /> : null}
       {children}
     </div>
   )

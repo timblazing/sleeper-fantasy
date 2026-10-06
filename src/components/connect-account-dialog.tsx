@@ -42,7 +42,7 @@ export function ConnectAccountDialog() {
     <Dialog open modal disablePointerDismissal>
       <DialogContent className="sm:max-w-md" overlayClassName="bg-background/20 supports-backdrop-filter:backdrop-blur-sm" showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>Connect your Sleeper account</DialogTitle>
+          <DialogTitle className="font-display text-[1.75rem] leading-tight tracking-[-0.05em]">Connect your Sleeper account</DialogTitle>
           <DialogDescription>Enter your Sleeper username. We&rsquo;ll find your current NFL leagues and open your dashboard.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit}>
@@ -68,7 +68,7 @@ export function ConnectAccountDialog() {
               />
               {error ? <FieldError id="username-error">{error}</FieldError> : null}
             </Field>
-            <Button disabled={!valid || loading} size="lg" type="submit">
+            <Button disabled={!valid || loading} className="rounded-full" size="lg" type="submit">
               {loading ? <><LoaderCircle data-icon="inline-start" className="animate-spin" aria-hidden="true" />Finding leagues...</> : <>Open dashboard<ArrowRight data-icon="inline-end" aria-hidden="true" /></>}
             </Button>
           </FieldGroup>
