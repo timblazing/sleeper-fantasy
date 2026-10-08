@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/player/player-section";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { PlayerRankMetric } from "@/lib/roster-audit";
 import { cn } from "@/lib/utils";
@@ -67,9 +67,9 @@ export function PlayerPercentiles({ metrics, season, position }: { metrics: Play
     <Card accent>
       <CardHeader>
         <CardTitle>{season ?? "Season"} rankings</CardTitle>
-        <CardDescription>Percentile among {position}s, best first. Hover a metric for what it measures.</CardDescription>
+        <CardDescription>{position} percentiles</CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
+      <CardContent className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
         {ordered.map((metric) => <MetricRow key={metric.key} metric={metric} />)}
       </CardContent>
     </Card>

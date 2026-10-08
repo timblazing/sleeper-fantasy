@@ -8,7 +8,7 @@ import { PanelHeader } from "@/components/panel-header";
 import { PlayerIdentity } from "@/components/player-identity";
 import { PlayerDetail } from "@/components/player/player-detail";
 import { PositionBadge } from "@/components/position-badge";
-import { ResponsiveDialog } from "@/components/responsive-dialog";
+import { PlayerSheet } from "@/components/player/player-sheet";
 import { ResponsiveTabs } from "@/components/responsive-tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { CHART_AXIS, CHART_GRID, SINGLE_SERIES_COLOR } from "@/lib/chart-style";
 import { specimenContext, specimenProfile } from "@/lib/design-specimens";
 
-const views = [{ value: "overview", label: "Overview" }, { value: "production", label: "Production" }, { value: "profile", label: "Profile" }, { value: "market", label: "Market" }];
+const views = [{ value: "overview", label: "Summary" }, { value: "production", label: "Game log" }, { value: "team", label: "Team" }, { value: "history", label: "History" }];
 const chartData = [{ week: "W1", points: 16 }, { week: "W2", points: 0 }, { week: "W3", points: null }, { week: "W4", points: 24 }, { week: "W5", points: 18 }];
 const chartConfig = { points: { label: "Points", color: SINGLE_SERIES_COLOR } };
 
@@ -86,9 +86,9 @@ export function ComponentSpecimens({ position = "all" }: { position?: string }) 
         <p className="text-sm text-muted-foreground">The same player hero, charts, responsive views, and profile panels used by player pages, with explicit example data.</p>
         <PlayerDetail profile={specimenProfile} context={specimenContext} leagueId="demo" isSuperflex />
       </section>
-      <ResponsiveDialog open={open} onOpenChange={setOpen} title="Player details" description="A centered dialog on desktop and a bottom sheet on phones.">
-        <div className="space-y-4"><PlayerIdentity name="Bijan Robinson" position="RB" metadata="ATL · Fourth & Long" /><dl><Metric label="Dynasty value" value="10,000" /></dl><Button variant="outline" onClick={() => setOpen(false)}>Close detail</Button></div>
-      </ResponsiveDialog>
+      <PlayerSheet open={open} onOpenChange={setOpen} title={specimenProfile.player.name}>
+        <PlayerDetail profile={specimenProfile} context={specimenContext} leagueId="demo" isSuperflex />
+      </PlayerSheet>
     </div>
   );
 }

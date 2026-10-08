@@ -2,7 +2,7 @@
 
 import { Area, AreaChart, CartesianGrid, ReferenceLine, XAxis, YAxis } from "recharts";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/player/player-section";
 import { CHART_AXIS, CHART_GRID, SINGLE_SERIES_COLOR, chartValue, formatChartNumber, summarizeChartValues } from "@/lib/chart-style";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, useChartAnimation, type ChartConfig } from "@/components/ui/chart";
 import { formatValue } from "@/lib/display";
@@ -18,7 +18,7 @@ const humanise = (text: string) => text.replace(/_/g, " ").replace(/^\w/, (char)
 
 function OutcomeLeg({ label, finish, value, tone }: { label: string; finish: string | null; value: number | null; tone: string }) {
   return (
-    <div className="flex flex-col gap-0.5 rounded-lg border p-3">
+    <div className="flex flex-col gap-0.5 border-l pl-3 first:border-l-0 first:pl-0">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
       <span className={cn("text-lg font-medium", tone)}>{finish ?? "—"}</span>
       <span className="text-xs text-muted-foreground tabular-nums">{value == null ? "—" : formatValue(value)}</span>
@@ -49,7 +49,7 @@ export function PlayerProjection({ curve, outcome, summary, ppg, ppgPpr }: { cur
       <CardHeader>
         <CardTitle>Dynasty projection</CardTitle>
         <CardDescription>
-          Value by season, with the range of outcomes RosterAudit models
+          Projected value
           {ppgPpr != null ? ` · ${ppgPpr.toFixed(1)} projected PPG (PPR)` : ppg != null ? ` · ${ppg.toFixed(1)} projected PPG` : ""}
         </CardDescription>
       </CardHeader>
@@ -93,7 +93,7 @@ export function PlayerProjection({ curve, outcome, summary, ppg, ppgPpr }: { cur
           </div>
         ) : null}
 
-        {summary ? <p className="border-t pt-4 text-sm leading-relaxed text-muted-foreground">{summary}</p> : null}
+
       </CardContent>
     </Card>
   );

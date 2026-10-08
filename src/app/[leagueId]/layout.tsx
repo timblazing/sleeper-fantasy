@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: LayoutProps<"/[leagueId]">): 
 
 // The shell lives here rather than in each page so navigating between tabs (and the
 // loading.tsx skeleton) only swaps the inset content — the sidebar never unmounts.
-export default async function LeagueLayout({ children, params }: LayoutProps<"/[leagueId]">) {
+export default async function LeagueLayout({ children, modal, params }: LayoutProps<"/[leagueId]">) {
   const [{ leagueId }, cookieStore] = await Promise.all([params, cookies()]);
   if (!isLeagueId(leagueId)) notFound();
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
@@ -29,6 +29,7 @@ export default async function LeagueLayout({ children, params }: LayoutProps<"/[
     <LeagueShell defaultOpen={defaultOpen} league={league}>
       <RememberAccount leagueId={leagueId} />
       {children}
+      {modal}
     </LeagueShell>
   );
 }

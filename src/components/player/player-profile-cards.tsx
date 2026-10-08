@@ -1,6 +1,6 @@
 import { ShieldAlert, ShieldCheck, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/player/player-section";
 import type { PlayerCliffRisk, PlayerCombine, PlayerContract, PlayerInjuryHistory } from "@/lib/roster-audit";
 import { cn } from "@/lib/utils";
 

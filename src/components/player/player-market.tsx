@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { PositionBadge } from "@/components/position-badge";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/player/player-section";
 import { formatValue } from "@/lib/display";
 import type { PlayerRelated, PlayerRelatedPlayer, PlayerTradeAsset, PlayerTradeMarket } from "@/lib/roster-audit";
 import { withUsername } from "@/lib/utils";
@@ -69,13 +69,13 @@ export function PlayerTradeMarketCard({ market }: { market: PlayerTradeMarket | 
   );
 }
 
-function RelatedList({ title, description, players, leagueId, username }: { title: string; description: string; players: PlayerRelatedPlayer[]; leagueId: string; username?: string }) {
+export function RelatedList({ title, description, players, leagueId, username }: { title: string; description: string; players: PlayerRelatedPlayer[]; leagueId: string; username?: string }) {
   if (!players.length) return null;
   return (
     <Card accent>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        {description ? <CardDescription>{description}</CardDescription> : null}
       </CardHeader>
       <CardContent className="flex flex-col divide-y">
         {players.map((player) => (
@@ -95,7 +95,7 @@ function RelatedList({ title, description, players, leagueId, username }: { titl
 export function PlayerRelatedCards({ related, leagueId, username }: { related: PlayerRelated | null; leagueId: string; username?: string }) {
   if (!related) return null;
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="flex flex-col">
       <RelatedList description="Same value, any position — the real trade comps" leagueId={leagueId} players={related.similarValue} title="Similar value" username={username} />
       <RelatedList description="Peers in the same dynasty tier" leagueId={leagueId} players={related.sameTier} title="Same tier" username={username} />
       <RelatedList description="Who else eats on this offense" leagueId={leagueId} players={related.teammates} title="Teammates" username={username} />

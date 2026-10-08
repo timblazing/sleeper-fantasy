@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, ReferenceLine, XAxis, YAxis } from "recharts";
-import { PanelHeader } from "@/components/panel-header";
-import { Card, CardContent } from "@/components/ui/card";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/player/player-section";
 import { CHART_AXIS, CHART_GRID, SINGLE_SERIES_COLOR, chartValue, formatChartNumber, summarizeChartValues } from "@/lib/chart-style";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, useChartAnimation, type ChartConfig } from "@/components/ui/chart";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -32,18 +32,15 @@ export function PlayerWeeklyChart({ weekly, season }: { weekly: PlayerWeeklyLine
   const stats = summarizeChartValues(data.map((row) => row.points));
   if (!stats) return null;
   const average = stats.average;
-  const best = stats.max;
+  void season;
 
   return (
     <Card accent>
-      <PanelHeader title="Weekly scoring" description={<>
-          {season ?? "Season"} · {average.toFixed(1)} average, {best.toFixed(1)} best. Bars above the line beat his own average; gaps mean unavailable scores.
-        </>} actions={<>
-          <ToggleGroup aria-label="Scoring format" onValueChange={(next) => { if (next[0]) setScoring(next[0] as "ppr" | "standard"); }} size="sm" value={[scoring]} variant="outline">
-            <ToggleGroupItem value="ppr">PPR</ToggleGroupItem>
-            <ToggleGroupItem value="standard">Standard</ToggleGroupItem>
-          </ToggleGroup>
-        </>} />
+      <CardHeader><CardTitle>Weekly scoring</CardTitle>
+        <ToggleGroup aria-label="Scoring format" onValueChange={(next) => { if (next[0]) setScoring(next[0] as "ppr" | "standard"); }} size="sm" value={[scoring]} variant="outline">
+          <ToggleGroupItem value="ppr">PPR</ToggleGroupItem><ToggleGroupItem value="standard">Standard</ToggleGroupItem>
+        </ToggleGroup>
+      </CardHeader>
       <CardContent>
         <ChartContainer className="aspect-auto h-56 w-full" config={config}>
           <BarChart accessibilityLayer data={data} margin={{ left: 4, right: 4, top: 4 }}>

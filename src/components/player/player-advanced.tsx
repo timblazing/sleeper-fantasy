@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/player/player-section";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { PlayerCareerSeason } from "@/lib/roster-audit";
 
@@ -45,7 +45,7 @@ export function PlayerAdvanced({ advanced }: { advanced: Record<string, number |
     <Card accent>
       <CardHeader>
         <CardTitle>Advanced usage</CardTitle>
-        <CardDescription>Next Gen Stats and play-by-play context behind the box score</CardDescription>
+
       </CardHeader>
       <CardContent className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-4">
         {entries.map(([key, value]) => (
@@ -92,10 +92,10 @@ export function PlayerCareerTable({ career }: { career: PlayerCareerSeason[] }) 
     <Card accent>
       <CardHeader>
         <CardTitle>Career stats</CardTitle>
-        <CardDescription>Season by season, newest first</CardDescription>
+
       </CardHeader>
       <CardContent className="overflow-x-auto">
-        <Table>
+        <Table tabIndex={0} aria-label="Career player statistics">
           <TableHeader>
             <TableRow>
               <TableHead>Season</TableHead>
