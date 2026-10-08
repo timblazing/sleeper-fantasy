@@ -33,7 +33,7 @@ function RankingsRowCells({ row, leagueId, username, maxValue, showTrend }: { ro
         {row.kind === "pick" ? (
           <div className="flex items-center gap-3"><Avatar><AvatarFallback>PK</AvatarFallback></Avatar><div className="min-w-0"><p className="truncate font-medium">{row.label}</p><p className="text-xs text-muted-foreground">Draft pick</p></div></div>
         ) : (
-          <PlayerIdentity name={row.name} photoUrl={row.photoUrl} href={withUsername(`/${leagueId}/players/${row.sleeperId}`, username)} metadata={<>{row.team ?? "FA"}{row.owner ? ` · ${row.owner.teamName}` : ""}</>} badges={mine ? <Badge className="max-sm:hidden" variant="secondary">Your team</Badge> : null} />
+          <PlayerIdentity name={row.name} photoUrl={row.photoUrl} sleeperId={row.sleeperId} team={row.team} imagePosition={row.position} href={withUsername(`/${leagueId}/players/${row.sleeperId}`, username)} metadata={<>{row.team ?? "FA"}{row.owner ? ` · ${row.owner.teamName}` : ""}</>} badges={mine ? <Badge className="max-sm:hidden" variant="secondary">Your team</Badge> : null} />
         )}
       </TableCell>
       <TableCell className="max-sm:hidden">

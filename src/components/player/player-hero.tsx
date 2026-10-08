@@ -48,7 +48,7 @@ export function PlayerHero({ profile, context, leagueId, isSuperflex, username }
     <Card accent>
       <CardContent className="flex flex-col gap-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <PlayerIdentity name={player.name} photoUrl={player.photoUrl} position={player.position} metadata={meta} size="hero" badges={value.tierLabel ? <Badge variant="secondary">{value.tierLabel}</Badge> : null} />
+          <PlayerIdentity name={player.name} photoUrl={player.photoUrl} sleeperId={player.sleeperId} team={player.team} position={player.position} metadata={meta} size="hero" badges={value.tierLabel ? <Badge variant="secondary">{value.tierLabel}</Badge> : null} />
           <div className="flex shrink-0 items-center gap-2">
             <Link className={cn(buttonVariants({ variant: "outline", size: "sm" }))} href={withUsername(`/${leagueId}/trade`, username)}>
               Trade calculator <ArrowUpRight className="size-3.5" />

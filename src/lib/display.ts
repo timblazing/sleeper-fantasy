@@ -11,11 +11,14 @@ export function avatarUrl(id: string): string {
   return `https://sleepercdn.com/avatars/thumbs/${id}`;
 }
 
-export function headshotUrl(player: Pick<NflPlayer, "id" | "position" | "team">): string {
+export function playerImageUrl(player: Pick<NflPlayer, "id" | "position" | "team">): string {
   return player.position === "DEF" && player.team
     ? `https://sleepercdn.com/images/team_logos/nfl/${player.team.toLowerCase()}.png`
     : `https://sleepercdn.com/content/nfl/players/thumb/${player.id}.jpg`;
 }
+
+/** Backward-compatible name for the shared Sleeper player image URL. */
+export const headshotUrl = playerImageUrl;
 
 export function describeGame(game: PlayerGame | null): string {
   if (!game) return "";

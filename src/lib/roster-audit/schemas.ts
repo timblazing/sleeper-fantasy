@@ -114,7 +114,10 @@ const projectionStatSchema = z.object({ year: num, games: nullableNum, ppg_std: 
 const historyPointSchema = z.object({ d: z.string(), v: num, o: nullableNum, p: nullableNum }).passthrough();
 const historySeriesSchema = z.object({ points: z.array(historyPointSchema).nullish() }).passthrough();
 /** `metrics` is keyed by metric name; every entry is a percentile plus its nearest peers. */
-const rankMetricSchema = z.object({ rank: num, of: num, value: nullableNum, pctile: nullableNum, above: z.array(z.string()).nullish(), below: z.array(z.string()).nullish(), is_elite: z.boolean().nullish(), lower_better: z.boolean().nullish() }).passthrough();
+// RosterAudit now returns neighboring players as { name, sid } objects instead of strings.
+// Normalize both shapes to names because the profile UI only displays the labels.
+const peerNameSchema = z.union([z.string(), z.object({ name: z.string() }).passthrough().transform((peer) => peer.name)]);
+const rankMetricSchema = z.object({ rank: num, of: num, value: nullableNum, pctile: nullableNum, above: z.array(peerNameSchema).nullish(), below: z.array(peerNameSchema).nullish(), is_elite: z.boolean().nullish(), lower_better: z.boolean().nullish() }).passthrough();
 const metricConfigSchema = z.object({ label: z.string(), lower: z.boolean().nullish(), why: z.string().nullish() }).passthrough();
 const rankingsSectionSchema = z.object({ season: nullableNum, games: nullableNum, scoring_type: z.string().nullish(), metrics: z.record(z.string(), rankMetricSchema).nullish(), metric_configs: z.record(z.string(), metricConfigSchema).nullish(), weekly_ranks: z.record(z.string(), z.object({ rank: num, of: num }).passthrough()).nullish() }).passthrough();
 /** Projection curve: `confidence: "actual"` marks the present-day anchor, the rest are forecast. */
@@ -237,4 +240,3 @@ export const h2hResponseSchema = z.object({
   attribution: z.string().optional(),
   attribution_url: z.string().optional(),
 }).passthrough();
-

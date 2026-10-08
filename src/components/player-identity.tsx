@@ -2,18 +2,19 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { PositionBadge } from "@/components/position-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { initials } from "@/lib/display";
+import { initials, playerImageUrl } from "@/lib/display";
 import { cn } from "@/lib/utils";
 
-export function PlayerIdentity({ name, photoUrl, href, position, metadata, badges, children, size = "default", className }: {
-  name: string; photoUrl?: string | null; href?: string; position?: string | null;
+export function PlayerIdentity({ name, photoUrl, sleeperId, team, imagePosition, href, position, metadata, badges, children, size = "default", className }: {
+  name: string; photoUrl?: string | null; sleeperId?: string; team?: string | null; imagePosition?: string | null; href?: string; position?: string | null;
   metadata?: ReactNode; badges?: ReactNode; children?: ReactNode; size?: "default" | "hero"; className?: string;
 }) {
+  const imageUrl = sleeperId ? playerImageUrl({ id: sleeperId, position: imagePosition ?? position ?? null, team: team ?? null }) : photoUrl;
   const nameClass = size === "hero" ? "type-heading break-words" : "block max-w-full truncate text-sm font-medium";
   return (
     <div className={cn("flex min-w-0 items-center gap-3", className)}>
       <Avatar className={cn("shrink-0 bg-muted", size === "hero" && "size-16")}>
-        {photoUrl ? <AvatarImage alt="" src={photoUrl} /> : null}
+        {imageUrl ? <AvatarImage alt="" src={imageUrl} /> : null}
         <AvatarFallback>{initials(name)}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">

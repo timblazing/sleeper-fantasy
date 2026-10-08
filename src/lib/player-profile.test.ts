@@ -248,6 +248,30 @@ describe("getPlayerProfile", () => {
     expect(result.data.rankSeason).toBe(2025);
   });
 
+  it("accepts RosterAudit peer objects in percentile metrics", async () => {
+    const liveShape = {
+      ...body,
+      rankings: {
+        ...body.rankings,
+        metrics: {
+          ...body.rankings.metrics,
+          rushing_yards: {
+            ...body.rankings.metrics.rushing_yards,
+            above: [{ name: "Kenneth Walker", sid: "8151" }],
+            below: [{ name: "Bijan Robinson", sid: "9509" }],
+          },
+        },
+      },
+    };
+    stubFetch(liveShape);
+    const result = await getPlayerProfile("9509");
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.rankMetrics.find((metric) => metric.key === "rushing_yards"))
+      .toMatchObject({ above: ["Kenneth Walker"], below: ["Bijan Robinson"] });
+  });
+
   it("sorts weekly ranks by week, turning the string keys into numbers", async () => {
     stubFetch(body);
     const result = await getPlayerProfile("9509");
