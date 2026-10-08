@@ -15,7 +15,7 @@ export function ResponsiveDetailSheet({ children, title, fallbackHref, intercept
       else router.replace(fallbackHref ?? "/");
     }
   }}>
-    <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "data-[side=bottom]:h-[94dvh] max-h-[94dvh] gap-0 overflow-hidden rounded-t-2xl bg-background" : "data-[side=right]:w-[min(680px,90vw)] data-[side=right]:sm:max-w-none max-w-none gap-0 overflow-hidden bg-background sm:max-w-none"}>
+    <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "data-[side=bottom]:h-[94dvh] max-h-[94dvh] gap-0 overflow-hidden rounded-t-2xl bg-background" : "gap-0 overflow-hidden bg-background"}>
       <SheetTitle className="sr-only">{title}</SheetTitle>
       <div className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-muted-foreground/30 md:hidden" aria-hidden />
       {children}
