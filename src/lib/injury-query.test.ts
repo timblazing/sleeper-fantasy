@@ -42,16 +42,16 @@ describe("serializeInjuryQuery", () => {
 
   it("keeps username through every other change", () => {
     const query = parseInjuryQuery({ username: "clay" });
-    expect(injuriesHref("L1", query, { position: "TE" })).toBe("/L1/injuries?position=TE&username=clay");
+    expect(injuriesHref("L1", query, { position: "TE" })).toBe("/L1/players?position=TE&username=clay&view=injuries");
   });
 });
 
 describe("toggleSeverityHref", () => {
   it("adds a tier that is off and removes one that is on", () => {
     const off = parseInjuryQuery({});
-    expect(toggleSeverityHref("L1", off, "out")).toBe("/L1/injuries?status=out");
+    expect(toggleSeverityHref("L1", off, "out")).toBe("/L1/players?status=out&view=injuries");
     const on = parseInjuryQuery({ status: "out" });
-    expect(toggleSeverityHref("L1", on, "out")).toBe("/L1/injuries");
+    expect(toggleSeverityHref("L1", on, "out")).toBe("/L1/players?view=injuries");
   });
 });
 

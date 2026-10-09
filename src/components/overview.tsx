@@ -3,57 +3,18 @@ import { SparklesIcon } from "lucide-react";
 import { RecommendedActionsCard } from "@/components/insights";
 import { MatchupLineup } from "@/components/matchup-lineup";
 import { MatchupSummary } from "@/components/matchup-summary";
-import { Metric } from "@/components/metric";
 import { PanelHeader } from "@/components/panel-header";
+import { PlayoffRace } from "@/components/playoff-race";
+import { HistoryLeaderboard } from "@/components/history-leaderboard";
+import type { PlayoffPicture } from "@/lib/playoff-odds";
+import type { LeagueHistory } from "@/lib/league-history";
 import { PageHeader } from "@/components/page-header";
 import { PageContainer } from "@/components/page-container";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
-import { avatarUrl, initials } from "@/lib/display";
-import type { OverviewData, Tone } from "@/lib/team-insights";
+import type { OverviewData } from "@/lib/team-insights";
 import type { MatchupDetail } from "@/lib/types";
-
-/**
- * Tone is the only thing on this screen allowed to color a number, and it maps to the
- * semantic result tokens rather than a per-component hex.
- */
-const METRIC_TONE: Record<Tone, "positive" | "warning" | "negative" | "neutral"> = { positive: "positive", warning: "warning", critical: "negative", neutral: "neutral" };
-
-/**
- * The dashboard hero. The champion banners on the League page set the visual language, and the
- * `accent` Card carries it; the identity anchors the left so the four numbers read as one strip
- * on the right rather than four stretched columns with dead air between them.
- */
-function LeagueStatus({ data }: { data: OverviewData }) {
-  const { team } = data;
-  if (!team) return null;
-
-  return (
-    <Card accent>
-      <CardContent className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
-        <div className="flex min-w-0 items-center gap-3.5">
-          <Avatar className="size-12 shrink-0 after:hidden">
-            {team.avatar ? <AvatarImage alt="" src={avatarUrl(team.avatar)} /> : null}
-            <AvatarFallback className="text-sm font-medium">{initials(team.name)}</AvatarFallback>
-          </Avatar>
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <p className="truncate text-lg font-medium leading-tight tracking-tight">{team.name}</p>
-            <p className="truncate tabular-nums text-xs text-muted-foreground">@{team.manager}</p>
-          </div>
-        </div>
-
-        {/* Each metric is its own chip: the tint carries the grouping, so no rules are needed. */}
-        <dl className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:w-auto">
-          {data.metrics.map((metric) => (
-            <Metric key={metric.id} label={metric.label} value={metric.value} detail={metric.detail} tone={METRIC_TONE[metric.tone]} className="rounded-lg bg-muted/40 px-3 py-3 lg:min-w-[7.5rem]" />
-          ))}
-        </dl>
-      </CardContent>
-    </Card>
-  );
-}
 
 function CurrentMatchup({ data }: { data: OverviewData }) {
   const { matchup } = data;
@@ -99,16 +60,20 @@ function ConnectPrompt({ leagueId }: { leagueId: string }) {
   );
 }
 
-export function Overview({ data }: { data: OverviewData }) {
+export function Overview({ data, picture, history }: { data: OverviewData; picture?: PlayoffPicture; history?: LeagueHistory | null }) {
   return (
     <PageContainer className="flex flex-col gap-6">
       <PageHeader description="This week at a glance — your matchup and what needs attention." title="Dashboard" />
-
-      {data.team ? <LeagueStatus data={data} /> : <ConnectPrompt leagueId={data.league.id} />}
-
       <CurrentMatchup data={data} />
+      {!data.team ? <ConnectPrompt leagueId={data.league.id} /> : null}
 
       <RecommendedActionsCard data={data} />
+      {picture ? <PlayoffRace leagueId={data.league.id} picture={picture} username={data.username} /> : null}
+      {history === undefined ? null : history?.managers.some((row) => row.games > 0) ? (
+        <HistoryLeaderboard leagueId={data.league.id} rows={history.managers} seasonCount={history.seasons.length} username={data.username} />
+      ) : (
+        <Card><PanelHeader title="All-time standings" /><CardContent><p className="text-sm text-muted-foreground">Past-season standings will appear once Sleeper returns scored league history.</p></CardContent></Card>
+      )}
     </PageContainer>
   );
 }

@@ -3,6 +3,8 @@ import { CloudOff, Hourglass, TriangleAlert } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { RankingsToolbar } from "@/components/rankings-toolbar";
 import { RankingsTable } from "@/components/rankings-table";
+import { PlayersTabs } from "@/components/players-tabs";
+import { InjuryReportView } from "@/components/injury-report-view";
 import { Card, CardContent } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { getLeagueChrome } from "@/lib/league-chrome";
@@ -28,6 +30,16 @@ const ERROR_STATES: Record<RaError["kind"], { title: string; description: string
 export default async function PlayersPage({ params, searchParams }: { params: Promise<{ leagueId: string }>; searchParams: Promise<RankingsSearchParams> }) {
   const [{ leagueId }, rawQuery] = await Promise.all([params, searchParams]);
   const query = parseRankingsQuery(rawQuery);
+  if (rawQuery.view === "injuries") {
+    return (
+      <div className="mx-auto flex w-full max-w-[1288px] flex-col gap-6 p-4 md:p-6">
+        <PageHeader description="Every injury and practice designation across rostered players, ranked by who it actually costs." title="Players" />
+        <PlayersTabs leagueId={leagueId} username={query.username} value="injuries">
+          <InjuryReportView leagueId={leagueId} rawQuery={rawQuery} />
+        </PlayersTabs>
+      </div>
+    );
+  }
   // getLeagueChrome is the cheap read the layout already performs; it supplies the value basis
   // without the full dashboard fetch a LeagueShell-owning page would need.
   const [league, result] = await Promise.all([getLeagueChrome(leagueId), getRankingsView(leagueId, query)]);
@@ -41,7 +53,7 @@ export default async function PlayersPage({ params, searchParams }: { params: Pr
   return (
     <div className="mx-auto flex w-full max-w-[1288px] flex-col gap-6 p-4 md:p-6">
       <PageHeader description={meta.blurb} title="Players" />
-
+      <PlayersTabs leagueId={leagueId} username={query.username} value="rankings">
       {result.ok ? (
         <>
           <RankingsToolbar basis={result.view.basis} leagueId={leagueId} query={query} />
@@ -50,6 +62,7 @@ export default async function PlayersPage({ params, searchParams }: { params: Pr
       ) : (
         <Card><CardContent><Empty className="min-h-72 border"><EmptyHeader><EmptyMedia variant="icon">{result.error.kind === "rate-limited" ? <Hourglass /> : result.error.kind === "invalid-response" ? <TriangleAlert /> : <CloudOff />}</EmptyMedia><EmptyTitle>{ERROR_STATES[result.error.kind].title}</EmptyTitle><EmptyDescription>{ERROR_STATES[result.error.kind].description}</EmptyDescription></EmptyHeader></Empty></CardContent></Card>
       )}
+      </PlayersTabs>
     </div>
   );
 }

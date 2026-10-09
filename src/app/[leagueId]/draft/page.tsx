@@ -1,28 +1,10 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { DraftWorkspace } from "@/components/draft-workspace";
-import { PageHeader } from "@/components/page-header";
-import { getDraftGradeData } from "@/lib/draft-grades";
-
-export const metadata: Metadata = { title: "Draft" };
-
-export default async function DraftPage({ params, searchParams }: { params: Promise<{ leagueId: string }>; searchParams: Promise<{ draft?: string | string[] }> }) {
+export default async function DraftRedirect({ params, searchParams }: { params: Promise<{ leagueId: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const [{ leagueId }, query] = await Promise.all([params, searchParams]);
-  const requested = typeof query.draft === "string" ? query.draft : undefined;
-  const data = await getDraftGradeData(leagueId, requested);
-
-  return (
-    <div className="mx-auto flex w-full max-w-[1288px] flex-col gap-6 p-4 md:p-6">
-      <PageHeader
-        description={
-          data.selectedDraftId
-            ? `${data.selectedLabel} graded pick by pick`
-            : "Every completed draft in this league, graded pick by pick"
-        }
-        title="Draft"
-      />
-
-      <DraftWorkspace basePath={`/${leagueId}/draft`} data={data} />
-    </div>
-  );
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    for (const item of Array.isArray(value) ? value : value === undefined ? [] : [value]) qs.append(key, item);
+  }
+  redirect(`/${leagueId}/draft-insights${qs.size ? `?${qs}` : ""}`);
 }

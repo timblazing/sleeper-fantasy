@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
-import { NflScoreboardPage } from "@/components/nfl-scoreboard";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Scoreboard" };
-
-export default function ScoreboardPage() {
-  return <NflScoreboardPage />;
+// Keep stale bookmarks useful after scoreboard moves into the shared app chrome.
+export default async function ScoreboardRedirect({ params }: { params: Promise<{ leagueId: string }> }) {
+  const { leagueId } = await params;
+  redirect(`/${leagueId}`);
 }

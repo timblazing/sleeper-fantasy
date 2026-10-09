@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { TeamProfileSheet } from "@/components/team/team-profile-sheet";
-import LeaguePage from "../../league/page";
+import LeaguePage from "../../page";
 
 export const metadata: Metadata = { title: "Team" };
 

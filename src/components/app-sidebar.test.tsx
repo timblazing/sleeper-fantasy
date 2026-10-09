@@ -30,8 +30,8 @@ describe("AppSidebar", () => {
   it("renders every tool link for a dynasty league", () => {
     const { container } = renderSidebar(league(true));
     const rendered = hrefs(container);
-    expect(rendered).toEqual(expect.arrayContaining(["/123/trade", "/123/injuries"]));
-    expect(screen.getByText("Injury Report")).toBeInTheDocument();
+    expect(rendered).toEqual(expect.arrayContaining(["/123/trade", "/123/draft-insights"]));
+    expect(screen.queryByText("Injury Report")).not.toBeInTheDocument();
     expect(screen.queryByText("Dynasty tools unavailable")).not.toBeInTheDocument();
   });
 
@@ -51,11 +51,12 @@ describe("AppSidebar", () => {
     expect(screen.queryByText("Dynasty tools unavailable")).not.toBeInTheDocument();
   });
 
-  it("keeps the injury report in Tools for every league format", () => {
+  it("keeps injuries inside Players instead of the sidebar for every league format", () => {
     for (const isDynasty of [true, false]) {
       const { container, unmount } = renderSidebar(league(isDynasty));
-      expect(hrefs(container)).toContain("/123/injuries");
-      expect(screen.getByText("Injury Report")).toBeInTheDocument();
+      expect(hrefs(container)).not.toContain("/123/injuries");
+      expect(hrefs(container)).toContain("/123/players");
+      expect(screen.queryByText("Injury Report")).not.toBeInTheDocument();
       unmount();
     }
   });
@@ -72,11 +73,11 @@ describe("AppSidebar", () => {
   it("renders the requested primary links in order without a section title", () => {
     const { container } = renderSidebar(league(true));
     const rendered = hrefs(container);
-    const primaryLinks = rendered.filter((href) => href === "/123" || href === "/123/scoreboard" || href === "/123/league" || href === "/123/players" || href === "/123/draft");
-    expect(primaryLinks).toEqual(["/123", "/123/scoreboard", "/123/league", "/123/players", "/123/draft"]);
+    const primaryLinks = rendered.filter((href) => href === "/123" || href === "/123/league" || href === "/123/players" || href === "/123/draft");
+    expect(primaryLinks).toEqual(["/123", "/123/players"]);
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
-    expect(screen.getByText("League")).toBeInTheDocument();
-    expect(screen.getByText("Draft")).toBeInTheDocument();
+    expect(screen.queryByText("League", { exact: true })).not.toBeInTheDocument();
+    expect(screen.getByText("Draft Insights")).toBeInTheDocument();
   });
 
   it("no longer offers the removed Weekly Report link", () => {
@@ -97,14 +98,14 @@ describe("AppSidebar", () => {
     expect(screen.queryByText("Playoffs")).not.toBeInTheDocument();
     expect(screen.queryByText("League History")).not.toBeInTheDocument();
     expect(screen.queryByText("Standings")).not.toBeInTheDocument();
-    expect(rendered.indexOf("/123/draft")).toBeLessThan(rendered.indexOf("/123/trade"));
+    expect(rendered).not.toContain("/123/draft");
     expect(screen.getByText("Tools")).toBeInTheDocument();
   });
 
-  it("labels the draft analytics entry Draft", () => {
+  it("labels the draft analytics entry Draft Insights", () => {
     const { container } = renderSidebar(league(true));
-    expect(hrefs(container)).toContain("/123/draft");
-    expect(screen.getByText("Draft")).toBeInTheDocument();
+    expect(hrefs(container)).toContain("/123/draft-insights");
+    expect(screen.getByText("Draft Insights")).toBeInTheDocument();
   });
 
   it("renders Scouting in Tools for every league format", () => {
@@ -116,12 +117,12 @@ describe("AppSidebar", () => {
     }
   });
 
-  it("places Scouting before Injuries and Resources", () => {
+  it("places Draft Insights directly under Scouting and before Resources", () => {
     const { container } = renderSidebar(league(true));
     const rendered = hrefs(container);
     expect(rendered.indexOf("/123/scouting-report")).toBe(rendered.indexOf("/123/trade") + 1);
-    expect(rendered.indexOf("/123/injuries")).toBe(rendered.indexOf("/123/scouting-report") + 1);
-    expect(rendered.indexOf("/123/resources")).toBe(rendered.indexOf("/123/injuries") + 1);
+    expect(rendered.indexOf("/123/draft-insights")).toBe(rendered.indexOf("/123/scouting-report") + 1);
+    expect(rendered.indexOf("/123/resources")).toBe(rendered.indexOf("/123/draft-insights") + 1);
   });
 
   it("does not render the removed Stats link", () => {
@@ -161,7 +162,7 @@ describe("AppSidebar", () => {
       const rendered = hrefs(container).filter((href): href is string => href !== null && href.startsWith("/123"));
       expect(rendered.length).toBeGreaterThan(0);
       for (const href of rendered) expect(href).toContain("?username=tim%20blazing");
-      expect(rendered).toContain("/123/league?username=tim%20blazing");
+      expect(rendered).toContain("/123/draft-insights?username=tim%20blazing");
     } finally {
       searchParams.delete("username");
     }

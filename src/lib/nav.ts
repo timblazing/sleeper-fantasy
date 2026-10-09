@@ -1,6 +1,5 @@
 import type { ComponentType } from "react";
-import { NflIcon } from "@/components/nfl-icon";
-import { AmbulanceIcon, BinocularsIcon, BookOpenIcon, ClipboardListIcon, LayoutDashboardIcon, ScaleIcon, TrophyIcon, UsersIcon } from "lucide-react";
+import { BinocularsIcon, BookOpenIcon, ClipboardListIcon, LayoutDashboardIcon, ScaleIcon, UsersIcon } from "lucide-react";
 
 // `segment` matches what useSelectedLayoutSegment() reports under the [leagueId] layout;
 // null is the index route (Dashboard).
@@ -10,16 +9,13 @@ export type NavEntry = { title: string; segment: string | null; icon: ComponentT
 
 export const mainNav: NavEntry[] = [
   { title: "Dashboard", segment: null, icon: LayoutDashboardIcon },
-  { title: "Scoreboard", segment: "scoreboard", icon: NflIcon },
-  { title: "League", segment: "league", icon: TrophyIcon },
   { title: "Players", segment: "players", icon: UsersIcon },
-  { title: "Draft", segment: "draft", icon: ClipboardListIcon },
 ];
 
 export const toolsNav: NavEntry[] = [
   { title: "Trade Calculator", segment: "trade", icon: ScaleIcon },
   { title: "Scouting Report", segment: "scouting-report", icon: BinocularsIcon },
-  { title: "Injury Report", segment: "injuries", icon: AmbulanceIcon },
+  { title: "Draft Insights", segment: "draft-insights", icon: ClipboardListIcon },
   { title: "Resources", segment: "resources", icon: BookOpenIcon },
 ];
 

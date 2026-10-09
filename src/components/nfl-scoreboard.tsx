@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
-import { ArrowUpRightIcon } from "lucide-react";
-import { Football, FieldTrack, FieldView } from "@/components/nfl-field";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowUpRightIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { Football, FieldView } from "@/components/nfl-field";
 import { ResponsiveDialog } from "@/components/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { ResponsiveTabs } from "@/components/responsive-tabs";
@@ -31,18 +31,7 @@ function kickoff(date: string) {
 }
 
 function kickoffTime(date: string) {
-  return new Date(date).toLocaleTimeString(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-function kickoffDay(date: string) {
-  return new Date(date).toLocaleDateString(undefined, {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-  });
+  return new Date(date).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
 
 /** ESPN writes "10:24 - 3rd"; a scorebug reads quarter first. */
@@ -85,230 +74,63 @@ function TeamLogo({
   );
 }
 
-function GameCard({
-  game,
-  onOpen,
-}: {
-  game: ScoreboardGame;
-  onOpen: () => void;
-}) {
-  const live = game.state === "live";
-  const final = game.state === "final";
-  const { period, clock } = liveClock(game.detail);
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      aria-label={`View ${game.name} game details`}
-      className="flex min-w-0 flex-col rounded-xl border bg-card text-left transition-colors hover:border-foreground/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <div className="grid w-full grid-cols-[minmax(0,1fr)_7.5rem]">
-        <div className="space-y-2.5 py-3.5 pr-3 pl-4">
-          {game.teams.map((team) => {
-            const lost = final && !team.winner;
-            return (
-              <div key={team.id} className="flex items-center gap-2.5">
-                <TeamLogo team={team} />
-                <span
-                  className={cn(
-                    "truncate text-sm font-medium",
-                    lost && "font-medium text-muted-foreground",
-                  )}
-                >
-                  {team.shortName}
-                </span>
-                {team.possession ? <Football className="shrink-0" /> : null}
-                {team.possession && game.redZone ? (
-                  <span className="shrink-0 rounded-sm bg-negative/15 px-1 text-xs font-medium text-negative">
-                    RZ
-                  </span>
-                ) : null}
-                <span
-                  className={cn(
-                    "ml-auto pl-2  text-xl font-medium tabular-nums",
-                    lost && "text-muted-foreground",
-                    game.scoring?.teamId === team.id &&
-                      "rounded bg-positive/15 px-1.5 text-positive",
-                  )}
-                >
-                  {team.score ?? ""}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-        <div className="flex min-w-0 flex-col justify-center gap-0.5 border-l px-3 text-xs">
-          {live ? (
-            <>
-              <span className="font-medium text-positive">
-                {period} <span className="tabular-nums">{clock}</span>
-              </span>
-              {game.scoring ? (
-                <span className="font-medium text-positive">
-                  {game.scoring.label}
-                </span>
-              ) : game.field?.down ? (
-                <>
-                  <span className="text-foreground">{game.field.down}</span>
-                  <span className="text-muted-foreground">
-                    {game.field.spot}
-                  </span>
-                </>
-              ) : null}
-            </>
-          ) : final ? (
-            <span className="font-medium">{game.detail}</span>
-          ) : (
-            <>
-              <span className="font-medium">{kickoffTime(game.kickoff)}</span>
-              <span className="truncate text-muted-foreground">
-                {game.broadcast}
-              </span>
-            </>
-          )}
-        </div>
-      </div>
-      {live ? (
-        <div className="mt-auto w-full space-y-2.5 border-t px-4 pt-3 pb-3">
-          {game.field ? (
-            <FieldTrack field={game.field} teams={game.teams} />
-          ) : null}
-          <div className="flex items-baseline gap-3 text-xs text-muted-foreground">
-            <span className="min-w-0 flex-1 truncate">
-              {game.lastPlay || game.situation || "Live"}
-            </span>
-            <span className="shrink-0">{game.broadcast}</span>
-          </div>
-        </div>
-      ) : null}
-    </button>
-  );
-}
-
-function LoadingGames() {
-  return (
-    <div
-      role="status"
-      aria-label="Loading NFL scoreboard"
-      className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
-    >
-      {Array.from({ length: 8 }, (_, index) => (
-        <div
-          key={index}
-          className="h-24 animate-pulse rounded-xl border bg-muted/30"
-        />
-      ))}
-    </div>
-  );
-}
-
-function weekLabel(data: NflScoreboard) {
-  if (data.seasonType === 3) return "Postseason";
-  if (data.seasonType === 1) return `Preseason week ${data.week}`;
-  return `Week ${data.week}`;
-}
-
-export function NflScoreboardPage() {
-  const { data, error } = useLiveNfl<NflScoreboard>("/api/scoreboard");
+/** The top bar shows only live games and keeps the existing game details dialog. */
+export function NflScoreTicker() {
+  const { data } = useLiveNfl<NflScoreboard>("/api/scoreboard");
   const [selected, setSelected] = useState<ScoreboardGame | null>(null);
-  const games = data?.games ?? [];
-  const upcomingDays = [
-    ...new Set(
-      games
-        .filter((g) => g.state === "upcoming")
-        .map((g) => kickoffDay(g.kickoff)),
-    ),
-  ];
-  const sections: { key: string; title: string; games: ScoreboardGame[] }[] = [
-    {
-      key: "live",
-      title: "Live now",
-      games: games.filter((g) => g.state === "live"),
-    },
-    ...upcomingDays.map((day) => ({
-      key: day,
-      title: day,
-      games: games.filter(
-        (g) => g.state === "upcoming" && kickoffDay(g.kickoff) === day,
-      ),
-    })),
-    {
-      key: "final",
-      title: "Final",
-      games: games.filter((g) => g.state === "final"),
-    },
-  ];
-  return (
-    <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-8 p-4 md:p-6 lg:p-8">
-      <header className="flex items-baseline gap-3 border-b pb-4">
-        <h1 className="text-xl font-medium tracking-tight">Scoreboard</h1>
-        {data ? (
-          <span className="text-sm text-muted-foreground">
-            {weekLabel(data)}
-          </span>
-        ) : null}
-      </header>
-      {error ? (
-        <div
-          role="alert"
-          className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm"
-        >
-          {error}
-          {data
-            ? " Showing the last successful update."
-            : " Scores will retry automatically."}
-        </div>
-      ) : null}
-      {!data && !error ? <LoadingGames /> : null}
-      {data && !data.games.length ? (
-        <div className="rounded-xl border border-dashed p-12 text-center">
-          <h2 className="font-medium">No games scheduled this week</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Check back when the next NFL slate is available.
-          </p>
-        </div>
-      ) : null}
-      {sections.map((section) =>
-        section.games.length ? (
-          <section
-            key={section.key}
-            aria-label={section.title}
-            className="space-y-3"
-          >
-            <h2 className="flex items-center gap-2 text-sm font-medium">
-              {section.key === "live" ? (
-                <span aria-hidden="true" className="size-2 rounded-full bg-positive" />
-              ) : null}
-              {section.title}
-              <span className="font-normal text-muted-foreground tabular-nums">
-                {section.games.length}
-              </span>
-            </h2>
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-              {section.games.map((game) => (
-                <GameCard
-                  key={game.id}
-                  game={game}
-                  onOpen={() => setSelected(game)}
-                />
-              ))}
+  const [hasOverflow, setHasOverflow] = useState(false);
+  const track = useRef<HTMLDivElement>(null);
+  const games = useMemo(() => data?.games.filter((game) => game.state === "live") ?? [], [data?.games]);
+
+  useEffect(() => {
+    const element = track.current;
+    if (!element) return;
+    const updateOverflow = () => setHasOverflow(element.scrollWidth > element.clientWidth + 1);
+    updateOverflow();
+    const observer = new ResizeObserver(updateOverflow);
+    observer.observe(element);
+    window.addEventListener("resize", updateOverflow);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateOverflow);
+    };
+  }, [games]);
+
+  const gameButton = (game: ScoreboardGame) => {
+    const { period, clock } = liveClock(game.detail);
+    return (
+      <button key={game.id} type="button" onClick={() => setSelected(game)} aria-label={`View ${game.name} game details`}
+        className="group flex min-w-[10.5rem] shrink-0 items-center gap-2 rounded-lg border bg-card/80 px-2.5 py-1.5 text-left hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <div className="min-w-0 flex-1 space-y-1">
+          {game.teams.map((team) => (
+            <div key={team.id} className="flex min-w-0 items-center gap-1.5">
+              <TeamLogo team={team} size={18} />
+              <span className="truncate text-xs font-medium">{team.abbreviation}</span>
+              <span className="ml-auto text-xs font-semibold tabular-nums">{team.score ?? "0"}</span>
             </div>
-          </section>
-        ) : null,
-      )}
-      <ResponsiveDialog
-        open={selected !== null}
-        onOpenChange={(open) => {
-          if (!open) setSelected(null);
-        }}
-        title={selected?.name ?? "Game details"}
-        visuallyHideHeader
-        className="min-w-0 sm:max-w-4xl"
-      >
-        {selected ? <GameDetails key={selected.id} initial={selected} /> : null}
-      </ResponsiveDialog>
-    </div>
-  );
+          ))}
+        </div>
+        <span className="w-[3.35rem] shrink-0 text-[10px] leading-tight text-positive">
+          <span className="mb-0.5 flex items-center gap-1"><span className="size-1.5 rounded-full bg-positive" />{period}</span>{clock}
+        </span>
+      </button>
+    );
+  };
+
+  if (!games.length) return null;
+
+  return <>
+    <section aria-label="Live NFL scores" className="flex w-full min-w-0 max-w-full flex-1 items-center gap-1.5 sm:max-w-[min(56vw,46rem)]">
+      {hasOverflow ? <button type="button" aria-label="Scroll scores left" onClick={() => track.current?.scrollBy({ left: -190, behavior: "smooth" })} className="hidden size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted sm:flex"><ChevronLeftIcon className="size-4" /></button> : null}
+      <div ref={track} className="flex min-w-0 gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {games.map(gameButton)}
+      </div>
+      {hasOverflow ? <button type="button" aria-label="Scroll scores right" onClick={() => track.current?.scrollBy({ left: 190, behavior: "smooth" })} className="hidden size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted sm:flex"><ChevronRightIcon className="size-4" /></button> : null}
+    </section>
+    <ResponsiveDialog open={selected !== null} onOpenChange={(open) => { if (!open) setSelected(null); }} title={selected?.name ?? "Game details"} visuallyHideHeader className="min-w-0 sm:max-w-4xl">
+      {selected ? <GameDetails key={selected.id} initial={selected} /> : null}
+    </ResponsiveDialog>
+  </>;
 }
 
 const tableClass =

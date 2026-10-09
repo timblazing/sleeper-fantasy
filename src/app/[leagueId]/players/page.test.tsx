@@ -3,9 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import PlayersPage from "@/app/[leagueId]/players/page";
 import type { LeagueChrome } from "@/lib/league-chrome";
 import type { RankingsResult } from "@/lib/rankings-data";
+import userEvent from "@testing-library/user-event";
+
+const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 
 // RankingsSearch reads the app-router hooks; jsdom has no router.
-vi.mock("next/navigation", () => ({ usePathname: () => "/L1/players", useRouter: () => ({ push: vi.fn(), replace: vi.fn() }) }));
+vi.mock("next/navigation", () => ({ usePathname: () => "/L1/players", useRouter: () => ({ push, replace: vi.fn() }) }));
+vi.mock("@/components/injury-report-view", () => ({ InjuryReportView: () => <div>Roster injury report</div> }));
 // The page reads the value basis from getLeagueChrome — the layout already renders the shell.
 vi.mock("@/lib/league-chrome", () => ({ getLeagueChrome: vi.fn() }));
 vi.mock("@/lib/rankings-data", () => ({ getRankingsView: vi.fn(), RANKINGS_PER_PAGE: 50 }));
@@ -39,6 +43,19 @@ const renderPage = async (isDynasty: boolean, result: RankingsResult = VIEW) => 
 
 describe("PlayersPage", () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it("loads the injury view independently of rankings", async () => {
+    render(await PlayersPage({ params: Promise.resolve({ leagueId: "L1" }), searchParams: Promise.resolve({ view: "injuries", username: "clay" }) }));
+    expect(screen.getByText("Roster injury report")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Injury Report" })).toHaveAttribute("aria-selected", "true");
+    expect(getRankingsView).not.toHaveBeenCalled();
+  });
+
+  it("keeps the username when switching from injuries to rankings", async () => {
+    render(await PlayersPage({ params: Promise.resolve({ leagueId: "L1" }), searchParams: Promise.resolve({ view: "injuries", username: "clay" }) }));
+    await userEvent.click(screen.getByRole("tab", { name: "Rankings" }));
+    expect(push).toHaveBeenCalledWith("/L1/players?username=clay", { scroll: false });
+  });
 
   it("renders the table for a dynasty league", async () => {
     await renderPage(true);

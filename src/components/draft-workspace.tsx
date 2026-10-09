@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { DraftGradeData, DraftManagerGrade, DraftPickGrade } from "@/lib/draft-grades";
-import { cn } from "@/lib/utils";
+import { cn, withUsername } from "@/lib/utils";
 
 type BoardPick = DraftGradeData["allPicks"][number];
 
@@ -441,7 +441,7 @@ function CareerTable({ data }: { data: DraftGradeData }) {
   );
 }
 
-export function DraftWorkspace({ data, basePath }: { data: DraftGradeData; basePath: string }) {
+export function DraftWorkspace({ data, basePath, username }: { data: DraftGradeData; basePath: string; username?: string }) {
   const [view, setView] = React.useState("grades");
   const [selectedRosterId, setSelectedRosterId] = React.useState<number | null>(null);
   const selected = data.managers.find((manager) => manager.rosterId === selectedRosterId) ?? null;
@@ -493,7 +493,7 @@ export function DraftWorkspace({ data, basePath }: { data: DraftGradeData; baseP
               {data.drafts.map((draft) => (
                 <Button
                   key={draft.id}
-                  render={<Link href={`${basePath}?draft=${draft.id}`} scroll={false} />}
+                  render={<Link href={withUsername(`${basePath}?draft=${draft.id}`, username)} scroll={false} />}
                   size="sm"
                   variant={draft.id === data.selectedDraftId ? "default" : "outline"}
                 >

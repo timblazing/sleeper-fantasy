@@ -1,4 +1,4 @@
-// What the /{leagueId}/injuries URL means. The Players page put its filters in the URL so a
+// What the /{leagueId}/players?view=injuries URL means. Players keeps its filters in the URL so a
 // view is shareable and the back button works (src/lib/rankings-query.ts); this page follows
 // the same rule for the same reason — "here is who is hurt on your team" is a link worth sending.
 
@@ -75,7 +75,11 @@ export function serializeInjuryQuery(query: InjuryQuery, overrides: Partial<Inju
   return qs ? `?${qs}` : "";
 }
 
-export const injuriesHref = (leagueId: string, query: InjuryQuery, overrides: Partial<InjuryQuery> = {}) => `/${leagueId}/injuries${serializeInjuryQuery(query, overrides)}`;
+export const injuriesHref = (leagueId: string, query: InjuryQuery, overrides: Partial<InjuryQuery> = {}) => {
+  const params = new URLSearchParams(serializeInjuryQuery(query, overrides));
+  params.set("view", "injuries");
+  return `/${leagueId}/players?${params.toString()}`;
+};
 
 /** The href that adds or removes one severity — the filter chips are toggles, not radios. */
 export const toggleSeverityHref = (leagueId: string, query: InjuryQuery, severity: Severity) =>

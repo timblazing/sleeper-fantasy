@@ -2,6 +2,7 @@ import { AppBreadcrumb } from "@/components/app-breadcrumb";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteFooter } from "@/components/site-footer";
 import { Separator } from "@/components/ui/separator";
+import { ScorePlacementChrome } from "@/components/score-placement-chrome";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import type { LeagueChrome } from "@/lib/league-chrome";
 
@@ -12,11 +13,12 @@ export function LeagueShell({ children, defaultOpen = true, league }: { children
     <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar league={league} />
       <SidebarInset>
-        <header className="sticky top-0 z-30 flex h-[60px] shrink-0 items-center gap-2 border-b border-border/60 bg-background/80 backdrop-blur-xl transition-[width,height] ease-linear">
-          <div className="flex w-full items-center gap-2 px-3 md:px-4">
+        <header className="sticky top-0 z-30 flex min-h-[60px] shrink-0 items-center gap-2 border-b border-border/60 bg-background/80 backdrop-blur-xl transition-[width,height] ease-linear">
+          <div className="flex w-full flex-wrap items-center gap-2 px-3 py-2 md:flex-nowrap md:px-4 md:py-0">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 data-vertical:h-4 data-vertical:self-auto" />
-            <AppBreadcrumb league={league} />
+            <div className="min-w-0 flex-1"><AppBreadcrumb league={league} /></div>
+            <div className="w-full min-w-0 md:w-auto md:basis-auto"><ScorePlacementChrome /></div>
           </div>
         </header>
         {children}
