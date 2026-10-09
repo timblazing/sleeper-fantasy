@@ -68,7 +68,7 @@ export function ConnectAccountDialog() {
               />
               {error ? <FieldError id="username-error">{error}</FieldError> : null}
             </Field>
-            <Button disabled={!valid || loading} className="rounded-full" size="lg" type="submit">
+            <Button disabled={!valid || loading} size="lg" type="submit">
               {loading ? <><LoaderCircle data-icon="inline-start" className="animate-spin" aria-hidden="true" />Finding leagues...</> : <>Open dashboard<ArrowRight data-icon="inline-end" aria-hidden="true" /></>}
             </Button>
           </FieldGroup>

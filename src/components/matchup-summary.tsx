@@ -47,15 +47,15 @@ function CompactTeam({ probability, reverse, side, leagueId, username }: { proba
 function TeamScore({ side }: { side: MatchupSide }) {
   return (
     <div className="flex min-w-8 flex-col items-center tabular-nums sm:min-w-10">
-      <span className="text-sm font-medium">{liveScore(side)}</span>
-      <span aria-label={`Projected ${score(side.projectedScore)} points`} className="text-xs text-muted-foreground">{score(side.projectedScore)}</span>
+      <span className="text-sm font-medium group-data-[featured=true]/summary:text-xl sm:group-data-[featured=true]/summary:text-2xl">{liveScore(side)}</span>
+      <span className="text-xs text-muted-foreground"><span className="sr-only">Projected </span>{score(side.projectedScore)}<span className="sr-only"> points</span></span>
     </div>
   );
 }
 
-export function MatchupSummary({ matchup, leagueId, username }: { matchup: MatchupDetail; leagueId?: string; username?: string }) {
+export function MatchupSummary({ matchup, leagueId, username, featured = false }: { matchup: MatchupDetail; leagueId?: string; username?: string; featured?: boolean }) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3">
+    <div data-featured={featured} className="group/summary grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3">
       <CompactTeam leagueId={leagueId} probability={matchup.homeWinProbability} side={matchup.home} username={username} />
       <div className="flex items-center gap-1 sm:gap-2">
         <TeamScore side={matchup.home} />

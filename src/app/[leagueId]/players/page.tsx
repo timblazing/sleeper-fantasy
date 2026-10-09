@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { CloudOff, Hourglass, TriangleAlert } from "lucide-react";
+import { PageContainer } from "@/components/page-container";
+import { PlayerBoardContext } from "@/components/player-board-context";
+import { getDashboardPulse } from "@/lib/dashboard-pulse";
 import { PageHeader } from "@/components/page-header";
 import { RankingsToolbar } from "@/components/rankings-toolbar";
 import { RankingsTable } from "@/components/rankings-table";
@@ -32,17 +35,17 @@ export default async function PlayersPage({ params, searchParams }: { params: Pr
   const query = parseRankingsQuery(rawQuery);
   if (rawQuery.view === "injuries") {
     return (
-      <div className="mx-auto flex w-full max-w-[1288px] flex-col gap-6 p-4 md:p-6">
+      <PageContainer className="flex flex-col gap-5">
         <PageHeader description="Every injury and practice designation across rostered players, ranked by who it actually costs." title="Players" />
         <PlayersTabs leagueId={leagueId} username={query.username} value="injuries">
           <InjuryReportView leagueId={leagueId} rawQuery={rawQuery} />
         </PlayersTabs>
-      </div>
+      </PageContainer>
     );
   }
   // getLeagueChrome is the cheap read the layout already performs; it supplies the value basis
   // without the full dashboard fetch a LeagueShell-owning page would need.
-  const [league, result] = await Promise.all([getLeagueChrome(leagueId), getRankingsView(leagueId, query)]);
+  const [league, result, pulse] = await Promise.all([getLeagueChrome(leagueId), getRankingsView(leagueId, query), getDashboardPulse(leagueId).catch(() => null)]);
 
   // Dynasty leagues get the dynasty market board; every other format gets the same page priced
   // in projected points above replacement. Neither ever sees the other's numbers.
@@ -51,18 +54,21 @@ export default async function PlayersPage({ params, searchParams }: { params: Pr
   // The sidebar and chrome come from src/app/[leagueId]/layout.tsx, so this page renders
   // only its own content inside the standard container.
   return (
-    <div className="mx-auto flex w-full max-w-[1288px] flex-col gap-6 p-4 md:p-6">
+    <PageContainer className="flex flex-col gap-5">
       <PageHeader description={meta.blurb} title="Players" />
       <PlayersTabs leagueId={leagueId} username={query.username} value="rankings">
       {result.ok ? (
         <>
           <RankingsToolbar basis={result.view.basis} leagueId={leagueId} query={query} />
-          <RankingsTable query={query} view={result.view} />
+          <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            <div className="min-w-0"><RankingsTable query={query} view={result.view} /></div>
+            <PlayerBoardContext view={result.view} pulse={pulse} username={query.username} />
+          </div>
         </>
       ) : (
         <Card><CardContent><Empty className="min-h-72 border"><EmptyHeader><EmptyMedia variant="icon">{result.error.kind === "rate-limited" ? <Hourglass /> : result.error.kind === "invalid-response" ? <TriangleAlert /> : <CloudOff />}</EmptyMedia><EmptyTitle>{ERROR_STATES[result.error.kind].title}</EmptyTitle><EmptyDescription>{ERROR_STATES[result.error.kind].description}</EmptyDescription></EmptyHeader></Empty></CardContent></Card>
       )}
       </PlayersTabs>
-    </div>
+    </PageContainer>
   );
 }

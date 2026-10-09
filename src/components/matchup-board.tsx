@@ -31,7 +31,7 @@ function MatchupCard({ matchup, week, leagueId, username }: { matchup: MatchupDe
     <Dialog>
       <DialogTrigger
         aria-label={`${matchup.home.team.name} versus ${matchup.away.team.name}`}
-        className="w-full rounded-2xl border bg-card p-3 text-left text-card-foreground shadow-xs transition-all hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-4"
+        className="w-full rounded-xl border bg-card p-3 text-left text-card-foreground transition-colors hover:border-foreground/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-4"
       >
         <MatchupSummary matchup={matchup} />
       </DialogTrigger>
@@ -41,5 +41,5 @@ function MatchupCard({ matchup, week, leagueId, username }: { matchup: MatchupDe
 }
 
 export function MatchupBoard({ matchups, week, leagueId, username }: { matchups: MatchupDetail[]; week: number; leagueId?: string; username?: string }) {
-  return <div className="flex flex-col gap-3">{matchups.map((matchup) => <MatchupCard key={matchup.id} leagueId={leagueId} matchup={matchup} username={username} week={week} />)}</div>;
+  return <div className="grid gap-4 xl:grid-cols-2">{matchups.map((matchup) => <MatchupCard key={matchup.id} leagueId={leagueId} matchup={matchup} username={username} week={week} />)}</div>;
 }

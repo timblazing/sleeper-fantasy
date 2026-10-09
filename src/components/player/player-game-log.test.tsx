@@ -9,7 +9,7 @@ describe("PlayerGameLog", () => {
       { week: 1, opponent: "TB", points: 0, pointsPpr: 0, stats: { car: 1, rush: 5 } },
       { week: 2, opponent: "NO", points: null, pointsPpr: null, stats: { car: null, rush: null } },
     ] }} />);
-    expect(screen.getByRole("table")).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("region", { name: "Weekly player statistics" })).toHaveAttribute("tabindex", "0");
     expect(screen.getByRole("columnheader", { name: "Rush yd" })).toBeInTheDocument();
     expect(screen.queryByRole("columnheader", { name: "Pass yd" })).not.toBeInTheDocument();
     const rows = screen.getAllByRole("row");

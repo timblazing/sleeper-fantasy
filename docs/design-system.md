@@ -39,14 +39,18 @@ Body text remains 14px inside panels. Menlo is for code and measurements, not
 ordinary interface labels. Sports abbreviations such as QB, PPR, and NFL keep
 their conventional casing. Data uses `tabular-nums` without requiring monospace.
 
-PageContainer holds a 1288px maximum width, 24px desktop gutters, and 16px phone
+PageContainer holds a 1600px maximum width, 28px large-desktop gutters (24px
+on tablets), and 16px phone
 gutters. Chrome is 60px tall; the compact footer has a top rule and 20px vertical
 padding. Dashboard sections stay compact. The reference site's 96px section
 spacing and large display type are editorial patterns rather than table defaults.
-Controls use 8px radii, panels 12px, and pills are reserved for badges/avatars/CTAs.
+Controls use 8px radii, panels 12px, and pills are reserved for badges/avatars.
 
 ## Shared compositions
 
+- `SummaryMetrics`: shared two-column phone/four-column desktop summary strip.
+  Used only on the dashboard; tool pages lead directly into their workspace.
+  Each card contains a Metric; labels identify the scope and currency.
 - `Metric`: definition-list item with label, value, detail, and optional semantic
   tone. Place inside a `dl`; used by dashboard, team, and player summaries.
 - `FilterToolbar`: navigation filters plus search, active filter chips, and reset.
@@ -60,7 +64,7 @@ Controls use 8px radii, panels 12px, and pills are reserved for badges/avatars/C
   Used by draft, player details, and scoreboard. Filter mode retains pressed-button
   semantics for scouting; hidden controls stay out of the keyboard tab order.
 - `Disclosure`: native details/summary, turning plus, 250ms height/opacity where
-  supported. Scouting's mobile dossiers use it; desktop selection stays compact.
+  supported. Use for secondary details; scouting uses a shared report selected by manager buttons.
 - `ResponsiveDialog`: rich details use a centered desktop dialog and phone bottom
   sheet. Draft primary cells expose real keyboard buttons rather than pointer-only
   row actions.
@@ -99,3 +103,66 @@ Run `npm run design:check`, `npm run typecheck`, `npm run lint`, `npm test`, and
 `npm run build`. Browser checks cover 1440×900 and 393×852, both themes, URL
 filters, tab/Select state, native disclosure, keyboard draft actions, and dialog
 focus. Screenshot review and interaction tests complement each other.
+
+
+## Product direction and page hierarchy
+
+The product is a decision desk for a Sleeper NFL league: prepare a lineup, find
+available talent, compare roster strength, evaluate a trade, and understand the
+managers and drafts behind the league. Lead with a manager's next useful action
+and support it with source data. Add charts when they reveal a comparison or
+pattern; avoid decorative statistics and invented recommendations.
+
+The visual direction follows [shadcn dashboard blocks](https://ui.shadcn.com/blocks)
+and [composable shadcn charts](https://ui.shadcn.com/docs/components/base/chart):
+neutral surfaces, hairline borders, compact controls, restrained type, and clear
+primary/secondary content. Existing Base UI primitives remain the shared controls.
+Use project tokens for both themes; color communicates status, position, or a
+measured gain/loss. Do not add page-specific palettes or heavy card shadows.
+
+| View | Primary decision | Supporting context |
+| --- | --- | --- |
+| Dashboard | Set a healthy lineup and understand the matchup | Scoring vs league average, unrostered waiver projections, playoff odds, roster strengths and recent moves |
+| Players | Compare assets using this league's value basis | Waiver watch and dynasty market movement; filters and player details |
+| Injury report | Identify lineup risk | Severity filters, starter designations and status details in the rostered-player table |
+| Trade Calculator | Build both sides of a deal | Staged totals, net value, live comparison and clearly labelled basis |
+| Scouting Report | Find a compatible trade partner | A wrapping manager selector, roster needs, recorded trading cadence, transaction activity and draft preferences |
+| Draft Insights | Compare draft outcomes against slot cost | Position/round surplus, individual pick boards and manager details |
+| Matchups | Compare this week's league contests | Live points, league-scored projections and starting lineups in a dialog |
+| Resources | Find relevant research | League-format filters, URL-backed search, featured sources and category anchors |
+| Player/team sheets | Inspect an asset without losing league context | Flat, dense sections; player performance/history and team position rooms/roster |
+
+At xl and wider, pair the primary board with a narrower context column (usually
+2:1). Trade uses two asset panels plus a comparison rail. Matchups use two columns.
+Scouting uses a wrapping row of manager buttons on desktop and a horizontally
+scrollable row on phones; one shared report follows the selector. Redraft scouting
+compares current projected scoring needs and complementary depth; dynasty retains
+compete/rebuild windows and pick accumulation. No dynasty window labels or future
+pick recommendations appear in redraft.
+
+Phones stack in reading order; use shared responsive tabs/disclosures instead of
+squeezing desktop controls. Team and player sheets share a 30rem desktop cap and
+open from the bottom at 94dvh on phones. Centered dialogs retain their own width
+appropriate to their content. Sheet headers/tabs stay fixed while content scrolls.
+
+## Data and scrolling rules
+
+- Dynasty market value, redraft PPG+, weekly projected points and actual points
+  are different units. Name the unit beside the number. PPG+ preserves one decimal;
+  zero is a measurement, not an unavailable value.
+- Waivers exclude rostered assets and use this league's weekly scoring when
+  projections exist; fallback boards name their market/PPG+ basis explicitly.
+- Scoring charts use completed weeks from the current season; missing observations
+  remain gaps. Scouting counts based on roster values display unavailable when the
+  value feed fails. Behavioral history remains independently useful.
+- Draft hit rate means current value met or beat slot value, not future NFL success.
+  Class-relative fallback grades identify their benchmark.
+- All native scrollbars are hidden globally, including page, sidebar, tables,
+  sheets and dialogs. Keep overflow scrolling enabled. Never hide content merely
+  to remove a scrollbar. Table containers are focusable with a visible focus ring;
+  arrow keys, wheel/trackpad and touch remain usable. The wide game log includes a
+  scrolling hint and a pinned week column.
+- Resource badges describe user-relevant access and availability. Internal
+  integration mechanisms do not belong in the research directory.
+
+See [site UI audit](site-ui-audit.md) for route coverage and browser acceptance.

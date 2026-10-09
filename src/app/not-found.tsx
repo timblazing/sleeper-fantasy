@@ -1,3 +1,4 @@
+import { PageContainer } from "@/components/page-container";
 import { SearchXIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 
 export default function NotFound() {
   return (
-    <div className="mx-auto flex w-full max-w-[1288px] flex-col gap-6 p-4 md:p-6">
+    <PageContainer className="flex flex-col gap-6">
       <Empty className="min-h-64 border">
         <EmptyHeader>
           <EmptyMedia variant="icon"><SearchXIcon /></EmptyMedia>
@@ -16,6 +17,6 @@ export default function NotFound() {
           <Button nativeButton={false} render={<Link href="/" />}>Back to connect screen</Button>
         </EmptyContent>
       </Empty>
-    </div>
+    </PageContainer>
   );
 }

@@ -12,6 +12,7 @@ vi.mock("next/navigation", () => ({ usePathname: () => "/L1/players", useRouter:
 vi.mock("@/components/injury-report-view", () => ({ InjuryReportView: () => <div>Roster injury report</div> }));
 // The page reads the value basis from getLeagueChrome — the layout already renders the shell.
 vi.mock("@/lib/league-chrome", () => ({ getLeagueChrome: vi.fn() }));
+vi.mock("@/lib/dashboard-pulse", () => ({ getDashboardPulse: vi.fn().mockResolvedValue(null) }));
 vi.mock("@/lib/rankings-data", () => ({ getRankingsView: vi.fn(), RANKINGS_PER_PAGE: 50 }));
 
 const { getLeagueChrome } = await import("@/lib/league-chrome");
@@ -26,7 +27,7 @@ const VIEW: RankingsResult = {
     basis: "dynasty", presetKey: "sf-ppr", presetLabel: "SF PPR",
     rows: [{ kind: "player", key: "player-1", rank: 1, sleeperId: "1", name: "Bijan Robinson", position: "RB", team: "ATL", age: 24.5, tier: 1, value: 10000, trend7d: 0, rankPosition: 1, photoUrl: null, owner: null }],
     total: 1, totalLabel: "1 player", page: 1, totalPages: 1, maxValue: 10000,
-    // Populated on purpose: the page must not render movers even when the view carries them.
+    // Dynasty context includes actual market changes alongside rankings.
     movers: {
       risers: [{ sleeperId: "2", name: "Rising Rick", position: "WR", team: "BUF", trend7d: 500 }],
       fallers: [{ sleeperId: "3", name: "Falling Fred", position: "TE", team: "NYJ", trend7d: -500 }],
@@ -81,13 +82,13 @@ describe("PlayersPage", () => {
     expect(screen.queryByText("Bijan Robinson")).not.toBeInTheDocument();
   });
 
-  // MoversSummary was deliberately never ported onto this page; the view still carries
-  // movers, so guard that a successful render shows neither risers nor fallers.
-  it("does not render a risers/fallers section", async () => {
+  // The opportunity rail adds market context without repeating dashboard stat cards.
+  it("shows dynasty market context without a summary stat row", async () => {
     await renderPage(true);
     expect(screen.getByText("Bijan Robinson")).toBeInTheDocument();
-    expect(screen.queryByText("Rising Rick")).not.toBeInTheDocument();
-    expect(screen.queryByText("Falling Fred")).not.toBeInTheDocument();
+    expect(screen.getByText("Rising Rick")).toBeInTheDocument();
+    expect(screen.getByText("Falling Fred")).toBeInTheDocument();
+    expect(screen.queryByText("Matching assets")).not.toBeInTheDocument();
     expect(screen.queryByText(/Risers/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Fallers/i)).not.toBeInTheDocument();
   });

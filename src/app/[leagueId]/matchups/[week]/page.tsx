@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
 import { ChevronDown, Swords } from "lucide-react";
 import { MatchupBoard } from "@/components/matchup-board";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +12,8 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/
 import { getMatchupBoard } from "@/lib/matchup-detail";
 import { withUsername } from "@/lib/utils";
 
+export const metadata: Metadata = { title: "Matchups" };
+
 const WEEKS = Array.from({ length: 18 }, (_, index) => index + 1);
 
 export default async function MatchupsPage({ params, searchParams }: { params: Promise<{ leagueId: string; week: string }>; searchParams: Promise<{ username?: string | string[] }> }) {
@@ -18,7 +23,8 @@ export default async function MatchupsPage({ params, searchParams }: { params: P
   const board = await getMatchupBoard(leagueId, requestedWeek).catch(() => null);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1288px] flex-col gap-6 p-4 md:p-6">
+    <PageContainer className="flex flex-col gap-5">
+      <PageHeader title="Matchups" description={`Week ${requestedWeek} · Compare live scoring, projections, and every starting lineup in your league.`} />
       <div className="flex justify-end">
         <DropdownMenu>
           <DropdownMenuTrigger render={<Button size="sm" variant="outline" />}>
@@ -43,6 +49,6 @@ export default async function MatchupsPage({ params, searchParams }: { params: P
       {board?.byes.length ? (
         <Card><CardHeader><CardTitle>On bye</CardTitle><CardDescription>Teams without an opponent this week</CardDescription></CardHeader><CardContent className="flex flex-wrap gap-2">{board.byes.map((team) => <Badge key={team.rosterId} variant="outline">{team.name}</Badge>)}</CardContent></Card>
       ) : null}
-    </div>
+    </PageContainer>
   );
 }

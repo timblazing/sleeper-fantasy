@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils";
 // points above replacement carried to a tenth, where rounding would collapse the whole scale.
 const formatter = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
 
-export const signed = (value: number) => `${value > 0 ? "+" : ""}${formatter.format(value)}`;
+const displayed = (value: number) => Math.round(value * 10) / 10 || 0;
+export const signed = (value: number) => `${displayed(value) > 0 ? "+" : ""}${formatter.format(displayed(value))}`;
 export const plain = (value: number) => formatter.format(value);
 
 /**
@@ -20,7 +21,7 @@ export const plain = (value: number) => formatter.format(value);
  * `--positive`/`--negative` rather than literal emerald/red so a theme change moves these with
  * everything else that means "good" or "bad" in the app.
  */
-export const valueTone = (value: number) => (value > 0 ? "text-positive" : value < 0 ? "text-negative" : "text-muted-foreground");
+export const valueTone = (value: number) => (displayed(value) > 0 ? "text-positive" : displayed(value) < 0 ? "text-negative" : "text-muted-foreground");
 
 const initials = (value: string) => value.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
 

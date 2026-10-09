@@ -21,12 +21,16 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto"
+      tabIndex={props.tabIndex ?? 0}
+      role="region"
+      aria-label={props["aria-label"] ?? "Scrollable table"}
+      className="relative w-full overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <table
         data-slot="table"
         className={cn("w-full caption-bottom text-sm", className)}
         {...props}
+        tabIndex={undefined}
       />
     </div>
   )

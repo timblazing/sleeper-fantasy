@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { LeagueTeam, PositionRoom } from "@/lib/league-values";
-import { buildNetwork, buildTendencies, leverageFor, windowFor, type Lineage, type RoomNeed } from "@/lib/scouting-report";
+import { buildNetwork, buildTendencies, getScoutingReport, leverageFor, playFor, windowFor, type Lineage, type RoomNeed } from "@/lib/scouting-report";
 import type { SleeperTransaction } from "@/lib/types";
 
 const WEDNESDAY = new Date("2026-01-07T12:00:00Z").getTime();
@@ -153,5 +153,59 @@ describe("leverageFor", () => {
 
     expect(score).toBeGreaterThan(0);
     expect(score).toBeLessThanOrEqual(100);
+  });
+});
+
+
+vi.mock("@/lib/sleeper", async (importOriginal) => ({ ...await importOriginal<typeof import("@/lib/sleeper")>(), getLeagueLineage: async () => ["L1"], getLeagueRosters: async () => [], getUserLeagues: async () => [] }));
+vi.mock("@/lib/roster-audit", async (importOriginal) => ({ ...await importOriginal<typeof import("@/lib/roster-audit")>(), getLeagueManagers: async () => ({ ok: false }), getManagerCareer: vi.fn(), getHeadToHead: vi.fn() }));
+import { makeLeague, makeSource, makeTwelveTeamLeague } from "@/lib/test/fixtures";
+
+describe("redraft scouting", () => {
+  const tendencies = { ...buildTendencies([season([])], [team(1)]).get(1)!, trades: 12, tradesPerYear: 4, netPickFlow: 20 };
+  const fit = { tendencies, needs: [need("RB", 12)], surpluses: [need("QB", 1)], window: "Rebuilding" as const, manager: "Manager" };
+
+  it("scores complementary production without any dynasty-window bonus", () => {
+    const rebuild = leverageFor(fit, [need("RB", 1)], [need("QB", 12)], "redraft");
+    const contender = leverageFor({ ...fit, window: "Contender" }, [need("RB", 1)], [need("QB", 12)], "redraft");
+    expect(rebuild).toBe(contender);
+    expect(rebuild).toBeGreaterThan(leverageFor(fit, [need("TE", 1)], [need("WR", 12)], "redraft"));
+    expect(leverageFor(fit, [], [], "redraft")).toBe(0);
+    expect(playFor(fit, [need("RB", 1)], [need("QB", 12)], 12, "redraft")).toContain("address both lineups");
+    expect(playFor({ ...fit, needs: [], surpluses: [] }, [], [], 12, "redraft")).not.toMatch(/picks|veterans|Rebuilding/);
+  });
+
+  it("returns scoring-fit profiles without windows or future-capital insights", async () => {
+    const fixture = makeTwelveTeamLeague({ league: { settings: { type: 0 } } });
+    const report = await getScoutingReport("L1", "manager1", { ...fixture.source,
+      getNflLeaguesForUsername: async () => ({ userId: "U1", username: "manager1", displayName: "Manager 1", avatar: null, leagues: [] }),
+      getProjectedPpg: async () => ({ ok: true, attribution: { text: "Test", url: "https://example.com" }, data: [...fixture.catalog.values()].map((player, index) => ({ sleeperId: player.id, name: player.name, team: player.team, age: player.age, position: player.position!, ppg: 30 - index / 2 })) }),
+      getTransactions: async (_id, week) => week === 1 ? [trade([1, 2], { draft_picks: [{ season: "2027", round: 1, roster_id: 1, owner_id: 2, previous_owner_id: 1 }] })] : [],
+    });
+    expect(report.basis).toBe("redraft");
+    expect(report.valuesReady).toBe(true);
+    expect(report.marketCounts).toEqual({ rebuilding: 0, contending: 0, fringe: 0 });
+    expect(report.profiles.every(profile => profile.window === null)).toBe(true);
+    expect(report.profiles.flatMap(profile => profile.insights).some(insight => insight.id.startsWith("window-") || insight.id === "pick-flow")).toBe(false);
+    expect(report.marketSummary).toContain("current projected scoring");
+    expect(report.profiles.some(profile => !profile.isUser && profile.play?.includes("scoring"))).toBe(true);
+    expect(report.profiles.filter(profile => !profile.isUser).every(profile => !profile.play?.match(/picks|veterans|Rebuilding|playoff push/))).toBe(true);
+  });
+
+  it.each([0, 2])("does not invent roster needs or recommendations during a valuation outage (type %s)", async (type) => {
+    const report = await getScoutingReport("L1", "manager1", makeSource({
+      getLeague: async () => makeLeague({ settings: { type } }),
+      getLeagueRosters: async () => makeTwelveTeamLeague().rosters,
+      getNflLeaguesForUsername: async () => ({ userId: "U1", username: "manager1", displayName: "Manager 1", avatar: null, leagues: [] }),
+    }));
+    expect(report.valuesReady).toBe(false);
+    for (const profile of report.profiles) {
+      expect(profile.needs).toEqual([]);
+      expect(profile.surpluses).toEqual([]);
+      expect(profile.window).toBeNull();
+      expect(profile.play).toBeNull();
+      expect(profile.leverage).toBe(0);
+    }
+    expect(report.marketSummary).toContain("unavailable");
   });
 });

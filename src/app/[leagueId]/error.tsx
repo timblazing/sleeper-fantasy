@@ -1,5 +1,6 @@
 "use client";
 
+import { PageContainer } from "@/components/page-container";
 import { useEffect } from "react";
 import { TriangleAlertIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1288px] flex-col gap-6 p-4 md:p-6">
+    <PageContainer className="flex flex-col gap-6">
       <Empty className="min-h-64 border">
         <EmptyHeader>
           <EmptyMedia variant="icon"><TriangleAlertIcon /></EmptyMedia>
@@ -28,6 +29,6 @@ export default function Error({
           <Button onClick={() => retry()}>Try again</Button>
         </EmptyContent>
       </Empty>
-    </div>
+    </PageContainer>
   );
 }

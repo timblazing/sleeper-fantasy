@@ -71,7 +71,7 @@ function ManagerTable({ data, onSelect }: { data: DraftGradeData; onSelect: (ros
   );
 
   return (
-    <Card accent className="overflow-hidden">
+    <Card className="overflow-hidden">
       <CardHeader>
         <CardTitle>Leaderboard</CardTitle>
         <CardDescription>{data.selectedLabel} · {data.rounds} rounds · graded on value today against the slot used</CardDescription>
@@ -120,7 +120,7 @@ function ManagerTable({ data, onSelect }: { data: DraftGradeData; onSelect: (ros
         {basis === "dynasty"
           ? "Grades compare each player’s current dynasty value against the expected value of the draft slot where they were selected."
           : "Grades compare each player’s projected points per game above replacement against what the slot they were taken at returned across the class."}{" "}
-        Surplus = current value − slot value. Hit rate = % of picks where the player is worth at least the pick used. Select any manager to see their pick-by-pick breakdown.
+        Surplus = current value − slot value. Hit rate measures picks worth at least their draft cost. Select a manager for their picks.
       </CardContent>
     </Card>
   );
@@ -226,11 +226,12 @@ function ManagerDetail({ manager, data }: { manager: DraftManagerGrade; data: Dr
 /** Where the value actually was in this class — the answer to "should I have taken a TE?". */
 function PositionBreakdown({ data }: { data: DraftGradeData }) {
   const scale = Math.max(...data.byPosition.map((row) => Math.abs(row.surplusPerPick)), 1);
+  const roundScale = Math.max(...data.byRound.map((row) => Math.abs(row.surplusPerPick)), 1);
   return (
-    <Card accent>
+    <Card>
       <CardHeader>
-        <CardTitle>Where the value was</CardTitle>
-        <CardDescription>Surplus per pick by position across the whole class</CardDescription>
+        <CardTitle>Value by position</CardTitle>
+        <CardDescription>Average surplus per pick. Bars share a zero baseline.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         {data.byPosition.map((row) => (
@@ -239,7 +240,7 @@ function PositionBreakdown({ data }: { data: DraftGradeData }) {
             <SurplusBar surplus={row.surplusPerPick} scale={scale} />
             <div className="text-right">
               <span className={cn("text-sm font-medium tabular-nums", valueTone(row.surplusPerPick))}>{signed(row.surplusPerPick)}</span>
-              <span className="ml-1 text-xs text-muted-foreground tabular-nums">·{row.picks}</span>
+              <p className="text-xs text-muted-foreground tabular-nums">{row.picks} picks · {row.hitRate}% hit</p>
             </div>
           </div>
         ))}
@@ -250,7 +251,7 @@ function PositionBreakdown({ data }: { data: DraftGradeData }) {
               {data.byRound.map((row) => (
                 <div className="grid grid-cols-[3rem_minmax(0,1fr)_5rem] items-center gap-3" key={row.round}>
                   <span className="text-xs text-muted-foreground">Rd {row.round}</span>
-                  <SurplusBar surplus={row.surplusPerPick} scale={Math.max(...data.byRound.map((entry) => Math.abs(entry.surplusPerPick)), 1)} />
+                  <SurplusBar surplus={row.surplusPerPick} scale={roundScale} />
                   <span className={cn("text-right text-sm font-medium tabular-nums", valueTone(row.surplusPerPick))}>{signed(row.surplusPerPick)}</span>
                 </div>
               ))}
@@ -320,7 +321,7 @@ function DraftBoard({ data, onSelect }: { data: DraftGradeData; onSelect: (roste
   );
 
   return (
-    <Card accent className="overflow-hidden">
+    <Card className="overflow-hidden">
       <CardHeader>
         <CardTitle>Draft results</CardTitle>
         <CardDescription>All {data.allPicks.length} picks in {data.selectedLabel}, graded against the slot each used</CardDescription>
@@ -390,7 +391,7 @@ function DraftBoard({ data, onSelect }: { data: DraftGradeData; onSelect: (roste
 function CareerTable({ data }: { data: DraftGradeData }) {
   const seasons = [...new Set(data.classes.map((entry) => entry.season))].toSorted((a, b) => Number(a) - Number(b));
   return (
-    <Card accent className="overflow-hidden">
+    <Card className="overflow-hidden">
       <CardHeader>
         <CardTitle>Career draft record</CardTitle>
         <CardDescription>Every completed draft in this league, {seasons.at(0)}–{seasons.at(-1)}</CardDescription>
@@ -454,7 +455,7 @@ export function DraftWorkspace({ data, basePath, username }: { data: DraftGradeD
 
   if (!data.managers.length) {
     return (
-      <Card accent>
+      <Card>
         <CardContent>
           <Empty className="min-h-80">
             <EmptyHeader>
@@ -504,8 +505,9 @@ export function DraftWorkspace({ data, basePath, username }: { data: DraftGradeD
           ) : null}
         </div>
 
-        <TabsContent value="grades">
+        <TabsContent value="grades" className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.8fr)_minmax(300px,1fr)]">
           <ManagerTable data={data} onSelect={select} />
+          <PositionBreakdown data={data} />
         </TabsContent>
 
         <TabsContent value="board"><DraftBoard data={data} onSelect={select} /></TabsContent>

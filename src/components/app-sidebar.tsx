@@ -64,7 +64,7 @@ export function AppSidebar({
           teams={leagues}
         />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent role="navigation" aria-label="League navigation">
         <NavMain items={toItems(mainNav)} />
         <NavProjects projects={toItems(toolsNav)} />
       </SidebarContent>

@@ -13,7 +13,7 @@ export async function TeamProfileSheet({ leagueId, rosterId, username, intercept
   if (!team) notFound();
   return (
     <ResponsiveDetailSheet title={team.name} intercepted={intercepted} fallbackHref={withUsername(`/${leagueId}/league`, username)}>
-      <TeamDetail leagueId={leagueId} leagueName={context.league.name} season={context.league.season} team={team} teams={context.teams.length} username={username} valuesReady={context.valuesReady} />
+      <TeamDetail basis={context.basis} leagueId={leagueId} leagueName={context.league.name} season={context.league.season} team={team} teams={context.teams.length} username={username} valuesReady={context.valuesReady} />
     </ResponsiveDetailSheet>
   );
 }

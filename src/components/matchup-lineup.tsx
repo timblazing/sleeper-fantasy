@@ -46,7 +46,7 @@ function PlayerSide({ entry, reverse, leagueId, username }: { entry: RosterSlot;
       </div>
       <div className="hidden shrink-0 tabular-nums text-right sm:block">
         <p className="text-xs font-medium leading-tight sm:text-sm">{points(entry)}</p>
-        <p aria-label={`Projected ${projection(entry)} points`} className="text-xs leading-tight text-muted-foreground">{projection(entry)}</p>
+        <p className="text-xs leading-tight text-muted-foreground"><span className="sr-only">Projected </span>{projection(entry)}<span className="sr-only"> points</span></p>
       </div>
     </div>
   );

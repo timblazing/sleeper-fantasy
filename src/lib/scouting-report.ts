@@ -3,6 +3,7 @@ import { liveSource, type LeagueSource } from "@/lib/league-source";
 import { getHeadToHead, getLeagueManagers, getManagerCareer } from "@/lib/roster-audit";
 import { getLeagueLineage, getLeagueRosters, getUserLeagues } from "@/lib/sleeper";
 import type { NflPlayer, SleeperDraftPick, SleeperTransaction } from "@/lib/types";
+import type { ValueBasis } from "@/lib/value-basis";
 
 /**
  * The GM Scouting Report: every opponent profiled from how they have actually behaved, not
@@ -96,7 +97,7 @@ export type ManagerProfile = {
   isUser: boolean;
   /** 0–100. How much there is for *you* to gain by working this manager. */
   leverage: number;
-  window: Window;
+  window: Window | null;
   record: { wins: number; losses: number; ties: number };
   valueRank: number;
   teams: number;
@@ -120,6 +121,7 @@ export type ManagerProfile = {
 export type TradeLink = { a: number; b: number; trades: number };
 
 export type ScoutingReport = {
+  basis: ValueBasis;
   league: { id: string; name: string; season: string; teams: number; superflex: boolean };
   /** Null when no ?username= is connected. Everything comparative degrades gracefully without it. */
   userRosterId: number | null;
@@ -325,12 +327,12 @@ async function buildCrushes(userId: string, season: string, currentLeagueId: str
 }
 
 /** Rooms ranked against the league, split into what they must buy and what they can sell. */
-function roomSplit(team: LeagueTeam, teams: number): { needs: RoomNeed[]; surpluses: RoomNeed[] } {
+function roomSplit(team: LeagueTeam, teams: number, basis: ValueBasis = "dynasty"): { needs: RoomNeed[]; surpluses: RoomNeed[] } {
   const rows: RoomNeed[] = team.rooms.map((room) => ({ position: room.position as RoomPosition, rank: room.rank, value: room.value, leagueAvg: room.leagueAvg, starterCount: room.players }));
   const half = Math.ceil(teams / 2);
   return {
-    needs: rows.filter((room) => room.rank > half).toSorted((a, b) => b.rank - a.rank),
-    surpluses: rows.filter((room) => room.rank <= Math.max(1, Math.floor(teams / 3))).toSorted((a, b) => a.rank - b.rank),
+    needs: rows.filter((room) => room.rank > half && (basis === "dynasty" || room.value < room.leagueAvg)).toSorted((a, b) => b.rank - a.rank),
+    surpluses: rows.filter((room) => room.rank <= Math.max(1, Math.floor(teams / 3)) && (basis === "dynasty" || room.value > room.leagueAvg)).toSorted((a, b) => a.rank - b.rank),
   };
 }
 
@@ -349,7 +351,7 @@ export function windowFor(team: LeagueTeam, teams: number, tendencies: ManagerTe
  * attention than a mediocre one that answers every offer and needs what you are sitting on, so
  * the score is built from reachability and fit rather than strength.
  */
-export function leverageFor(profile: { tendencies: ManagerTendencies; needs: RoomNeed[]; surpluses: RoomNeed[]; window: Window }, userSurpluses: RoomNeed[], userNeeds: RoomNeed[]): number {
+export function leverageFor(profile: { tendencies: ManagerTendencies; needs: RoomNeed[]; surpluses: RoomNeed[]; window: Window | null }, userSurpluses: RoomNeed[], userNeeds: RoomNeed[], basis: ValueBasis = "dynasty"): number {
   const { tendencies, needs, surpluses, window } = profile;
   // Reachability: a manager who does not trade cannot be leveraged at any price.
   const activity = Math.min(1, tendencies.tradesPerYear / 4);
@@ -362,14 +364,24 @@ export function leverageFor(profile: { tendencies: ManagerTendencies; needs: Roo
   const buyFit = surpluses.filter((room) => userNeedPositions.has(room.position)).length / Math.max(1, surpluses.length || 1);
 
   // A rebuilder sells veterans cheap and a contender overpays for them; a fringe team does neither.
-  const windowBonus = window === "Rebuilding" ? 0.2 : window === "Contender" ? 0.15 : 0;
+  const windowBonus = basis === "redraft" ? 0 : window === "Rebuilding" ? 0.2 : window === "Contender" ? 0.15 : 0;
 
-  const score = activity * 40 + sellFit * 25 + buyFit * 20 + windowBonus * 75;
+  const score = basis === "redraft"
+    ? (sellFit * 55 + buyFit * 45) * (0.5 + activity * 0.5)
+    : activity * 40 + sellFit * 25 + buyFit * 20 + windowBonus * 75;
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
 /** The single recommended action at the top of a dossier. */
-function playFor(profile: { needs: RoomNeed[]; surpluses: RoomNeed[]; window: Window; tendencies: ManagerTendencies; manager: string }, userSurpluses: RoomNeed[], userNeeds: RoomNeed[], teams: number): string | null {
+export function playFor(profile: { needs: RoomNeed[]; surpluses: RoomNeed[]; window: Window | null; tendencies: ManagerTendencies; manager: string }, userSurpluses: RoomNeed[], userNeeds: RoomNeed[], teams: number, basis: ValueBasis = "dynasty"): string | null {
+  if (basis === "redraft") {
+    const sell = profile.needs.find(room => userSurpluses.some(mine => mine.position === room.position));
+    const buy = profile.surpluses.find(room => userNeeds.some(mine => mine.position === room.position));
+    if (sell && buy) return `Explore exchanging your ${sell.position} scoring depth for their ${buy.position} depth to address both lineups.`;
+    if (sell) return `Your ${sell.position} scoring strength matches their #${sell.rank} room. Check starting-lineup needs before offering depth.`;
+    if (buy) return `Their ${buy.position} scoring strength matches your need. Check which player they can spare from their lineup.`;
+    return "No complementary scoring fit found. Compare starting lineups before offering a deal.";
+  }
   if (profile.tendencies.trades === 0) return `No completed trades on record — ${profile.manager} is unlikely to answer. Spend your capital elsewhere.`;
   const sellTarget = profile.needs.find((room) => userSurpluses.some((mine) => mine.position === room.position));
   if (sellTarget) return `Sell ${sellTarget.position} depth into their critical need (ranked #${sellTarget.rank} of ${teams}).`;
@@ -382,6 +394,7 @@ function playFor(profile: { needs: RoomNeed[]; surpluses: RoomNeed[]; window: Wi
 
 /** Every insight card in a dossier, in the order the four lenses are read. */
 function buildInsights(args: {
+  basis: ValueBasis;
   profile: Omit<ManagerProfile, "insights" | "leverage" | "play">;
   teams: number;
   userSurpluses: RoomNeed[];
@@ -390,7 +403,8 @@ function buildInsights(args: {
   /** Null when no account is connected; used so the user is never described as a third party. */
   userRosterId: number | null;
 }): ScoutInsight[] {
-  const { profile, teams, userSurpluses, userNeeds, leagueAvgFaab, userRosterId } = args;
+  const { profile, teams, userSurpluses, userNeeds, leagueAvgFaab, userRosterId, basis } = args;
+  const dynasty = basis === "dynasty";
   const { tendencies: tend, manager } = profile;
   const insights: ScoutInsight[] = [];
   const seasons = tend.seasonsScanned;
@@ -404,13 +418,15 @@ function buildInsights(args: {
       label: "ROSTER HOLE",
       tone: "critical",
       strength: room.rank >= teams - 1 ? "strong" : "moderate",
-      title: `Desperate for ${room.position} (ranked #${room.rank} of ${teams})`,
-      detail: `${room.value.toLocaleString("en-US")} against a ${Math.round(room.leagueAvg).toLocaleString("en-US")} league average.${mine ? ` You are #${mine.rank} there — they should be willing to overpay.` : " Critical hole they must address."}`,
+      title: dynasty ? `Desperate for ${room.position} (ranked #${room.rank} of ${teams})` : `${room.position} scoring need (#${room.rank} of ${teams})`,
+      detail: dynasty
+        ? `${room.value.toLocaleString("en-US")} against a ${Math.round(room.leagueAvg).toLocaleString("en-US")} league average.${mine ? ` You are #${mine.rank} there — they should be willing to overpay.` : " Critical hole they must address."}`
+        : `${room.value.toLocaleString("en-US", { maximumFractionDigits: 1 })} projected PPG+ against a ${room.leagueAvg.toLocaleString("en-US", { maximumFractionDigits: 1 })} league average.${mine ? ` Your #${mine.rank} room may provide a complementary trade fit.` : " Compare their starters before proposing a deal."}`,
       thisLeague: true,
     });
   }
 
-  if (profile.window === "Contender") {
+  if (dynasty && profile.window === "Contender") {
     insights.push({
       id: "window-contend",
       group: "needs",
@@ -421,7 +437,7 @@ function buildInsights(args: {
       detail: `#${profile.valueRank} of ${teams} in roster value. During the playoff push they get desperate; time your offer for maximum leverage.`,
       thisLeague: true,
     });
-  } else if (profile.window === "Rebuilding") {
+  } else if (dynasty && profile.window === "Rebuilding") {
     insights.push({
       id: "window-rebuild",
       group: "needs",
@@ -465,7 +481,7 @@ function buildInsights(args: {
       });
     }
 
-    if (tend.netPickFlow !== 0) {
+    if (dynasty && tend.netPickFlow !== 0) {
       insights.push({
         id: "pick-flow",
         group: "trades",
@@ -530,8 +546,8 @@ function buildInsights(args: {
       label: "DRAFT BIAS",
       tone: "neutral",
       strength: strengthFor(profile.draftTendencies.reduce((sum, row) => sum + row.picks, 0), 8, 4),
-      title: `Drafts ${topDraft.position} — ${pct(topDraft.share)} of their rookie picks`,
-      detail: `${plural(topDraft.picks, "pick")} spent on ${topDraft.position} across ${plural(seasons, "season")}. Expect them to reach there again, so that is the room to sell into on draft day.`,
+      title: `Drafts ${topDraft.position} — ${pct(topDraft.share)} of their ${dynasty ? "rookie " : "recorded "}picks`,
+      detail: dynasty ? `${plural(topDraft.picks, "pick")} spent on ${topDraft.position} across ${plural(seasons, "season")}. Expect them to reach there again, so that is the room to sell into on draft day.` : `${plural(topDraft.picks, "pick")} spent on ${topDraft.position} across ${plural(seasons, "season")}. Historical preference alone does not establish a current lineup need.`,
       thisLeague: true,
     });
   }
@@ -621,7 +637,7 @@ function buildInsights(args: {
       tone: "positive",
       strength: "moderate",
       title: `${room.position} surplus fills your #${mine.rank} room`,
-      detail: `They are #${room.rank} of ${teams} at ${room.position} with ${room.starterCount} bodies. Worth making an offer — the depth is spare to them.`,
+      detail: dynasty ? `They are #${room.rank} of ${teams} at ${room.position} with ${room.starterCount} bodies. Worth making an offer — the depth is spare to them.` : `They are #${room.rank} of ${teams} in projected ${room.position} PPG+. Check their starters and depth before proposing a scoring swap.`,
       thisLeague: true,
     });
   }
@@ -654,7 +670,7 @@ export async function getScoutingReport(leagueId: string, username?: string, sou
   const account = username ? await source.getNflLeaguesForUsername(username).catch(() => null) : null;
   const userTeam = account ? teams.find((team) => team.ownerId === account.userId) ?? null : null;
   const userRosterId = userTeam?.rosterId ?? null;
-  const userRooms = userTeam ? roomSplit(userTeam, teamCount) : { needs: [], surpluses: [] };
+  const userRooms = userTeam && context.valuesReady ? roomSplit(userTeam, teamCount, context.basis) : { needs: [], surpluses: [] };
 
   const historyReady = managersResult.ok;
   const careerByUser = new Map(managersResult.ok ? managersResult.data.map((entry) => [entry.userId, entry]) : []);
@@ -716,8 +732,8 @@ export async function getScoutingReport(leagueId: string, username?: string, sou
       trades: 0, tradesPerYear: 0, tradeRank: teamCount, style: "Inactive" as TradeStyle, netPlayerFlow: 0, netPickFlow: 0,
       waiverClaims: 0, faabSpent: 0, activityByDay: Array(7).fill(0), busiestDay: null, movesPerYear: 0, partners: [], seasonsScanned: lineage.length,
     };
-    const { needs, surpluses } = roomSplit(team, teamCount);
-    const window = windowFor(team, teamCount, tendencies);
+    const { needs, surpluses } = context.valuesReady ? roomSplit(team, teamCount, context.basis) : { needs: [], surpluses: [] };
+    const window = context.basis === "dynasty" && context.valuesReady ? windowFor(team, teamCount, tendencies) : null;
     const isUser = team.rosterId === userRosterId;
     const efficiencyEntry = efficiencyRaw.get(team.rosterId);
     const crush = crushByRoster.get(team.rosterId);
@@ -750,9 +766,9 @@ export async function getScoutingReport(leagueId: string, username?: string, sou
     return {
       ...base,
       // The self scout is a mirror, not a target: no leverage score, no recommended play.
-      leverage: isUser ? 0 : leverageFor({ tendencies, needs, surpluses, window }, userRooms.surpluses, userRooms.needs),
-      play: isUser ? null : playFor({ needs, surpluses, window, tendencies, manager: team.manager }, userRooms.surpluses, userRooms.needs, teamCount),
-      insights: buildInsights({ profile: base, teams: teamCount, userSurpluses: userRooms.surpluses, userNeeds: userRooms.needs, leagueAvgFaab, userRosterId }),
+      leverage: isUser || !context.valuesReady || !userTeam ? 0 : leverageFor({ tendencies, needs, surpluses, window }, userRooms.surpluses, userRooms.needs, context.basis),
+      play: isUser || !context.valuesReady || !userTeam ? null : playFor({ needs, surpluses, window, tendencies, manager: team.manager }, userRooms.surpluses, userRooms.needs, teamCount, context.basis),
+      insights: buildInsights({ basis: context.basis, profile: base, teams: teamCount, userSurpluses: userRooms.surpluses, userNeeds: userRooms.needs, leagueAvgFaab, userRosterId }),
     };
   });
 
@@ -763,6 +779,7 @@ export async function getScoutingReport(leagueId: string, username?: string, sou
   };
 
   return {
+    basis: context.basis,
     league: { id: leagueId, name: context.league.name, season: context.league.season, teams: teamCount, superflex: context.superflex },
     userRosterId,
     username,
@@ -770,7 +787,9 @@ export async function getScoutingReport(leagueId: string, username?: string, sou
     lineage: lineageIds,
     seasonsScanned: lineage.length,
     network,
-    marketSummary: marketCounts.rebuilding > marketCounts.contending
+    marketSummary: !context.valuesReady ? "Roster scoring or market values are unavailable. Recorded manager behavior remains available."
+      : context.basis === "redraft" ? "Compare current projected scoring strengths and needs to find complementary player trades."
+      : marketCounts.rebuilding > marketCounts.contending
       ? `${plural(marketCounts.rebuilding, "team")} rebuilding. Veteran prices low — buyer's market.`
       : marketCounts.contending > marketCounts.rebuilding
         ? `${plural(marketCounts.contending, "team")} contending. Veterans are in demand — seller's market.`

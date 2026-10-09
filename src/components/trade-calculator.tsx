@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { ArrowUpDownIcon, LoaderCircleIcon, SearchIcon, TriangleAlertIcon, XIcon } from "lucide-react";
+import { ArrowDownLeftIcon, ArrowUpRightIcon, ArrowUpDownIcon, InfoIcon, LoaderCircleIcon, PlusIcon, SearchIcon, TriangleAlertIcon, XIcon } from "lucide-react";
+import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { PositionBadge } from "@/components/position-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -76,6 +77,7 @@ function SuggestionRow({ asset, onAdd }: { asset: StagedAsset; onAdd: () => void
       <span className="block truncate text-xs font-normal text-muted-foreground">{asset.detail}</span>
     </span>
     <span className="shrink-0 tabular-nums text-xs text-muted-foreground">{asset.value ? formatter.format(asset.value) : "—"}</span>
+    <PlusIcon className="size-3.5 shrink-0 text-muted-foreground" />
   </Button>;
 }
 
@@ -104,6 +106,7 @@ function Side({ data, title, description, teamId, onTeamChange, assets, onAdd, o
   const [query, setQuery] = React.useState("");
   const [remote, setRemote] = React.useState<MarketPlayer[]>([]);
   const [isSearching, setIsSearching] = React.useState(false);
+  const [searchError, setSearchError] = React.useState(false);
   const trimmed = query.trim();
   const roster = teamId === ANY_TEAM ? null : data.teams.find((team) => String(team.rosterId) === teamId) ?? null;
   const staged = new Set(assets.map((asset) => asset.key));
@@ -120,9 +123,11 @@ function Side({ data, title, description, teamId, onTeamChange, assets, onAdd, o
         const response = await fetch(`/api/leagues/${data.league.id}/players?q=${encodeURIComponent(trimmed)}`, { signal: controller.signal });
         const payload = await response.json() as { players?: MarketPlayer[] };
         setRemote(response.ok ? payload.players ?? [] : []);
+        setSearchError(!response.ok);
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") return;
         setRemote([]);
+        setSearchError(true);
       } finally {
         if (!controller.signal.aborted) setIsSearching(false);
       }
@@ -137,60 +142,63 @@ function Side({ data, title, description, teamId, onTeamChange, assets, onAdd, o
   const suggestions = [...playerSuggestions, ...(trimmed ? pickSuggestions : pickSuggestions.slice(0, 3))].filter((asset) => !staged.has(asset.key)).slice(0, SUGGESTION_LIMIT);
   const total = sumValues(assets.map((asset) => asset.value));
 
-  return <Card accent className="flex flex-col">
+  return <Card className="flex flex-col">
     <CardHeader>
-      <CardTitle>{title}</CardTitle>
+      <div className="flex items-center justify-between gap-3"><CardTitle className="flex items-center gap-2">{title === "You receive" ? <ArrowDownLeftIcon className="size-4 text-positive" /> : <ArrowUpRightIcon className="size-4 text-muted-foreground" />}{title}</CardTitle><Badge variant="secondary">{assets.length} {assets.length === 1 ? "asset" : "assets"}</Badge></div>
       <CardDescription>{description}</CardDescription>
-      <div className="mt-3"><TeamSelect label={`${title} — team`} onChange={onTeamChange} teams={data.teams} value={teamId} /></div>
+      <div className="mt-3"><TeamSelect label={`${title} — team`} onChange={(next) => { onTeamChange(next); setQuery(""); setRemote([]); setSearchError(false); setIsSearching(false); }} teams={data.teams} value={teamId} /></div>
     </CardHeader>
     <CardContent className="flex flex-1 flex-col gap-4">
-      <div className="overflow-hidden rounded-xl border">
+      <div className="overflow-hidden rounded-lg border">
         {assets.length
           ? <div className="divide-y">{assets.map((asset) => <StagedRow asset={asset} key={asset.key} onRemove={() => onRemove(asset.key)} />)}</div>
-          : <p className="px-4 py-6 text-center text-sm text-muted-foreground">{hasPicks ? "No assets yet. Add players or picks below." : "No players yet. Add one below."}</p>}
+          : <div className="flex min-h-28 flex-col items-center justify-center gap-1 px-4 py-5 text-center"><p className="text-sm font-medium">{title === "You receive" ? "What comes back?" : "What would you give up?"}</p><p className="text-xs text-muted-foreground">{hasPicks ? "Add players or draft picks from the list below." : "Add players from the list below."}</p></div>}
         {assets.length ? <div className="flex items-center justify-between border-t bg-muted/30 px-4 py-2 text-sm">
           <span className="text-muted-foreground">{basisMeta(data.league.basis).hasMarket ? "Market value" : "Points above replacement"}</span>
-          <span className="tabular-nums font-medium">{formatter.format(total)}</span>
+          <span className="tabular-nums font-medium">{data.valuesReady ? formatter.format(total) : "—"}</span>
         </div> : null}
       </div>
 
+      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground"><span>{roster ? "Available on this roster" : "Find an asset"}</span><span>{hasPicks ? "Players & picks" : "Players only"}</span></div>
       <div className="relative">
         <SearchIcon aria-hidden="true" className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input aria-label={`Add an asset to ${title}`} className="h-10 pl-8" onChange={(event) => { const value = event.target.value; setQuery(value); setIsSearching(!roster && Boolean(value.trim())); }} placeholder={roster ? `Search ${roster.name}${hasPicks ? " and picks" : ""}...` : hasPicks ? "Search any player or pick..." : "Search any player..."} type="search" value={query} />
+        <Input aria-label={`Add an asset to ${title}`} className="h-10 pl-8" onChange={(event) => { const value = event.target.value; setQuery(value); setRemote([]); setSearchError(false); setIsSearching(!roster && Boolean(value.trim())); }} placeholder={roster ? `Search ${roster.name}${hasPicks ? " and picks" : ""}...` : hasPicks ? "Search any player or pick..." : "Search any player..."} type="search" value={query} />
       </div>
 
-      <div aria-busy={isSearching} className="overflow-hidden rounded-xl border">
+      <div aria-busy={isSearching} className="max-h-80 overflow-y-auto rounded-lg border">
         {suggestions.length
           ? <div className="divide-y">{suggestions.map((asset) => <SuggestionRow asset={asset} key={asset.key} onAdd={() => { onAdd(asset); setQuery(""); }} />)}</div>
-          : <p className="px-4 py-6 text-center text-sm text-muted-foreground">{isSearching ? "Searching..." : trimmed ? (hasPicks ? "No players or picks matched." : "No players matched.") : "Start typing to find a player."}</p>}
+          : <p className="px-4 py-6 text-center text-sm text-muted-foreground">{isSearching ? "Searching..." : searchError ? "Player search is unavailable. Try another search or select a roster." : trimmed ? (hasPicks ? "No players or picks matched." : "No players matched.") : "Start typing to find a player."}</p>}
       </div>
     </CardContent>
   </Card>;
 }
 
 function Verdict({ basis, trade }: { basis: TradeLabData["league"]["basis"]; trade: RaTrade }) {
-  const winnerLabel = trade.verdict.winner === null ? "Even trade" : trade.verdict.winner === "sideA" ? "You win this trade" : "Your partner wins this trade";
+  const winnerLabel = trade.verdict.winner === null ? "Values are balanced" : trade.verdict.winner === "sideA" ? "Receive side leads" : "Send side leads";
   const total = trade.sideA.value + trade.sideB.value;
   const sharePercent = total ? Math.round((trade.sideA.value / total) * 100) : 50;
 
-  return <Card accent>
+  return <Card>
     <CardHeader>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div><CardTitle>{winnerLabel}</CardTitle><CardDescription>{trade.verdict.difference ? `${formatter.format(trade.verdict.difference)} ${basisMeta(basis).hasMarket ? "value" : "PPG"} gap` : `Both sides carry the same ${basisMeta(basis).hasMarket ? "market value" : "projected production"}`}</CardDescription></div>
-        <Badge className={cn("text-base", gradeTone(trade.verdict.grade))} variant="outline">{trade.verdict.grade}</Badge>
+        <div><p className="mb-2 text-xs font-medium text-muted-foreground">Calculated comparison</p><CardTitle>{winnerLabel}</CardTitle><CardDescription>{trade.verdict.difference ? `${formatter.format(trade.verdict.difference)} ${basisMeta(basis).hasMarket ? "value" : "PPG+"} gap` : `Both sides carry the same ${basisMeta(basis).hasMarket ? "market value" : "projected production"}`}</CardDescription></div>
+        <Badge aria-label={`Trade grade ${trade.verdict.grade}`} className={cn("text-base", gradeTone(trade.verdict.grade))} variant="outline">{trade.verdict.grade}</Badge>
       </div>
     </CardHeader>
     <CardContent className="flex flex-col gap-5">
       <div>
-        <div className="flex justify-between text-sm"><span className="font-medium">You receive {formatter.format(trade.sideA.value)}</span><span className="font-medium">{formatter.format(trade.sideB.value)} you send</span></div>
+        <div className="flex justify-between gap-3 text-xs"><span>Receive <strong className="tabular-nums">{formatter.format(trade.sideA.value)}</strong></span><span>Send <strong className="tabular-nums">{formatter.format(trade.sideB.value)}</strong></span></div>
         <div className="mt-2 flex h-3 overflow-hidden rounded-full bg-muted" role="img" aria-label={`You receive ${sharePercent}% of the traded value`}>
           <div className="bg-positive" style={{ width: `${sharePercent}%` }} />
-          <div className="flex-1 bg-primary/60" />
+          <div className="flex-1 bg-muted-foreground/30" />
         </div>
       </div>
 
+      <p className="text-xs leading-relaxed text-muted-foreground">{basisMeta(basis).hasMarket ? "Market values compare the assets in this deal. They do not account for your roster needs or competitive window." : "PPG+ compares projected points above replacement. Check your starting lineup before deciding."}</p>
+
       {trade.cliffWarnings.length ? <div className="flex flex-col gap-3">
-        <p className="text-xs font-medium r text-muted-foreground">Age and decline risk</p>
+        <p className="text-xs font-medium text-muted-foreground">Age and decline risk</p>
         {trade.cliffWarnings.map((warning) => <div className="rounded-xl border p-4" key={`${warning.sleeperId}-${warning.side}`}>
           <div className="flex flex-wrap items-center gap-2">
             <TriangleAlertIcon className="size-4 text-warning-foreground" />
@@ -275,26 +283,32 @@ export function TradeCalculator({ data }: { data: TradeLabData }) {
     return () => { window.clearTimeout(timeout); controller.abort(); };
   }, [data.league.id, ready, receive, send]);
 
-  return <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6 p-4 md:p-6 lg:p-8">
-    <PageHeader description={dynasty ? "Stage both sides of a deal and grade it against live market values." : "Stage both sides of a deal and grade it on the starting points each side gains."} title="Trade Calculator" />
 
-    {!data.valuesReady ? <Card><CardContent className="py-4 text-sm text-muted-foreground">{dynasty ? "Live market values are unavailable right now, so staged assets may show no value. The graded result still comes from RosterAudit." : "Projections are unavailable right now, so staged players may show no value and the verdict will read as an even trade."}</CardContent></Card> : null}
-
-    {hasAssets && trade ? <Verdict basis={data.league.basis} trade={trade} /> : null}
-
-    <div className="grid gap-4 lg:grid-cols-2">
-      <Side assets={receive} data={data} description="Assets coming to your roster" onAdd={add(setReceive)} onRemove={remove(setReceive)} onTeamChange={setReceiveTeam} teamId={receiveTeam} title="You receive" />
-      <Side assets={send} data={data} description="Assets leaving your roster" onAdd={add(setSend)} onRemove={remove(setSend)} onTeamChange={setSendTeam} teamId={sendTeam} title="You send" />
+  return <PageContainer className="flex flex-col gap-6">
+    <div className="flex flex-wrap items-start justify-between gap-4">
+      <PageHeader description="Build both sides of a deal. Compare what comes back with what you give up." title="Trade Calculator" />
+      <div className="flex items-center gap-2"><Badge variant="outline">{dynasty ? "Dynasty" : "Redraft"}</Badge><Badge variant="secondary">{data.league.superflex ? "Superflex" : "1QB"}</Badge></div>
     </div>
 
-    {hasAssets ? <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2 shadow-xs">
-      <Button onClick={swap} size="sm" variant="outline"><ArrowUpDownIcon className="size-4" />Swap sides</Button>
-      <Button onClick={clear} size="sm" variant="ghost">Clear</Button>
-      <span aria-live="polite" className="ml-1 inline-flex items-center gap-2 text-sm text-muted-foreground sm:ml-auto">
-        {isCalculating ? <><LoaderCircleIcon className="size-4 animate-spin" />Updating trade value...</> : ready ? "Updates automatically as you edit." : "Add at least one asset to each side."}
-      </span>
-    </div> : null}
+    {!data.valuesReady || !data.picksReady ? <div className="flex items-start gap-3 rounded-lg border bg-card p-4 text-sm"><InfoIcon className="mt-0.5 size-4 shrink-0 text-info-foreground" /><p className="text-muted-foreground">{!data.valuesReady ? dynasty ? "Live market values are unavailable. Staged totals are hidden; a graded result may still be available from RosterAudit." : "Projections are unavailable. Staged totals are hidden and a calculated result may appear balanced without usable projections." : "Draft pick values are unavailable. You can still compare players."}</p></div> : null}
 
-    {hasAssets && error ? <Card><CardContent className="flex items-start gap-3 py-4 text-sm"><TriangleAlertIcon className="mt-0.5 size-4 shrink-0 text-destructive" /><span>{error}</span></CardContent></Card> : null}
-  </div>;
+    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid min-w-0 items-start gap-4 md:grid-cols-2">
+        <Side assets={receive} data={data} description="Choose the partner's outgoing assets" onAdd={add(setReceive)} onRemove={remove(setReceive)} onTeamChange={setReceiveTeam} teamId={receiveTeam} title="You receive" />
+        <Side assets={send} data={data} description="Choose your outgoing assets" onAdd={add(setSend)} onRemove={remove(setSend)} onTeamChange={setSendTeam} teamId={sendTeam} title="You send" />
+      </div>
+
+      <aside aria-label="Trade comparison" className="flex min-w-0 flex-col gap-4 xl:sticky xl:top-6">
+        <Card>
+          <CardHeader><CardTitle>Deal overview</CardTitle><CardDescription>{data.league.name}</CardDescription></CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-3 border-b pb-3"><span className="text-muted-foreground">Receive / send</span><span className="font-medium tabular-nums">{receive.length} / {send.length} assets</span></div>
+            <div aria-live="polite" className="flex items-start gap-2 text-sm text-muted-foreground">{isCalculating || ready && !trade && !error ? <LoaderCircleIcon className="mt-0.5 size-4 shrink-0 animate-spin" /> : <InfoIcon className="mt-0.5 size-4 shrink-0 text-info-foreground" />}<span>{isCalculating || ready && !trade && !error ? "Updating comparison…" : ready ? "Comparison updates as you edit." : "Add at least one asset to each side to calculate the deal."}</span></div>
+            <div className="flex flex-wrap items-center gap-2"><Button disabled={!hasAssets} onClick={swap} size="sm" variant="outline"><ArrowUpDownIcon className="size-4" />Swap sides</Button><Button disabled={!hasAssets} onClick={clear} size="sm" variant="ghost">Clear all</Button></div>
+          </CardContent>
+        </Card>
+        {trade ? <Verdict basis={data.league.basis} trade={trade} /> : error ? <Card><CardContent role="alert" className="flex items-start gap-3 text-sm"><TriangleAlertIcon className="mt-0.5 size-4 shrink-0 text-destructive" /><div><p className="font-medium">Comparison unavailable</p><p className="mt-1 text-muted-foreground">{error}</p><p className="mt-2 text-xs text-muted-foreground">Your staged assets are saved here. Edit either side to try again.</p></div></CardContent></Card> : <Card><CardHeader><CardTitle>How to compare</CardTitle></CardHeader><CardContent className="space-y-3 text-sm text-muted-foreground"><p>Select each team’s roster, then add the assets they would send.</p><p>{dynasty ? "Draft picks use early, mid, or late slot estimates. Pick ownership is not verified." : "This redraft league compares projected production; future picks are excluded."}</p><p className="text-xs">Use “Any player” to explore a hypothetical deal.</p></CardContent></Card>}
+      </aside>
+    </div>
+  </PageContainer>;
 }

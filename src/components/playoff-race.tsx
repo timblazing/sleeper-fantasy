@@ -77,7 +77,7 @@ export function PlayoffRace({ leagueId, picture, username }: { leagueId: string;
                     <TeamAvatar row={row} />
                     <div className="min-w-0">
                       <TeamLink className={cn("block break-words text-xs font-medium leading-tight sm:truncate sm:text-[0.8125rem]", row.isUser && "text-primary")} leagueId={leagueId} rosterId={row.rosterId} username={username}>{row.name}</TeamLink>
-                      <p className="break-all text-xs leading-tight text-muted-foreground sm:truncate sm:text-xs">
+                      <p className={cn("break-all text-xs leading-tight sm:truncate", row.isUser ? "text-foreground/70" : "text-muted-foreground")}>
                         {row.manager}
                         {picture.started ? <span className="ml-1.5 tabular-nums">{row.wins}–{row.losses}{row.ties ? `–${row.ties}` : ""}</span> : null}
                       </p>
@@ -101,11 +101,11 @@ export function PlayoffRace({ leagueId, picture, username }: { leagueId: string;
                     </Badge>
                   </span>
 
-                  <span className="text-right tabular-nums text-xs text-muted-foreground max-sm:hidden">
+                  <span className={cn("text-right tabular-nums text-xs max-sm:hidden", row.isUser ? "text-foreground/70" : "text-muted-foreground")}>
                     {row.projectedWins.toFixed(1)}
                   </span>
 
-                  <span className="text-right tabular-nums text-xs text-muted-foreground max-sm:hidden">
+                  <span className={cn("text-right tabular-nums text-xs max-sm:hidden", row.isUser ? "text-foreground/70" : "text-muted-foreground")}>
                     #{row.averageSeed.toFixed(1)}
                   </span>
                 </div>

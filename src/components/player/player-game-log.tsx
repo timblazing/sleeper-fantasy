@@ -16,6 +16,7 @@ export function PlayerGameLog({ profile }: { profile: PlayerProfile }) {
   return (
     <section className="py-5">
       <h2 className="mb-3 font-heading text-base font-semibold">{profile.season ?? "Season"} game log</h2>
+      <p className="mb-3 text-xs text-muted-foreground">Scroll horizontally for all stats. Focus the table and use arrow keys.</p>
       <Table tabIndex={0} aria-label="Weekly player statistics">
         <TableHeader><TableRow>
           <TableHead className="sticky left-0 bg-background">Wk</TableHead><TableHead>Opp</TableHead>

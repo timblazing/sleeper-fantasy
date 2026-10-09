@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import type { ResourceStatus } from "@/lib/resources/data";
 
 const STATUS_LABEL: Record<ResourceStatus, string> = {
-  integrated: "Integrated",
+  integrated: "In this app",
   free: "Free",
   free_tier: "Free tier",
   paid: "Paid",
@@ -50,7 +50,7 @@ export function ResourceCard({
       <Card
         className={cn(
           "h-full min-w-0 transition-colors",
-          featured ? "bg-primary/5 ring-2 ring-primary/40" : "hover:ring-foreground/20",
+          featured ? "ring-border-strong" : "hover:ring-foreground/20",
         )}
         size="sm"
       >
@@ -70,7 +70,7 @@ export function ResourceCard({
             </a>
             {resource.status && resource.status.length > 0 && (
               <div className="flex shrink-0 flex-wrap justify-end gap-1">
-                {resource.status.map((status) => (
+                {resource.status.filter(status => status !== "scrape_required").map((status) => (
                   <Badge
                     key={status}
                     variant={STATUS_VARIANT[status]}

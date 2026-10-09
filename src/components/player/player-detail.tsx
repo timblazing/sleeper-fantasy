@@ -32,7 +32,7 @@ export function PlayerDetail({ profile, context, leagueId, isSuperflex, username
         <TabsList variant="line" className="mx-5 w-auto shrink-0 justify-between border-b p-0 group-data-horizontal/tabs:h-11 md:mx-7" aria-label="Player details">
           {[["summary", "Summary"], ["game-log", "Game log"], ["team", "Team"], ["history", "History"]].map(([value, label]) => <TabsTrigger key={value} value={value} className="rounded-none px-2 text-xs after:bottom-0 md:text-sm">{label}</TabsTrigger>)}
         </TabsList>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[max(24px,env(safe-area-inset-bottom))] md:px-7">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[max(24px,env(safe-area-inset-bottom))] md:px-7 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsContent value="summary">
             <dl className="grid grid-cols-3 gap-4 py-5">
               <div><dt className="text-[11px] text-muted-foreground">Dynasty rank</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{position == null ? "—" : `#${position}`} <span className="text-xs font-normal text-muted-foreground">{profile.player.position}</span></dd><dd className="text-xs text-muted-foreground">{overall == null ? "—" : `#${overall}`} overall · {isSuperflex ? "SF" : "1QB"}</dd></div>

@@ -8,8 +8,9 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/u
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { avatarUrl, formatValue, headshotUrl, initials } from "@/lib/display";
+import { avatarUrl, headshotUrl, initials } from "@/lib/display";
 import type { LeagueTeam, ValuedPlayer } from "@/lib/league-values";
+import { basisMeta, type ValueBasis } from "@/lib/value-basis";
 import { cn, withUsername } from "@/lib/utils";
 
 type TeamDetailProps = {
@@ -20,9 +21,10 @@ type TeamDetailProps = {
   teams: number;
   valuesReady: boolean;
   username?: string;
+  basis?: ValueBasis;
 };
 
-function TeamHero({ team, leagueName, season, teams, valuesReady }: Pick<TeamDetailProps, "team" | "leagueName" | "season" | "teams" | "valuesReady">) {
+function TeamHero({ team, leagueName, season, teams, valuesReady, basis = "dynasty" }: Pick<TeamDetailProps, "team" | "leagueName" | "season" | "teams" | "valuesReady" | "basis">) {
   return (
     <header className="px-5 pb-5 pt-6 md:px-7 md:pt-8">
       <div className="flex min-w-0 items-center gap-4 pr-6">
@@ -38,14 +40,14 @@ function TeamHero({ team, leagueName, season, teams, valuesReady }: Pick<TeamDet
       <p className="mt-4 text-xs text-muted-foreground">{leagueName} · {season}</p>
       <dl className="mt-5 grid grid-cols-3 gap-4">
         <div><dt className="text-[11px] text-muted-foreground">Record</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{team.wins}-{team.losses}{team.ties ? `-${team.ties}` : ""}</dd></div>
-        <div><dt className="text-[11px] text-muted-foreground">Roster value</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{valuesReady ? `#${team.valueRank}` : "—"}</dd><dd className="text-xs text-muted-foreground">{valuesReady ? `${formatValue(team.value)} · ${teams} teams` : "Unavailable"}</dd></div>
+        <div><dt className="text-[11px] text-muted-foreground">{basis === "dynasty" ? "Roster value" : "Roster PPG+"}</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{valuesReady ? `#${team.valueRank}` : "—"}</dd><dd className="text-xs text-muted-foreground">{valuesReady ? `${team.value.toLocaleString("en-US", { maximumFractionDigits: basisMeta(basis).decimals })} · ${teams} teams` : "Unavailable"}</dd></div>
         <div><dt className="text-[11px] text-muted-foreground">Scoring</dt><dd className="mt-1 text-xl font-semibold tabular-nums">#{team.powerRank}</dd><dd className="text-xs text-muted-foreground">{team.pointsFor.toFixed(1)} pts</dd></div>
       </dl>
     </header>
   );
 }
 
-function PositionRooms({ team, teams, valuesReady }: Pick<TeamDetailProps, "team" | "teams" | "valuesReady">) {
+function PositionRooms({ team, teams, valuesReady, basis = "dynasty" }: Pick<TeamDetailProps, "team" | "teams" | "valuesReady" | "basis">) {
   return (
     <section className="py-6">
       <h2 className="mb-5 font-heading text-base font-semibold">Position rooms</h2>
@@ -54,7 +56,7 @@ function PositionRooms({ team, teams, valuesReady }: Pick<TeamDetailProps, "team
           const strength = teams > 1 ? Math.round(((teams - room.rank) / (teams - 1)) * 100) : 100;
           return <div key={room.position}>
             <div className="flex items-center justify-between gap-3"><PositionBadge position={room.position} /><span className="text-sm font-medium tabular-nums">{valuesReady ? `#${room.rank} / ${teams}` : "—"}</span></div>
-            <p className="mt-3 text-xl font-medium tabular-nums">{valuesReady ? formatValue(room.value) : "—"}</p>
+            <p className="mt-3 text-xl font-medium tabular-nums">{valuesReady ? room.value.toLocaleString("en-US", { maximumFractionDigits: basisMeta(basis).decimals }) : "—"}<span className="ml-2 text-xs text-muted-foreground">{basisMeta(basis).columnLabel}</span></p>
             {valuesReady ? <Progress aria-label={`${room.position} room strength`} className="mt-2" value={strength} /> : null}
             <p className="mt-2 text-xs text-muted-foreground">{room.players} {room.players === 1 ? "player" : "players"}{room.avgAge == null ? "" : ` · ${room.avgAge.toFixed(1)} avg age`}</p>
           </div>;
@@ -73,14 +75,14 @@ function rosterGroup(team: LeagueTeam, entry: ValuedPlayer): "Starters" | "Bench
   return "Bench";
 }
 
-function RosterTable({ entries, leagueId, username, valuesReady }: { entries: ValuedPlayer[]; leagueId: string; username?: string; valuesReady: boolean }) {
+function RosterTable({ entries, leagueId, username, valuesReady, basis = "dynasty" }: { entries: ValuedPlayer[]; leagueId: string; username?: string; valuesReady: boolean; basis?: ValueBasis }) {
   return (
     <Table tabIndex={0} aria-label="Team roster">
       <TableHeader>
         <TableRow>
           <TableHead>Player</TableHead>
           <TableHead className="hidden w-24 sm:table-cell">Position</TableHead>
-          <TableHead className="w-24 text-right">Value</TableHead>
+          <TableHead className="w-24 text-right">{basisMeta(basis).columnLabel}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -90,7 +92,7 @@ function RosterTable({ entries, leagueId, username, valuesReady }: { entries: Va
               <PlayerIdentity name={entry.player.name} photoUrl={headshotUrl(entry.player)} href={withUsername(`/${leagueId}/players/${entry.player.id}`, username)} metadata={<>{entry.player.team ?? "FA"}{entry.rankPosition ? ` · ${entry.player.position}${entry.rankPosition}` : ""}</>} />
             </TableCell>
             <TableCell className="hidden sm:table-cell"><PositionBadge position={entry.player.position} /></TableCell>
-            <TableCell className={cn("pr-4 text-right tabular-nums font-medium", !valuesReady && "text-muted-foreground")}>{valuesReady ? formatValue(entry.value) : "—"}</TableCell>
+            <TableCell className={cn("pr-4 text-right tabular-nums font-medium", !valuesReady && "text-muted-foreground")}>{valuesReady ? entry.value.toLocaleString("en-US", { maximumFractionDigits: basisMeta(basis).decimals }) : "—"}</TableCell>
           </TableRow>
         ))}
       </TableBody>
@@ -98,7 +100,7 @@ function RosterTable({ entries, leagueId, username, valuesReady }: { entries: Va
   );
 }
 
-function TeamRoster({ team, leagueId, username, valuesReady }: Pick<TeamDetailProps, "team" | "leagueId" | "username" | "valuesReady">) {
+function TeamRoster({ team, leagueId, username, valuesReady, basis }: Pick<TeamDetailProps, "team" | "leagueId" | "username" | "valuesReady" | "basis">) {
   const groups = ["Starters", "Bench", "Taxi squad", "Injured reserve"] as const;
   if (!team.roster.length) return <Empty className="min-h-64"><EmptyHeader><EmptyTitle>Roster unavailable</EmptyTitle><EmptyDescription>Sleeper did not return any players for this team.</EmptyDescription></EmptyHeader></Empty>;
 
@@ -112,7 +114,7 @@ function TeamRoster({ team, leagueId, username, valuesReady }: Pick<TeamDetailPr
             <div className="mb-3">
               <div className="flex items-center gap-2"><h2 className="font-heading text-base font-semibold">{group}</h2><Badge variant="secondary">{entries.length}</Badge></div>
             </div>
-            <RosterTable entries={entries} leagueId={leagueId} username={username} valuesReady={valuesReady} />
+            <RosterTable entries={entries} leagueId={leagueId} username={username} valuesReady={valuesReady} basis={basis} />
           </section>
         );
       })}
@@ -130,8 +132,8 @@ export function TeamDetail(props: TeamDetailProps) {
           <TabsTrigger className="rounded-none after:bottom-0" value="roster">Roster</TabsTrigger>
         </TabsList>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[max(24px,env(safe-area-inset-bottom))] md:px-7">
-          <TabsContent value="overview"><PositionRooms team={props.team} teams={props.teams} valuesReady={props.valuesReady} /></TabsContent>
-          <TabsContent value="roster"><TeamRoster leagueId={props.leagueId} team={props.team} username={props.username} valuesReady={props.valuesReady} /></TabsContent>
+          <TabsContent value="overview"><PositionRooms team={props.team} teams={props.teams} valuesReady={props.valuesReady} basis={props.basis} /></TabsContent>
+          <TabsContent value="roster"><TeamRoster leagueId={props.leagueId} team={props.team} username={props.username} valuesReady={props.valuesReady} basis={props.basis} /></TabsContent>
         </div>
       </Tabs>
     </div>

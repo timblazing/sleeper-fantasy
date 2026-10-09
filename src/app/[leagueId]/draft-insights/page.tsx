@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { DraftWorkspace } from "@/components/draft-workspace";
+import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { getDraftGradeData } from "@/lib/draft-grades";
 
@@ -12,7 +13,7 @@ export default async function DraftPage({ params, searchParams }: { params: Prom
   const data = await getDraftGradeData(leagueId, requested);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1288px] flex-col gap-6 p-4 md:p-6">
+    <PageContainer className="flex flex-col gap-6">
       <PageHeader
         description={
           data.selectedDraftId
@@ -23,6 +24,6 @@ export default async function DraftPage({ params, searchParams }: { params: Prom
       />
 
       <DraftWorkspace basePath={`/${leagueId}/draft-insights`} data={data} username={typeof query.username === "string" ? query.username : undefined} />
-    </div>
+    </PageContainer>
   );
 }
