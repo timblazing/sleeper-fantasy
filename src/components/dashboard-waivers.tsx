@@ -28,4 +28,3 @@ export function DashboardWaivers({ pulse, leagueId, username }: { pulse?: Dashbo
     </CardContent>
   </Card>;
 }
-
