@@ -35,6 +35,15 @@ describe("AppSidebar", () => {
     expect(screen.queryByText("Dynasty tools unavailable")).not.toBeInTheDocument();
   });
 
+  it("renders the GitHub project link in the secondary footer navigation", () => {
+    const { container } = renderSidebar(league(true));
+    const github = screen.getByRole("link", { name: "GitHub" });
+    expect(github).toHaveAttribute("href", "https://github.com/timblazing/sleeper-fantasy");
+    expect(github).toHaveAttribute("target", "_blank");
+    expect(github).toHaveAttribute("rel", "noreferrer");
+    expect(screen.getByText("Links")).toBeInTheDocument();
+  });
+
   it("does not render the removed Insights page", () => {
     const { container } = renderSidebar(league(true));
     const rendered = hrefs(container);

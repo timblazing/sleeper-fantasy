@@ -4,6 +4,7 @@ import * as React from "react"
 
 import { NavMain } from "@/components/nav-main"
 import { NavProjects } from "@/components/nav-projects"
+import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
 import {
@@ -69,6 +70,7 @@ export function AppSidebar({
         <NavProjects projects={toItems(toolsNav)} />
       </SidebarContent>
       <SidebarFooter>
+        <NavSecondary />
         <NavUser
           user={{
             name: account?.displayName ?? username ?? "Sleeper",

@@ -3,19 +3,19 @@
 </p>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/dashboard.png"><img alt="Dashboard" src="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/dashboard.png" /></a>
+  <a href="docs/screenshots/dashboard.png"><img alt="Dashboard" src="docs/screenshots/dashboard.png" /></a>
 </p>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/players.png"><img alt="Players" src="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/players.png" /></a>
+  <a href="docs/screenshots/players.png"><img alt="Players" src="docs/screenshots/players.png" /></a>
 </p>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/playoff-race.png"><img alt="Playoff race" src="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/playoff-race.png" /></a>
+  <a href="docs/screenshots/matchups.png"><img alt="Matchups" src="docs/screenshots/matchups.png" /></a>
 </p>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/seed-probability.png"><img alt="Seed probability" src="https://raw.githubusercontent.com/timblazing/sleeper-fantasy/refs/heads/main/docs/screenshots/seed-probability.png" /></a>
+  <a href="docs/screenshots/scouting-report.png"><img alt="Scouting report" src="docs/screenshots/scouting-report.png" /></a>
 </p>
 
 ## Features
@@ -25,6 +25,7 @@
 - Trade analysis powered by RosterAudit
 - Dynasty, keeper, and redraft leagues — dynasty pages are priced on the dynasty market, everything else on projected points above replacement
 - Username-based league discovery with no manual league IDs
+- A sidebar footer link to the project on GitHub
 
 ## Data sources
 
