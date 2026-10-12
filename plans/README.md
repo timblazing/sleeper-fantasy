@@ -17,10 +17,16 @@ status row when complete.
 | 004 | Give every server-side outbound fetch a timeout | P1 | S | — | TODO |
 | 005 | Cover season-phase and outlook logic with tests | P2 | M | — | TODO |
 | 006 | Rate-limit the remaining public API routes | P2 | M | — | TODO |
+| 007 | Adopt current design system + light/dark toggle | P1 | M | — | TODO |
+| 008 | Landing page replaces the connect dialog | P1 | M | 007 | TODO |
+| 009 | Sidebar IA + split dashboard into pages | P1 | L | 007 | TODO |
+| 010 | Command palette + consistency pass | P2 | M | 007–009 | TODO |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale).
 
 ## Dependency notes
+
+- 007–010 (UX overhaul, 2026-10-12) run sequentially on `main`: 007 → 008 → 009 → 010.
 
 - 004, 005 and 006 are independent and can run in any order or in parallel.
   They touch disjoint files, with one exception below.
