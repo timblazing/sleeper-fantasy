@@ -57,22 +57,9 @@ function ToneIcon({ tone }: { tone: ScoutInsight["tone"] }) {
   return <Icon size="14" aria-hidden="true" />;
 }
 
-/**
- * The leverage score, drawn as a numeral in a tinted well.
- *
- * Deliberately not a progress bar: the number is ordinal guidance ("work this one before that
- * one"), not a precise quantity, and a bar invites reading 52 as meaningfully more than 49.
- */
-function LeverageMark({ score, muted, size = "sm" }: { score: number; muted: boolean; size?: "sm" | "lg" }) {
-  const tint = muted || score === 0 ? "bg-muted text-muted-foreground" : score >= 50 ? "bg-positive/12 text-positive" : "bg-warning/12 text-warning-foreground";
-  return (
-    <span
-      className={cn("flex shrink-0 items-center justify-center rounded-lg font-medium tabular-nums", size === "lg" ? "size-14 text-2xl" : "size-11 text-lg", tint)}
-      title={`Leverage ${score} of 100`}
-    >
-      {score}
-    </span>
-  );
+/** Compact ordinal guidance beside the manager name. */
+function TradeFitBadge({ score }: { score: number }) {
+  return <Badge variant={score === 0 ? "secondary" : score >= 50 ? "success" : "warning"} className="tabular-nums" title={`Trade fit ${score} of 100`}>Trade fit {score}</Badge>;
 }
 
 function InsightCard({ insight }: { insight: ScoutInsight }) {
@@ -123,19 +110,21 @@ function ManagerActivity({ profile, basis }: { profile: ManagerProfile; basis: V
   const draftTotal = profile.draftTendencies.reduce((sum, entry) => sum + entry.picks, 0);
 
   return (
-    <section className="flex flex-col gap-4 border-y py-4">
+    <section className="flex min-w-0 flex-col gap-4">
+      <h3 className="text-sm font-medium">Manager activity</h3>
       <div className="grid grid-cols-3 gap-3">
-        <div><p className="text-xs text-muted-foreground">Completed trades</p><p className="mt-1 text-xl font-semibold tabular-nums">{tendencies.trades}</p><p className="text-xs text-muted-foreground">{tendencies.style} · #{tendencies.tradeRank} in league</p></div>
-        <div><p className="text-xs text-muted-foreground">Trades / season</p><p className="mt-1 text-xl font-semibold tabular-nums">{tendencies.tradesPerYear.toLocaleString("en-US", { maximumFractionDigits: 1 })}</p><p className="text-xs text-muted-foreground">{tendencies.seasonsScanned} seasons scanned</p></div>
-        <div><p className="text-xs text-muted-foreground">{basis === "dynasty" ? "Net pick flow" : "Waiver claims"}</p><p className={cn("mt-1 text-xl font-semibold tabular-nums", tendencies.netPickFlow > 0 && "text-positive")}>{basis === "dynasty" ? `${tendencies.netPickFlow > 0 ? "+" : ""}${tendencies.netPickFlow}` : tendencies.waiverClaims}</p><p className="text-xs text-muted-foreground">{basis === "dynasty" ? "Acquired minus sent" : "Across scanned seasons"}</p></div>
+        <div><p className="text-xs text-muted-foreground">Completed trades</p><p className="mt-1 text-xl font-semibold tabular-nums">{tendencies.trades}</p><p className="text-xs text-muted-foreground">#{tendencies.tradeRank} in league</p></div>
+        <div><p className="text-xs text-muted-foreground">Trades / season</p><p className="mt-1 text-xl font-semibold tabular-nums">{tendencies.tradesPerYear.toLocaleString("en-US", { maximumFractionDigits: 1 })}</p></div>
+        <div><p className="text-xs text-muted-foreground">{basis === "dynasty" ? "Net pick flow" : "Waiver claims"}</p><p className={cn("mt-1 text-xl font-semibold tabular-nums", tendencies.netPickFlow > 0 && "text-positive")}>{basis === "dynasty" ? `${tendencies.netPickFlow > 0 ? "+" : ""}${tendencies.netPickFlow}` : tendencies.waiverClaims}</p>{basis === "dynasty" ? <p className="text-xs text-muted-foreground">Acquired minus sent</p> : null}</div>
       </div>
+      <p className="text-xs text-muted-foreground">{tendencies.style} trader · {tendencies.seasonsScanned} {tendencies.seasonsScanned === 1 ? "season" : "seasons"} recorded</p>
       {activity > 0 || draftTotal > 0 ? (
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-5 border-t pt-4 sm:grid-cols-2">
           {activity > 0 ? (
             <div>
               <h3 className="text-xs font-medium">Weekly activity</h3>
               <p className="mt-1 text-xs text-muted-foreground">{activity} non-trade moves · peak {tendencies.busiestDay ?? "day unavailable"}</p>
-              <div className="mt-3 flex h-20 items-end gap-2">
+              <div className="mt-3 flex h-16 items-end gap-2">
                 {days.map((day, index) => (
                   <div key={day} className="flex min-w-0 flex-1 flex-col items-center gap-1" title={`${day}: ${tendencies.activityByDay[index] ?? 0} moves`}>
                     <span className="text-[10px] text-muted-foreground tabular-nums">{tendencies.activityByDay[index] ?? 0}</span>
@@ -178,27 +167,28 @@ function Dossier({ profile, report }: { profile: ManagerProfile; report: Scoutin
         <Avatar className="size-12"><AvatarImage src={profile.avatar ? avatarUrl(profile.avatar) : undefined} alt="" /><AvatarFallback>{initials(profile.manager)}</AvatarFallback></Avatar>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2"><h2 className="font-heading text-xl font-semibold">{profile.name}</h2>
+            {report.valuesReady && report.userRosterId && !profile.isUser ? <TradeFitBadge score={profile.leverage} /> : null}
             {dynasty && report.valuesReady && profile.window ? <Badge variant={WINDOW_VARIANT[profile.window]}>{profile.window}</Badge> : null}
             {profile.isUser ? <Badge variant="secondary">Your team</Badge> : null}
           </div>
           <p className="mt-1 text-xs text-muted-foreground">@{profile.manager} · {record.wins}-{record.losses}{record.ties ? `-${record.ties}` : ""} · {report.valuesReady ? `#${profile.valueRank} of ${profile.teams} in ${dynasty ? "dynasty value" : "projected roster PPG+"}` : "Roster values unavailable"}</p>
         </div>
       </div>
-      {report.valuesReady && report.userRosterId && !profile.isUser ? <div className="flex items-center gap-2"><span className="text-xs text-muted-foreground">Trade fit</span><LeverageMark muted={false} score={profile.leverage} /><Button nativeButton={false} size="sm" variant="outline" render={<Link href={withUsername(`/${report.league.id}/trade`, report.username)} />}>Explore a deal</Button></div> : null}
+      {report.valuesReady && report.userRosterId && !profile.isUser ? <Button nativeButton={false} size="sm" variant="outline" render={<Link href={withUsername(`/${report.league.id}/trade`, report.username)} />}>Explore a deal</Button> : null}
     </header>
     <div className="grid items-start gap-6 lg:grid-cols-2">
-      <section className="flex flex-col gap-4">
+      <section className="flex min-w-0 flex-col gap-3">
         <h3 className="text-sm font-medium">{profile.isUser ? "Your roster outlook" : "Trade angle"}</h3>
         {report.valuesReady ? <>
-          {profile.play ? <div className="rounded-lg border bg-muted/30 p-4"><p className="mb-1 text-xs font-medium text-positive">{dynasty ? "Suggested approach" : "Scoring fit"}</p><p className="text-sm leading-relaxed">{profile.play}</p></div> : <p className="text-sm text-muted-foreground">{profile.isUser ? "Compare your position strengths with the other managers to find a complementary deal." : "No clear complementary trade identified. Compare both sides before making an offer."}</p>}
-          <RoomPills label={dynasty ? "Needs" : "Weaker scoring rooms"} rooms={profile.needs} teams={profile.teams} tone="need" />
-          <RoomPills label={dynasty ? "Depth" : "Stronger scoring rooms"} rooms={profile.surpluses} teams={profile.teams} tone="surplus" />
-          <p className="text-xs leading-relaxed text-muted-foreground">{dynasty ? "Position ranks compare dynasty market value in this league." : "Position ranks compare projected points above replacement in this league’s lineup format. Use them to identify complementary strengths for a deal."}</p>
+          {profile.play ? <p className="max-w-prose text-sm leading-relaxed">{profile.play}</p> : <p className="text-sm text-muted-foreground">{profile.isUser ? "Compare your position strengths with the other managers to find a complementary deal." : "No clear complementary trade identified. Compare both sides before making an offer."}</p>}
+          <RoomPills label={dynasty ? "Needs" : "Weaker rooms"} rooms={profile.needs} teams={profile.teams} tone="need" />
+          <RoomPills label={dynasty ? "Depth" : "Stronger rooms"} rooms={profile.surpluses} teams={profile.teams} tone="surplus" />
+          <p className="text-xs leading-relaxed text-muted-foreground">{dynasty ? "Position ranks compare dynasty market value in this league." : "Position ranks use projected points above replacement in this league’s lineup."}</p>
         </> : <p className="text-sm text-muted-foreground">Current roster values are unavailable. Position needs and trade-fit suggestions will return when the feed recovers.</p>}
       </section>
       <ManagerActivity profile={profile} basis={report.basis} />
     </div>
-    <div className="grid items-start gap-6 md:grid-cols-2">{grouped.map(group => <section key={group.id}>
+    <div className="grid items-start gap-6 border-t pt-6 md:grid-cols-2">{grouped.map(group => <section key={group.id}>
       <h3 className="mb-3 flex items-center gap-2 text-sm font-medium"><group.icon size="14" aria-hidden="true" />{group.heading}</h3>
       <div className="flex flex-col gap-2">{group.items.map(insight => <InsightCard insight={insight} key={insight.id} />)}</div>
     </section>)}</div>
@@ -235,7 +225,7 @@ export function ScoutingReportView({ report }: { report: ScoutingReport }) {
       <Input aria-label="Search managers" placeholder="Search teams or managers…" value={search} onChange={event => setSearch(event.target.value)} className="w-full sm:max-w-64" />
     </div>
     <section className="flex flex-col gap-3" aria-label="Choose a manager">
-      <div className="flex items-center justify-between gap-3"><h2 className="text-sm font-medium">Choose a manager</h2><span className="text-xs text-muted-foreground">{visible.length} teams · {report.seasonsScanned} {report.seasonsScanned === 1 ? "season" : "seasons"} of history</span></div>
+      <h2 className="text-sm font-medium">Choose a manager</h2>
       <p className="text-xs text-muted-foreground sm:hidden">Swipe to browse teams.</p>
       <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">{visible.map(profile => <Button key={profile.rosterId} variant={selected?.rosterId === profile.rosterId ? "default" : "outline"} className="h-auto min-h-10 max-w-full shrink-0 justify-start gap-2 px-3 py-2" aria-pressed={selected?.rosterId === profile.rosterId} aria-controls="manager-report" onClick={() => setSelectedId(profile.rosterId)}>
         <Avatar aria-hidden="true" className="size-6 shrink-0"><AvatarImage src={profile.avatar ? avatarUrl(profile.avatar) : undefined} alt="" /><AvatarFallback className="text-[10px]">{initials(profile.manager)}</AvatarFallback></Avatar><span className="truncate">{profile.name}</span>{profile.isUser ? <span className="text-[10px] opacity-70">You</span> : null}
