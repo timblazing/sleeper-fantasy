@@ -1,13 +1,13 @@
 import { AppBreadcrumb } from "@/components/app-breadcrumb";
 import { AppSidebar } from "@/components/app-sidebar";
+import { CommandMenu } from "@/components/command-menu";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ScorePlacementChrome } from "@/components/score-placement-chrome";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import type { LeagueChrome } from "@/lib/league-chrome";
 
-// Shared by the [leagueId] layout and the connect screen, which renders the same
-// chrome behind the dialog so the blurred backdrop is the real dashboard.
+// Shared by the [leagueId] layout: sidebar, sticky header (breadcrumb, search, theme, ticker) and inset.
 export function LeagueShell({ children, defaultOpen = true, league }: { children: React.ReactNode; defaultOpen?: boolean; league: LeagueChrome }) {
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
@@ -18,6 +18,7 @@ export function LeagueShell({ children, defaultOpen = true, league }: { children
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 data-vertical:h-4 data-vertical:self-auto" />
             <div className="min-w-0 flex-1"><AppBreadcrumb league={league} /></div>
+            <CommandMenu league={league} />
             <ThemeToggle />
             <div className="w-full min-w-0 md:w-auto md:basis-auto"><ScorePlacementChrome /></div>
           </div>
