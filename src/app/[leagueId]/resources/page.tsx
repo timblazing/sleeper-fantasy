@@ -169,6 +169,14 @@ export default async function ResourcesPage({
           .
         </p>
       )}
+
+      {/* Vendor terms (rosteraudit-api-reference.md §6): RosterAudit values link back to the source. */}
+      <p className="mt-4 border-t pt-5 text-center text-xs text-muted-foreground">
+        Data by Sleeper ·{" "}
+        <a className="hover:text-foreground hover:underline" href="https://rosteraudit.com" rel="noreferrer" target="_blank">
+          Values by RosterAudit
+        </a>
+      </p>
     </PageContainer>
   );
 }

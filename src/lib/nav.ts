@@ -16,11 +16,13 @@ export const toolsNav: NavEntry[] = [
   { title: "Trade Calculator", segment: "trade", icon: ScaleIcon },
   { title: "Scouting Report", segment: "scouting-report", icon: BinocularsIcon },
   { title: "Draft Insights", segment: "draft-insights", icon: ClipboardListIcon },
-  { title: "Resources", segment: "resources", icon: BookOpenIcon },
 ];
+
+// Rendered in the sidebar footer's link list, below GitHub, rather than with the Tools.
+export const resourcesNav: NavEntry = { title: "Resources", segment: "resources", icon: BookOpenIcon };
 
 export function navTitle(segment: string | null): string {
   if (segment === "matchups") return "Matchups";
   if (segment === "teams") return "Team";
-  return [...mainNav, ...toolsNav].find((entry) => entry.segment === segment)?.title ?? "Dashboard";
+  return [...mainNav, ...toolsNav, resourcesNav].find((entry) => entry.segment === segment)?.title ?? "Dashboard";
 }

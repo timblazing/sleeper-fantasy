@@ -61,7 +61,6 @@ describe("PlayersPage", () => {
   it("renders the table for a dynasty league", async () => {
     await renderPage(true);
     expect(screen.getByText("Bijan Robinson")).toBeInTheDocument();
-    // The RosterAudit credit is the layout's SiteFooter now, not this page's own attribution.
     expect(screen.queryByText("Values by RosterAudit.com")).not.toBeInTheDocument();
     expect(screen.getByText("Dynasty market values for every player, ranked and filterable.")).toBeInTheDocument();
   });

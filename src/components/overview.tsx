@@ -13,7 +13,6 @@ import { HistoryLeaderboard } from "@/components/history-leaderboard";
 import type { PlayoffPicture, RemainingGame } from "@/lib/playoff-odds";
 import { TeamLink } from "@/components/team-link";
 import type { LeagueHistory } from "@/lib/league-history";
-import { PageHeader } from "@/components/page-header";
 import { SummaryMetrics } from "@/components/summary-metrics";
 import { PageContainer } from "@/components/page-container";
 import { buttonVariants } from "@/components/ui/button";
@@ -87,10 +86,6 @@ export function Overview({ data, picture, history, pulse }: { data: OverviewData
   ] : [];
   return (
     <PageContainer className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <PageHeader description={`${data.league.name} · ${data.league.season}`} title="Dashboard" />
-        <div className="flex flex-wrap items-center gap-2 pb-1"><Link className={buttonVariants({ size: "sm", variant: "outline" })} href={withUsername(`/${data.league.id}/matchups/${data.state.matchupWeek}`, data.username)}>All matchups</Link><Badge variant="secondary">Week {data.state.matchupWeek}</Badge><Badge variant={data.phase.tone === "positive" ? "success" : "secondary"}>{data.phase.label}</Badge></div>
-      </div>
       {!data.team ? <ConnectPrompt leagueId={data.league.id} /> : null}
       {metrics.length ? <SummaryMetrics items={metrics} /> : null}
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">

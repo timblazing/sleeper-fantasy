@@ -105,7 +105,7 @@ export function TeamSwitcher({
                   }}
                   render={<Link href={team.url} />}
                 >
-                  <div className="flex size-6 items-center justify-center overflow-hidden rounded-md border">
+                  <div className="flex size-6 items-center justify-center overflow-hidden rounded-md">
                     <LeagueLogo src={team.logo} className="size-4" />
                   </div>
                   {team.name}

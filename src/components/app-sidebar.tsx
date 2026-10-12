@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sidebar"
 import { useAccount } from "@/hooks/use-account"
 import type { LeagueChrome } from "@/lib/league-chrome"
-import { mainNav, toolsNav, type NavEntry } from "@/lib/nav"
+import { mainNav, resourcesNav, toolsNav, type NavEntry } from "@/lib/nav"
 import { leagueAvatarProxyUrl, withUsername } from "@/lib/utils"
 import { useSearchParams, useSelectedLayoutSegment } from "next/navigation"
 
@@ -70,7 +70,7 @@ export function AppSidebar({
         <NavProjects projects={toItems(toolsNav)} />
       </SidebarContent>
       <SidebarFooter>
-        <NavSecondary />
+        <NavSecondary resources={toItems([resourcesNav])[0]} />
         <NavUser
           user={{
             name: account?.displayName ?? username ?? "Sleeper",

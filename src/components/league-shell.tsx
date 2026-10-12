@@ -1,6 +1,5 @@
 import { AppBreadcrumb } from "@/components/app-breadcrumb";
 import { AppSidebar } from "@/components/app-sidebar";
-import { SiteFooter } from "@/components/site-footer";
 import { Separator } from "@/components/ui/separator";
 import { ScorePlacementChrome } from "@/components/score-placement-chrome";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -22,7 +21,6 @@ export function LeagueShell({ children, defaultOpen = true, league }: { children
           </div>
         </header>
         {children}
-        <SiteFooter />
       </SidebarInset>
     </SidebarProvider>
   );

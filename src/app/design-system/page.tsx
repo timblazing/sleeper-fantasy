@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ComponentSpecimens } from "@/components/component-specimens";
 import { PageContainer } from "@/components/page-container";
-import { SiteFooter } from "@/components/site-footer";
 
 export const metadata = { title: "Design system", robots: { index: false, follow: false } };
 
@@ -21,7 +20,6 @@ export default async function DesignSystemPage({ searchParams }: { searchParams:
         </header>
         <ComponentSpecimens position={position} />
       </PageContainer></main>
-      <SiteFooter />
     </>
   );
 }

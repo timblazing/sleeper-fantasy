@@ -41,7 +41,7 @@ describe("AppSidebar", () => {
     expect(github).toHaveAttribute("href", "https://github.com/timblazing/sleeper-fantasy");
     expect(github).toHaveAttribute("target", "_blank");
     expect(github).toHaveAttribute("rel", "noreferrer");
-    expect(screen.getByText("Links")).toBeInTheDocument();
+    expect(screen.queryByText("Links")).not.toBeInTheDocument();
   });
 
   it("does not render the removed Insights page", () => {
@@ -70,11 +70,13 @@ describe("AppSidebar", () => {
     }
   });
 
-  it("keeps Resources in Tools for every league format", () => {
+  it("keeps Resources in the footer links, below GitHub, for every league format", () => {
     for (const isDynasty of [true, false]) {
       const { container, unmount } = renderSidebar(league(isDynasty));
       expect(hrefs(container)).toContain("/123/resources");
       expect(screen.getByText("Resources")).toBeInTheDocument();
+      const rendered = hrefs(container);
+      expect(rendered.indexOf("/123/resources")).toBe(rendered.indexOf("https://github.com/timblazing/sleeper-fantasy") + 1);
       unmount();
     }
   });
@@ -126,12 +128,11 @@ describe("AppSidebar", () => {
     }
   });
 
-  it("places Draft Insights directly under Scouting and before Resources", () => {
+  it("places Draft Insights directly under Scouting", () => {
     const { container } = renderSidebar(league(true));
     const rendered = hrefs(container);
     expect(rendered.indexOf("/123/scouting-report")).toBe(rendered.indexOf("/123/trade") + 1);
     expect(rendered.indexOf("/123/draft-insights")).toBe(rendered.indexOf("/123/scouting-report") + 1);
-    expect(rendered.indexOf("/123/resources")).toBe(rendered.indexOf("/123/draft-insights") + 1);
   });
 
   it("does not render the removed Stats link", () => {
