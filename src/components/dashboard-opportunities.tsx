@@ -16,7 +16,7 @@ export function DashboardRoster({ data, className }: { data: OverviewData; class
   return <Card className={className}>
     <PanelHeader title="Roster edge" description={data.league.isDynasty ? "Position value against the league" : "Projected PPG against the league"} actions={<PanelLink href={withUsername(`/${data.league.id}/teams/${data.team.rosterId}`, data.username)} label="Open your roster" />} />
     <CardContent className="flex flex-1 flex-col">
-      {data.valuesReady ? <div className="grid grid-cols-2 gap-x-5 gap-y-4">{data.rooms.map(room => {
+      {data.valuesReady ? <div className="grid flex-1 grid-cols-2 content-evenly gap-x-5 gap-y-4">{data.rooms.map(room => {
         const relative = room.leagueAvg > 0 ? (room.value / room.leagueAvg - 1) * 100 : null;
         return <div key={room.position}>
           <div className="flex items-center justify-between"><PositionBadge position={room.position} /><span className="text-xs tabular-nums text-muted-foreground">#{room.rank} <span className="text-muted-foreground/60">/ {data.league.teams}</span></span></div>
@@ -24,7 +24,7 @@ export function DashboardRoster({ data, className }: { data: OverviewData; class
           <p className={cn("mt-1.5 text-xs tabular-nums", relative == null ? "text-muted-foreground" : relative >= 0 ? "text-positive" : "text-negative")}>{relative == null ? "No league baseline" : `${relative >= 0 ? "+" : ""}${relative.toFixed(0)}% vs average`}</p>
         </div>;
       })}</div> : <p className="text-sm text-muted-foreground">Roster values are temporarily unavailable.</p>}
-      {data.insights.length ? <div className="mt-auto space-y-3 pt-5"><div className="space-y-3 border-t pt-4">{data.insights.slice(0, 2).map(insight => <div key={insight.id}><p className="text-sm font-medium">{insight.title}</p><p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{insight.detail}</p></div>)}</div></div> : null}
+      {data.insights.length ? <div className="mt-4"><div className="space-y-3 border-t pt-4">{data.insights.slice(0, 2).map(insight => <div key={insight.id}><p className="text-sm font-medium">{insight.title}</p><p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{insight.detail}</p></div>)}</div></div> : null}
     </CardContent>
   </Card>;
 }
