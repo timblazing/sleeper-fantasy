@@ -3,7 +3,8 @@
 import { useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { PanelHeader } from "@/components/panel-header";
 import { Separator } from "@/components/ui/separator";
 import { TeamLink } from "@/components/team-link";
 import type { PlayoffOutlook, PlayoffPicture, PlayoffRow } from "@/lib/playoff-odds";
@@ -39,16 +40,13 @@ function TeamAvatar({ row, className }: { row: Pick<PlayoffRow, "avatar" | "name
  * The headline table: one row per team, sorted by playoff odds, with the playoff
  * cutline drawn between the last qualifying seed and the first team on the outside.
  */
-export function PlayoffRace({ leagueId, picture, username }: { leagueId: string; picture: PlayoffPicture; username?: string }) {
+export function PlayoffRace({ leagueId, picture, username, className }: { leagueId: string; picture: PlayoffPicture; username?: string; className?: string }) {
   const rows = useMemo(() => picture.rows.toSorted((a, b) => b.playoffOdds - a.playoffOdds), [picture.rows]);
   const max = Math.max(...rows.map((row) => row.playoffOdds), 1);
 
   return (
-    <Card accent>
-      <CardHeader>
-        <CardTitle>Playoff race</CardTitle>
-        <CardDescription>{METRIC.description} — {picture.simulations.toLocaleString()} simulations</CardDescription>
-      </CardHeader>
+    <Card className={className}>
+      <PanelHeader title="Playoff race" description={METRIC.description} />
       <CardContent>
         <div className="grid grid-cols-[1.5rem_minmax(7rem,1fr)_minmax(3rem,6rem)_3.5rem] items-center gap-x-3 border-b pb-2 text-xs font-medium text-muted-foreground sm:grid-cols-[1.5rem_minmax(9rem,1.4fr)_minmax(5rem,1fr)_3.5rem_5.5rem_4.5rem_4rem]">
           <span className="text-center">#</span>

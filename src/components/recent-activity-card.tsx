@@ -1,6 +1,7 @@
 import { ArrowLeftRightIcon, MinusIcon, PlusIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { PanelHeader } from "@/components/panel-header";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { TeamLink } from "@/components/team-link";
 import { headshotUrl } from "@/lib/display";
@@ -46,7 +47,7 @@ function ActivityRow({ item, leagueId, username }: { item: ActivityItem; leagueI
   return (
     <li className="border-b py-3 first:pt-0 last:border-b-0 last:pb-0">
       <div className="flex min-w-0 items-baseline gap-x-2 gap-y-0.5 text-xs">
-        <span className="truncate font-medium">
+        <span className="truncate font-medium text-foreground">
           {item.teams.length && leagueId ? item.teams.map((team, index) => (
             <span key={team.rosterId}>
               {index ? <span className="px-1 text-muted-foreground">↔</span> : null}
@@ -80,15 +81,17 @@ function ActivityRow({ item, leagueId, username }: { item: ActivityItem; leagueI
 }
 
 /** The league's last handful of completed moves — trades, waiver claims, and free agent adds. */
-export function RecentActivityCard({ activity, leagueId, username }: { activity: ActivityItem[]; leagueId?: string; username?: string }) {
+export function RecentActivityCard({ activity, leagueId, username, fill = false, className }: {
+  activity: ActivityItem[]; leagueId?: string; username?: string;
+  /** At xl, size to the row instead of the list: the feed scrolls inside whatever height its neighbour sets. */
+  fill?: boolean; className?: string;
+}) {
   return (
-    <Card accent>
-      <CardHeader>
-        <CardTitle>Recent activity</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Card className={className}>
+      <PanelHeader title="Recent activity" description="Trades, waiver claims, and free agent adds" />
+      <CardContent className={cn(fill && "xl:relative xl:min-h-72 xl:flex-1")}>
         {activity.length ? (
-          <ul className="flex flex-col">
+          <ul tabIndex={fill ? 0 : undefined} aria-label={fill ? "Recent league moves" : undefined} className={cn("flex flex-col", fill && "xl:absolute xl:inset-x-(--card-spacing) xl:inset-y-0 xl:overflow-y-auto xl:pb-6 xl:mask-b-from-[calc(100%-2rem)] xl:focus-visible:outline-none")}>
             {activity.slice(0, 8).map((item) => (
               <ActivityRow item={item} key={item.id} leagueId={leagueId} username={username} />
             ))}

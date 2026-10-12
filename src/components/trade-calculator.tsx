@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowDownLeftIcon, ArrowUpRightIcon, ArrowUpDownIcon, InfoIcon, LoaderCircleIcon, PlusIcon, SearchIcon, TriangleAlertIcon, XIcon } from "lucide-react";
+import { ArrowUpDownIcon, InfoIcon, LoaderCircleIcon, PlusIcon, SearchIcon, TriangleAlertIcon, XIcon } from "lucide-react";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { PositionBadge } from "@/components/position-badge";
@@ -144,7 +144,7 @@ function Side({ data, title, description, teamId, onTeamChange, assets, onAdd, o
 
   return <Card className="flex flex-col">
     <CardHeader>
-      <div className="flex items-center justify-between gap-3"><CardTitle className="flex items-center gap-2">{title === "You receive" ? <ArrowDownLeftIcon className="size-4 text-positive" /> : <ArrowUpRightIcon className="size-4 text-muted-foreground" />}{title}</CardTitle><Badge variant="secondary">{assets.length} {assets.length === 1 ? "asset" : "assets"}</Badge></div>
+      <div className="flex items-center justify-between gap-3"><CardTitle>{title}</CardTitle><Badge variant="secondary">{assets.length} {assets.length === 1 ? "asset" : "assets"}</Badge></div>
       <CardDescription>{description}</CardDescription>
       <div className="mt-3"><TeamSelect label={`${title} — team`} onChange={(next) => { onTeamChange(next); setQuery(""); setRemote([]); setSearchError(false); setIsSearching(false); }} teams={data.teams} value={teamId} /></div>
     </CardHeader>
@@ -159,7 +159,6 @@ function Side({ data, title, description, teamId, onTeamChange, assets, onAdd, o
         </div> : null}
       </div>
 
-      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground"><span>{roster ? "Available on this roster" : "Find an asset"}</span><span>{hasPicks ? "Players & picks" : "Players only"}</span></div>
       <div className="relative">
         <SearchIcon aria-hidden="true" className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input aria-label={`Add an asset to ${title}`} className="h-10 pl-8" onChange={(event) => { const value = event.target.value; setQuery(value); setRemote([]); setSearchError(false); setIsSearching(!roster && Boolean(value.trim())); }} placeholder={roster ? `Search ${roster.name}${hasPicks ? " and picks" : ""}...` : hasPicks ? "Search any player or pick..." : "Search any player..."} type="search" value={query} />
@@ -285,10 +284,7 @@ export function TradeCalculator({ data }: { data: TradeLabData }) {
 
 
   return <PageContainer className="flex flex-col gap-6">
-    <div className="flex flex-wrap items-start justify-between gap-4">
-      <PageHeader description="Build both sides of a deal. Compare what comes back with what you give up." title="Trade Calculator" />
-      <div className="flex items-center gap-2"><Badge variant="outline">{dynasty ? "Dynasty" : "Redraft"}</Badge><Badge variant="secondary">{data.league.superflex ? "Superflex" : "1QB"}</Badge></div>
-    </div>
+    <PageHeader description="Build both sides of a deal. Compare what comes back with what you give up." title="Trade Calculator" />
 
     {!data.valuesReady || !data.picksReady ? <div className="flex items-start gap-3 rounded-lg border bg-card p-4 text-sm"><InfoIcon className="mt-0.5 size-4 shrink-0 text-info-foreground" /><p className="text-muted-foreground">{!data.valuesReady ? dynasty ? "Live market values are unavailable. Staged totals are hidden; a graded result may still be available from RosterAudit." : "Projections are unavailable. Staged totals are hidden and a calculated result may appear balanced without usable projections." : "Draft pick values are unavailable. You can still compare players."}</p></div> : null}
 

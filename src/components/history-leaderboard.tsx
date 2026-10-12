@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { PanelHeader } from "@/components/panel-header";
 import { TeamLink } from "@/components/team-link";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -39,7 +40,7 @@ function Signed({ value, digits = 2 }: { value: number; digits?: number }) {
  * expected" versus "compiled record", which is what separates the teams that were good from the
  * teams that were lucky.
  */
-export function HistoryLeaderboard({ leagueId, rows, seasonCount, username }: { leagueId: string; rows: ManagerRow[]; seasonCount: number; username?: string }) {
+export function HistoryLeaderboard({ leagueId, rows, username, className }: { leagueId: string; rows: ManagerRow[]; username?: string; className?: string }) {
   const [sort, setSort] = useState<SortKey>("record");
   const active = SORTS.find((entry) => entry.id === sort) ?? SORTS[0];
 
@@ -52,13 +53,13 @@ export function HistoryLeaderboard({ leagueId, rows, seasonCount, username }: { 
   );
 
   return (
-    <Card accent>
-      <CardHeader className="max-sm:grid-cols-1!">
-        <CardTitle>All-time standings</CardTitle>
-        <CardDescription>{active.description} — {rows.length} managers across {seasonCount} {seasonCount === 1 ? "season" : "seasons"}</CardDescription>
-        <CardAction className="max-sm:col-start-1 max-sm:row-start-3 max-sm:mt-2 max-sm:justify-self-stretch">
+    <Card className={className}>
+      <PanelHeader
+        title="All-time standings"
+        description={active.description}
+        actions={
           <Select onValueChange={(value) => setSort(value as SortKey)} value={sort}>
-            <SelectTrigger aria-label="Sort managers by" size="sm" className="w-[11.5rem] max-sm:w-full">
+            <SelectTrigger aria-label="Sort managers by" size="sm" className="w-[11.5rem]">
               {/* Base UI renders the raw value unless the label is supplied explicitly. */}
               <SelectValue>{() => active.label}</SelectValue>
             </SelectTrigger>
@@ -68,8 +69,8 @@ export function HistoryLeaderboard({ leagueId, rows, seasonCount, username }: { 
               ))}
             </SelectContent>
           </Select>
-        </CardAction>
-      </CardHeader>
+        }
+      />
       <CardContent className="px-0">
         <Table>
           <TableHeader>

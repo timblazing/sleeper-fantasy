@@ -2,7 +2,8 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-// Accent surfaces use a stronger border, keeping elevation quiet.
+// Accent surfaces use a stronger border, keeping elevation quiet. In dark mode a faint top sheen
+// and inner highlight lift the surface off the page without a drop shadow.
 function Card({
   className,
   size = "default",
@@ -16,7 +17,7 @@ function Card({
       data-size={size}
       data-accent={accent ? "" : undefined}
       className={cn(
-        "group/card relative flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-border [--card-spacing:--spacing(3)] sm:[--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        "group/card relative flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-border dark:bg-linear-to-b dark:from-white/[0.025] dark:to-transparent dark:shadow-[inset_0_1px_0_0_rgb(255_255_255/0.05)] [--card-spacing:--spacing(3)] sm:[--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
         accent && "ring-border-strong",
         className
       )}

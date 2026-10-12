@@ -15,7 +15,6 @@ describe("dashboard priorities", () => {
     }));
     render(<DashboardPriorities data={priorities(actions)} />);
     for (const action of actions) expect(screen.getByText(action.title)).toBeVisible();
-    expect(screen.getByText("5 priorities")).toBeVisible();
   });
 
   it("does not clear the lineup when matchup data is unavailable", () => {

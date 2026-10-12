@@ -44,7 +44,7 @@ function PlayerSide({ entry, reverse, leagueId, username }: { entry: RosterSlot;
           {opponentLabel(entry)}
         </p>
       </div>
-      <div className="hidden shrink-0 tabular-nums text-right sm:block">
+      <div className={cn("hidden shrink-0 tabular-nums sm:block", reverse ? "text-left" : "text-right")}>
         <p className="text-xs font-medium leading-tight sm:text-sm">{points(entry)}</p>
         <p className="text-xs leading-tight text-muted-foreground"><span className="sr-only">Projected </span>{projection(entry)}<span className="sr-only"> points</span></p>
       </div>
