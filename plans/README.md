@@ -19,7 +19,7 @@ status row when complete.
 | 006 | Rate-limit the remaining public API routes | P2 | M | — | TODO |
 | 007 | Adopt current design system + light/dark toggle | P1 | M | — | DONE |
 | 008 | Landing page replaces the connect dialog | P1 | M | 007 | DONE |
-| 009 | Sidebar IA + split dashboard into pages | P1 | L | 007 | TODO |
+| 009 | Sidebar IA + split dashboard into pages | P1 | L | 007 | DONE |
 | 010 | Command palette + consistency pass | P2 | M | 007–009 | TODO |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale).
@@ -56,6 +56,7 @@ are stated relative to that 421-test baseline.
 - Note: the repo now uses `npm` (see `package.json` scripts and `package-lock.json`); plans 004–006 specify `npm` commands. The `.agents/skills` lint warnings no longer appear — `npm run lint` exits 0 with no output at `929f986`.
 - Plan 007: executed on `main` (tokens copied from components repo, class-based dark mode via next-themes, ThemeToggle in league header and /design-system, drift cleanup); typecheck, lint, test (59 files, 482 tests) and build pass. Left literal hex in `nfl-field.tsx` (field illustration/team colors).
 - Plan 008: executed on `main` (landing page at `/` with masked dot-field hero, pill username form, in-page league picker, `?league=` preselect, features strip, footer; connect dialog removed; "Switch account" in NavUser); typecheck, lint, test (59 files, 485 tests) and build pass; browser-verified at 1440 and 393 in both themes.
+- Plan 009: executed on `main` (League/Players/Tools sidebar with WK badge on Matchups; new Standings, Teams, Activity, History and Injuries pages with loading skeletons; dashboard slimmed to a playoff-odds mini list and 4 recent moves linking out; `/players?view=injuries` redirects to `/injuries`; `/teams/[id]` direct loads render the Teams grid behind the sheet); typecheck, lint, test and build pass; browser-verified at 1440 and 393 in both themes, both league formats.
 
 ## Findings considered and rejected
 

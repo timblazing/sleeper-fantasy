@@ -308,6 +308,11 @@ function buildTimeline(context: LeagueValueContext): SeasonTimeline {
   };
 }
 
+/** Just the season rail — a cheap read off the shared league context for pages that only need it. */
+export async function getSeasonTimeline(leagueId: string): Promise<SeasonTimeline> {
+  return buildTimeline(await getLeagueValueContext(leagueId));
+}
+
 export async function getOverviewData(leagueId: string, username?: string): Promise<OverviewData> {
   const [context, account] = await Promise.all([
     getLeagueValueContext(leagueId),

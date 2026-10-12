@@ -3,16 +3,14 @@ import { CalendarCheck, Flame, Gem, SparklesIcon, Target } from "lucide-react";
 import { DashboardWaivers } from "@/components/dashboard-waivers";
 import { DashboardScoring } from "@/components/dashboard-scoring";
 import { DashboardPriorities, DashboardRoster } from "@/components/dashboard-opportunities";
+import { DashboardPlayoffs } from "@/components/dashboard-playoffs";
 import { RecentActivityCard } from "@/components/recent-activity-card";
 import type { DashboardPulse } from "@/lib/dashboard-pulse";
 import { MatchupLineup } from "@/components/matchup-lineup";
 import { MatchupSummary } from "@/components/matchup-summary";
 import { PanelHeader, PanelLabel, PanelLink } from "@/components/panel-header";
-import { PlayoffRace } from "@/components/playoff-race";
-import { HistoryLeaderboard } from "@/components/history-leaderboard";
 import type { PlayoffPicture, RemainingGame } from "@/lib/playoff-odds";
 import { TeamLink } from "@/components/team-link";
-import type { LeagueHistory } from "@/lib/league-history";
 import { SummaryMetrics } from "@/components/summary-metrics";
 import { PageContainer } from "@/components/page-container";
 import { buttonVariants } from "@/components/ui/button";
@@ -80,7 +78,7 @@ function ConnectPrompt({ leagueId }: { leagueId: string }) {
 const ROW = "grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] *:min-w-0";
 const SIDE = "grid content-start gap-5 md:grid-cols-2 xl:flex xl:flex-col";
 
-export function Overview({ data, picture, history, pulse }: { data: OverviewData; picture?: PlayoffPicture; history?: LeagueHistory | null; pulse?: DashboardPulse | null }) {
+export function Overview({ data, picture, pulse }: { data: OverviewData; picture?: PlayoffPicture; pulse?: DashboardPulse | null }) {
   const playoff = picture?.rows.find(row => row.rosterId === data.team?.rosterId);
   const games = data.team ? data.team.wins + data.team.losses + data.team.ties : 0;
   const metrics = data.team ? [
@@ -103,19 +101,14 @@ export function Overview({ data, picture, history, pulse }: { data: OverviewData
         </div>
       </div>
       <div className={ROW}>
-        {picture ? <PlayoffRace className="h-full" leagueId={data.league.id} picture={picture} username={data.username} /> : null}
         <div className={cn(SIDE, !picture && "xl:col-span-2")}>
+          {picture ? <DashboardPlayoffs leagueId={data.league.id} picture={picture} username={data.username} /> : null}
+          <RecentActivityCard className="xl:flex-1" activity={data.activity} href={withUsername(`/${data.league.id}/activity`, data.username)} leagueId={data.league.id} limit={4} username={data.username} />
+        </div>
+        <div className={SIDE}>
           <DashboardPriorities data={data} />
           <DashboardRoster className="xl:flex-1" data={data} />
         </div>
-      </div>
-      <div className={ROW}>
-        {history === undefined ? null : history?.managers.some((row) => row.games > 0) ? (
-          <HistoryLeaderboard className="h-full" leagueId={data.league.id} rows={history.managers} username={data.username} />
-        ) : (
-          <Card className="h-full"><PanelHeader title="All-time standings" /><CardContent><p className="text-sm text-muted-foreground">Past-season standings will appear once Sleeper returns scored league history.</p></CardContent></Card>
-        )}
-        <RecentActivityCard fill className={cn(history === undefined && "xl:col-span-2")} activity={data.activity.slice(0, 8)} leagueId={data.league.id} username={data.username} />
       </div>
     </PageContainer>
   );

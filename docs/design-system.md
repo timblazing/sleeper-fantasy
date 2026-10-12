@@ -124,7 +124,7 @@ measured gain/loss. Do not add page-specific palettes or heavy card shadows.
 | --- | --- | --- |
 | Dashboard | Set a healthy lineup and understand the matchup | Scoring vs league average, unrostered waiver projections, playoff odds, roster strengths and recent moves |
 | Players | Compare assets using this league's value basis | Waiver watch and dynasty market movement; filters and player details |
-| Injury report | Identify lineup risk | Severity filters, starter designations and status details in the rostered-player table |
+| Injuries (`/injuries`) | Identify lineup risk | Severity filters, starter designations and status details in the rostered-player table |
 | Trade Calculator | Build both sides of a deal | Staged totals, net value, live comparison and clearly labelled basis |
 | Scouting Report | Find a compatible trade partner | A wrapping manager selector, roster needs, recorded trading cadence, transaction activity and draft preferences |
 | Draft Insights | Compare draft outcomes against slot cost | Position/round surplus, individual pick boards and manager details |

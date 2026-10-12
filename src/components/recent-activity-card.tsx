@@ -1,7 +1,7 @@
 import { ArrowLeftRightIcon, MinusIcon, PlusIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { PanelHeader } from "@/components/panel-header";
+import { PanelHeader, PanelLink } from "@/components/panel-header";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { TeamLink } from "@/components/team-link";
 import { headshotUrl } from "@/lib/display";
@@ -37,7 +37,7 @@ function PlayerMove({ kind, player }: { kind: "add" | "drop"; player: NflPlayer 
   );
 }
 
-function ActivityRow({ item, leagueId, username }: { item: ActivityItem; leagueId?: string; username?: string }) {
+export function ActivityRow({ item, leagueId, username }: { item: ActivityItem; leagueId?: string; username?: string }) {
   const { icon: Icon, chip } = ENTRY_STYLE[item.kind] ?? ENTRY_STYLE.add;
   const moves = [
     ...item.adds.map((player) => ({ kind: "add" as const, player })),
@@ -81,18 +81,20 @@ function ActivityRow({ item, leagueId, username }: { item: ActivityItem; leagueI
 }
 
 /** The league's last handful of completed moves — trades, waiver claims, and free agent adds. */
-export function RecentActivityCard({ activity, leagueId, username, fill = false, className }: {
+export function RecentActivityCard({ activity, leagueId, username, href, limit = 8, fill = false, className }: {
   activity: ActivityItem[]; leagueId?: string; username?: string;
+  /** Where the full feed lives; adds the panel's open-full-view link. */
+  href?: string; limit?: number;
   /** At xl, size to the row instead of the list: the feed scrolls inside whatever height its neighbour sets. */
   fill?: boolean; className?: string;
 }) {
   return (
     <Card className={className}>
-      <PanelHeader title="Recent activity" description="Trades, waiver claims, and free agent adds" />
+      <PanelHeader title="Recent activity" description="Trades, waiver claims, and free agent adds" actions={href ? <PanelLink href={href} label="Open full activity feed" /> : undefined} />
       <CardContent className={cn(fill && "xl:relative xl:min-h-72 xl:flex-1")}>
         {activity.length ? (
           <ul tabIndex={fill ? 0 : undefined} aria-label={fill ? "Recent league moves" : undefined} className={cn("flex flex-col", fill && "xl:absolute xl:inset-x-(--card-spacing) xl:inset-y-0 xl:overflow-y-auto xl:pb-6 xl:mask-b-from-[calc(100%-2rem)] xl:focus-visible:outline-none")}>
-            {activity.slice(0, 8).map((item) => (
+            {activity.slice(0, limit).map((item) => (
               <ActivityRow item={item} key={item.id} leagueId={leagueId} username={username} />
             ))}
           </ul>

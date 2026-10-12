@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp, Flame, Snowflake, Swords, Target, TrendingDown, TrendingUp, Trophy, Zap } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { PanelHeader } from "@/components/panel-header";
 import { TeamLink } from "@/components/team-link";
 import type { ManagerRow, RecordBook } from "@/lib/league-history";
 import { cn } from "@/lib/utils";
@@ -85,11 +86,8 @@ export function HistoryRecords({ leagueId, managers, records, username }: { leag
   if (!heroes.length && !rest.length) return null;
 
   return (
-    <Card accent>
-      <CardHeader>
-        <CardTitle>All-time records</CardTitle>
-        <CardDescription>The high-water marks and the low points, across every season on record</CardDescription>
-      </CardHeader>
+    <Card>
+      <PanelHeader title="All-time records" description="The high-water marks and the low points, across every season on record" />
       <CardContent className="flex flex-col gap-3">
         {heroes.length ? (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

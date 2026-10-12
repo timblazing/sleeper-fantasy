@@ -1,5 +1,18 @@
 import type { ComponentType } from "react";
-import { BinocularsIcon, BookOpenIcon, ClipboardListIcon, LayoutDashboardIcon, ScaleIcon, UsersIcon } from "lucide-react";
+import {
+  ActivityIcon,
+  BandageIcon,
+  BinocularsIcon,
+  BookOpenIcon,
+  ClipboardListIcon,
+  HistoryIcon,
+  LayoutDashboardIcon,
+  ListOrderedIcon,
+  ScaleIcon,
+  SwordsIcon,
+  TrophyIcon,
+  UsersRoundIcon,
+} from "lucide-react";
 
 // `segment` matches what useSelectedLayoutSegment() reports under the [leagueId] layout;
 // null is the index route (Dashboard).
@@ -7,9 +20,18 @@ import { BinocularsIcon, BookOpenIcon, ClipboardListIcon, LayoutDashboardIcon, S
 // league's own basis (`src/lib/value-basis.ts`) rather than hiding themselves.
 export type NavEntry = { title: string; segment: string | null; icon: ComponentType<{ className?: string }> };
 
-export const mainNav: NavEntry[] = [
+export const leagueNav: NavEntry[] = [
   { title: "Dashboard", segment: null, icon: LayoutDashboardIcon },
-  { title: "Players", segment: "players", icon: UsersIcon },
+  { title: "Matchups", segment: "matchups", icon: SwordsIcon },
+  { title: "Standings", segment: "standings", icon: TrophyIcon },
+  { title: "Teams", segment: "teams", icon: UsersRoundIcon },
+  { title: "Activity", segment: "activity", icon: ActivityIcon },
+  { title: "History", segment: "history", icon: HistoryIcon },
+];
+
+export const playersNav: NavEntry[] = [
+  { title: "Rankings", segment: "players", icon: ListOrderedIcon },
+  { title: "Injuries", segment: "injuries", icon: BandageIcon },
 ];
 
 export const toolsNav: NavEntry[] = [
@@ -22,7 +44,5 @@ export const toolsNav: NavEntry[] = [
 export const resourcesNav: NavEntry = { title: "Resources", segment: "resources", icon: BookOpenIcon };
 
 export function navTitle(segment: string | null): string {
-  if (segment === "matchups") return "Matchups";
-  if (segment === "teams") return "Team";
-  return [...mainNav, ...toolsNav, resourcesNav].find((entry) => entry.segment === segment)?.title ?? "Dashboard";
+  return [...leagueNav, ...playersNav, ...toolsNav, resourcesNav].find((entry) => entry.segment === segment)?.title ?? "Dashboard";
 }

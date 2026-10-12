@@ -1,6 +1,7 @@
 import { CheckIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { PanelHeader } from "@/components/panel-header";
 import type { SeasonTimeline } from "@/lib/team-insights";
 import { cn } from "@/lib/utils";
 
@@ -10,13 +11,11 @@ export function SeasonTimelineCard({ timeline }: { timeline: SeasonTimeline }) {
   const at = (week: number) => Math.min(100, Math.max(0, ((week - timeline.startWeek) / span) * 100));
 
   return (
-    <Card accent>
-      <CardHeader>
-        <CardTitle>Season timeline</CardTitle>
-        <CardDescription>
-          {timeline.currentWeek === 0 ? timeline.phase.label : `Week ${timeline.currentWeek} of ${timeline.endWeek}`} · {timeline.phase.detail}
-        </CardDescription>
-      </CardHeader>
+    <Card>
+      <PanelHeader
+        title="Season timeline"
+        description={`${timeline.currentWeek === 0 ? timeline.phase.label : `Week ${timeline.currentWeek} of ${timeline.endWeek}`} · ${timeline.phase.detail}`}
+      />
       <CardContent className="flex flex-col gap-6">
         <div className="relative mx-1.5 mt-3 h-1.5 rounded-full bg-muted">
           <div className="absolute inset-y-0 left-0 rounded-full bg-foreground/60" style={{ width: `${at(timeline.currentWeek)}%` }} />

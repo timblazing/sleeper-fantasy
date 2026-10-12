@@ -1,6 +1,7 @@
 import { Crown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { PanelHeader } from "@/components/panel-header";
 import { TeamLink } from "@/components/team-link";
 import type { HistorySeason, ManagerRow } from "@/lib/league-history";
 import { cn } from "@/lib/utils";
@@ -12,7 +13,7 @@ const initials = (name: string) => name.split(/\s+/).map((word) => word[0]).join
  *
  * A league's history is mostly remembered as a list of champions, and the old page never said who
  * won anything: the title was a `🏆` glyph inside a stat tile. This is the section that gives the
- * page a reason to exist, so it leads the historical section on the League page.
+ * page a reason to exist, so it leads the History page.
  */
 export function HistoryChampions({ leagueId, managers, seasons, username }: { leagueId: string; managers: ManagerRow[]; seasons: HistorySeason[]; username?: string }) {
   const byOwner = new Map(managers.map((row) => [row.ownerId, row]));
@@ -37,11 +38,8 @@ export function HistoryChampions({ leagueId, managers, seasons, username }: { le
     .toSorted((a, b) => b.championships - a.championships);
 
   return (
-    <Card accent>
-      <CardHeader>
-        <CardTitle>Champions</CardTitle>
-        <CardDescription>Every title in league history{banners.length > 1 ? ` — ${banners.length} seasons decided` : ""}</CardDescription>
-      </CardHeader>
+    <Card>
+      <PanelHeader title="Champions" description={`Every title in league history${banners.length > 1 ? ` — ${banners.length} seasons decided` : ""}`} />
       <CardContent className="flex flex-col gap-3">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {banners.map(({ season, champion, line, runnerUp }) => (

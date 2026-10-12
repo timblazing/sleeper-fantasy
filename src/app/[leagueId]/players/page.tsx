@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { CloudOff, Hourglass, TriangleAlert } from "lucide-react";
 import { PageContainer } from "@/components/page-container";
 import { PlayerBoardContext } from "@/components/player-board-context";
@@ -6,8 +7,6 @@ import { getDashboardPulse } from "@/lib/dashboard-pulse";
 import { PageHeader } from "@/components/page-header";
 import { RankingsToolbar } from "@/components/rankings-toolbar";
 import { RankingsTable } from "@/components/rankings-table";
-import { PlayersTabs } from "@/components/players-tabs";
-import { InjuryReportView } from "@/components/injury-report-view";
 import { Card, CardContent } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { getLeagueChrome } from "@/lib/league-chrome";
@@ -33,15 +32,13 @@ const ERROR_STATES: Record<RaError["kind"], { title: string; description: string
 export default async function PlayersPage({ params, searchParams }: { params: Promise<{ leagueId: string }>; searchParams: Promise<RankingsSearchParams> }) {
   const [{ leagueId }, rawQuery] = await Promise.all([params, searchParams]);
   const query = parseRankingsQuery(rawQuery);
+  // The injury report is its own page now; keep old shared links working.
   if (rawQuery.view === "injuries") {
-    return (
-      <PageContainer className="flex flex-col gap-5">
-        <PageHeader description="Every injury and practice designation across rostered players, ranked by who it actually costs." title="Players" />
-        <PlayersTabs leagueId={leagueId} username={query.username} value="injuries">
-          <InjuryReportView leagueId={leagueId} rawQuery={rawQuery} />
-        </PlayersTabs>
-      </PageContainer>
-    );
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(rawQuery)) {
+      if (key !== "view") for (const item of Array.isArray(value) ? value : value === undefined ? [] : [value]) params.append(key, item);
+    }
+    redirect(`/${leagueId}/injuries${params.size ? `?${params}` : ""}`);
   }
   // getLeagueChrome is the cheap read the layout already performs; it supplies the value basis
   // without the full dashboard fetch a LeagueShell-owning page would need.
@@ -56,7 +53,6 @@ export default async function PlayersPage({ params, searchParams }: { params: Pr
   return (
     <PageContainer className="flex flex-col gap-5">
       <PageHeader description={meta.blurb} title="Players" />
-      <PlayersTabs leagueId={leagueId} username={query.username} value="rankings">
       {result.ok ? (
         <>
           <RankingsToolbar positions={result.view.positions} basis={result.view.basis} leagueId={leagueId} query={query} />
@@ -68,7 +64,6 @@ export default async function PlayersPage({ params, searchParams }: { params: Pr
       ) : (
         <Card><CardContent><Empty className="min-h-72 border"><EmptyHeader><EmptyMedia variant="icon">{result.error.kind === "rate-limited" ? <Hourglass /> : result.error.kind === "invalid-response" ? <TriangleAlert /> : <CloudOff />}</EmptyMedia><EmptyTitle>{ERROR_STATES[result.error.kind].title}</EmptyTitle><EmptyDescription>{ERROR_STATES[result.error.kind].description}</EmptyDescription></EmptyHeader></Empty></CardContent></Card>
       )}
-      </PlayersTabs>
     </PageContainer>
   );
 }

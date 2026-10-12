@@ -3,7 +3,6 @@
 import * as React from "react"
 
 import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
@@ -16,7 +15,7 @@ import {
 } from "@/components/ui/sidebar"
 import { useAccount } from "@/hooks/use-account"
 import type { LeagueChrome } from "@/lib/league-chrome"
-import { mainNav, resourcesNav, toolsNav, type NavEntry } from "@/lib/nav"
+import { leagueNav, playersNav, resourcesNav, toolsNav, type NavEntry } from "@/lib/nav"
 import { leagueAvatarProxyUrl, withUsername } from "@/lib/utils"
 import { useSearchParams, useSelectedLayoutSegment } from "next/navigation"
 
@@ -37,6 +36,7 @@ export function AppSidebar({
       ),
       icon: <Icon />,
       isActive: activeSegment === segment,
+      badge: segment === "matchups" ? `WK ${league.matchupWeek}` : undefined,
     }))
 
   // Switching leagues keeps you on the same tab; the matchup week resets to the new league's.
@@ -66,8 +66,9 @@ export function AppSidebar({
         />
       </SidebarHeader>
       <SidebarContent role="navigation" aria-label="League navigation">
-        <NavMain items={toItems(mainNav)} />
-        <NavProjects projects={toItems(toolsNav)} />
+        <NavMain label="League" items={toItems(leagueNav)} />
+        <NavMain label="Players" items={toItems(playersNav)} />
+        <NavMain label="Tools" items={toItems(toolsNav)} />
       </SidebarContent>
       <SidebarFooter>
         <NavSecondary resources={toItems([resourcesNav])[0]} />

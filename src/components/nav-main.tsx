@@ -4,6 +4,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
@@ -19,6 +20,7 @@ export function NavMain({
     url: string
     icon?: React.ReactNode
     isActive?: boolean
+    badge?: string
   }[]
   label?: string
 }) {
@@ -41,6 +43,7 @@ export function NavMain({
               {item.icon}
               <span>{item.title}</span>
             </SidebarMenuButton>
+            {item.badge ? <SidebarMenuBadge className="font-mono">{item.badge}</SidebarMenuBadge> : null}
           </SidebarMenuItem>
         ))}
       </SidebarMenu>
