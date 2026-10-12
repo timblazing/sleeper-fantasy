@@ -78,7 +78,7 @@ export function NavUser({
               }}
             >
               <LogOutIcon />
-              Disconnect
+              Switch account
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

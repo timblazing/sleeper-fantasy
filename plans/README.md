@@ -18,7 +18,7 @@ status row when complete.
 | 005 | Cover season-phase and outlook logic with tests | P2 | M | — | TODO |
 | 006 | Rate-limit the remaining public API routes | P2 | M | — | TODO |
 | 007 | Adopt current design system + light/dark toggle | P1 | M | — | DONE |
-| 008 | Landing page replaces the connect dialog | P1 | M | 007 | TODO |
+| 008 | Landing page replaces the connect dialog | P1 | M | 007 | DONE |
 | 009 | Sidebar IA + split dashboard into pages | P1 | L | 007 | TODO |
 | 010 | Command palette + consistency pass | P2 | M | 007–009 | TODO |
 
@@ -55,6 +55,7 @@ are stated relative to that 421-test baseline.
 - Final verification on the combined 001–003 branch: `bun run typecheck`, `bun run lint`, `bun run test` (45 files, 398 tests), and `git diff --check` all passed. Lint retained six pre-existing warnings under `.agents/skills`.
 - Note: the repo now uses `npm` (see `package.json` scripts and `package-lock.json`); plans 004–006 specify `npm` commands. The `.agents/skills` lint warnings no longer appear — `npm run lint` exits 0 with no output at `929f986`.
 - Plan 007: executed on `main` (tokens copied from components repo, class-based dark mode via next-themes, ThemeToggle in league header and /design-system, drift cleanup); typecheck, lint, test (59 files, 482 tests) and build pass. Left literal hex in `nfl-field.tsx` (field illustration/team colors).
+- Plan 008: executed on `main` (landing page at `/` with masked dot-field hero, pill username form, in-page league picker, `?league=` preselect, features strip, footer; connect dialog removed; "Switch account" in NavUser); typecheck, lint, test (59 files, 485 tests) and build pass; browser-verified at 1440 and 393 in both themes.
 
 ## Findings considered and rejected
 

@@ -6,6 +6,15 @@ import { getOverviewData, type OverviewData } from "@/lib/team-insights";
 // frame, so it needs a league nobody has to be signed in to read.
 const SHOWCASE_USERNAME = "TimBlazing";
 
+/** The demo league's id for the landing page link; `null` when Sleeper cannot supply it. */
+export async function getShowcaseLeagueId(): Promise<string | null> {
+  try {
+    return (await getNflLeaguesForUsername(SHOWCASE_USERNAME))?.leagues[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * `null` when Sleeper cannot supply the backdrop league. `/` is the only host of the
  * connect dialog, so a decorative backdrop must never be able to 500 the entry page.
