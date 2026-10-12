@@ -78,7 +78,7 @@ export function CommandMenu({ league }: { league: LeagueChrome }) {
 
   return (
     <>
-      <Button variant="outline" size="icon" className="md:hidden" aria-label="Search" onClick={() => setOpen(true)}>
+      <Button variant="ghost" size="icon" className="md:hidden" aria-label="Search" onClick={() => setOpen(true)}>
         <Search aria-hidden="true" />
       </Button>
       <Button variant="outline" className="hidden w-52 justify-start gap-2 font-normal text-muted-foreground md:inline-flex" onClick={() => setOpen(true)}>
