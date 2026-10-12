@@ -93,9 +93,7 @@ describe("loadValueMap", () => {
     });
     const context = await getLeagueValueContext("L1", source);
     expect(context.basis).toBe("redraft");
-    // 12 teams × 1 starting QB, so the 12th-best quarterback on the board (10 ppg) is
-    // replacement level, and the 24 ppg starter is worth the 14 points he clears it by.
-    expect(context.values.get("p11")).toBe(14);
+    expect(context.values.get("p11")).toBe(24);
     expect(context.values.get("p12")).toBeUndefined();
     expect(marketRead).toBe(false);
   });

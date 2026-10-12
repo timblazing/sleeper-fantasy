@@ -40,7 +40,7 @@ function TeamHero({ team, leagueName, season, teams, valuesReady, basis = "dynas
       <p className="mt-4 text-xs text-muted-foreground">{leagueName} · {season}</p>
       <dl className="mt-5 grid grid-cols-3 gap-4">
         <div><dt className="text-[11px] text-muted-foreground">Record</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{team.wins}-{team.losses}{team.ties ? `-${team.ties}` : ""}</dd></div>
-        <div><dt className="text-[11px] text-muted-foreground">{basis === "dynasty" ? "Roster value" : "Roster PPG+"}</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{valuesReady ? `#${team.valueRank}` : "—"}</dd><dd className="text-xs text-muted-foreground">{valuesReady ? `${team.value.toLocaleString("en-US", { maximumFractionDigits: basisMeta(basis).decimals })} · ${teams} teams` : "Unavailable"}</dd></div>
+        <div><dt className="text-[11px] text-muted-foreground">{basis === "dynasty" ? "Roster value" : "Roster PPG"}</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{valuesReady ? `#${team.valueRank}` : "—"}</dd><dd className="text-xs text-muted-foreground">{valuesReady ? `${team.value.toLocaleString("en-US", { maximumFractionDigits: basisMeta(basis).decimals })} · ${teams} teams` : "Unavailable"}</dd></div>
         <div><dt className="text-[11px] text-muted-foreground">Scoring</dt><dd className="mt-1 text-xl font-semibold tabular-nums">#{team.powerRank}</dd><dd className="text-xs text-muted-foreground">{team.pointsFor.toFixed(1)} pts</dd></div>
       </dl>
     </header>
@@ -89,10 +89,10 @@ function RosterTable({ entries, leagueId, username, valuesReady, basis = "dynast
         {entries.map((entry) => (
           <TableRow key={entry.player.id}>
             <TableCell>
-              <PlayerIdentity name={entry.player.name} photoUrl={headshotUrl(entry.player)} href={withUsername(`/${leagueId}/players/${entry.player.id}`, username)} metadata={<>{entry.player.team ?? "FA"}{entry.rankPosition ? ` · ${entry.player.position}${entry.rankPosition}` : ""}</>} />
+              <PlayerIdentity name={entry.player.name} imagePosition={entry.player.position} photoUrl={headshotUrl(entry.player)} href={withUsername(`/${leagueId}/players/${entry.player.id}`, username)} metadata={<>{entry.player.team ?? "FA"}{entry.rankPosition ? ` · ${entry.player.position}${entry.rankPosition}` : ""}</>} />
             </TableCell>
             <TableCell className="hidden sm:table-cell"><PositionBadge position={entry.player.position} /></TableCell>
-            <TableCell className={cn("pr-4 text-right tabular-nums font-medium", !valuesReady && "text-muted-foreground")}>{valuesReady ? entry.value.toLocaleString("en-US", { maximumFractionDigits: basisMeta(basis).decimals }) : "—"}</TableCell>
+            <TableCell className={cn("pr-4 text-right tabular-nums font-medium", !valuesReady && "text-muted-foreground")}>{valuesReady && entry.valueAvailable !== false ? entry.value.toLocaleString("en-US", { maximumFractionDigits: basisMeta(basis).decimals }) : "—"}</TableCell>
           </TableRow>
         ))}
       </TableBody>

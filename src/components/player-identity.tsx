@@ -13,7 +13,7 @@ export function PlayerIdentity({ name, photoUrl, sleeperId, team, imagePosition,
   const nameClass = size === "hero" ? "type-heading break-words" : "block max-w-full truncate text-sm font-medium";
   return (
     <div className={cn("flex min-w-0 items-center gap-3", className)}>
-      <Avatar className={cn("shrink-0 bg-muted", size === "hero" && "size-16")}>
+      <Avatar shape={(imagePosition ?? position) === "DEF" ? "logo" : "circle"} className={cn("shrink-0 bg-muted", size === "hero" && "size-16")}>
         {imageUrl ? <AvatarImage alt="" src={imageUrl} /> : null}
         <AvatarFallback>{initials(name)}</AvatarFallback>
       </Avatar>

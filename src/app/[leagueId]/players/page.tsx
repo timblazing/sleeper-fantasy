@@ -48,7 +48,7 @@ export default async function PlayersPage({ params, searchParams }: { params: Pr
   const [league, result, pulse] = await Promise.all([getLeagueChrome(leagueId), getRankingsView(leagueId, query), getDashboardPulse(leagueId).catch(() => null)]);
 
   // Dynasty leagues get the dynasty market board; every other format gets the same page priced
-  // in projected points above replacement. Neither ever sees the other's numbers.
+  // in projected points per game. Neither ever sees the other's numbers.
   const meta = basisMeta(league.basis);
 
   // The sidebar and chrome come from src/app/[leagueId]/layout.tsx, so this page renders

@@ -4,7 +4,7 @@ import type { RankingsQuery } from "@/lib/rankings-query";
 import type { NflPlayer, SleeperLeague, SleeperRoster, SleeperUser } from "@/lib/types";
 
 const getPlayerCatalog = vi.fn();
-vi.mock("@/lib/players", () => ({ getPlayerCatalog }));
+vi.mock("@/lib/players", async (importOriginal) => ({ ...await importOriginal<typeof import("@/lib/players")>(), getPlayerCatalog }));
 
 const getPresets = vi.fn();
 const getRankings = vi.fn();
@@ -234,7 +234,7 @@ describe("getRankingsView movers and errors", () => {
 describe("getRankingsView for a redraft league", () => {
   const REDRAFT_LEAGUE: SleeperLeague = { ...ONE_QB_LEAGUE, settings: { num_teams: 2, type: 0 }, roster_positions: ["QB", "RB"] };
 
-  /** Two teams starting one RB each, so the second-best back is replacement level. */
+  /** Raw projected PPG, shared with roster views. */
   const BOARD = [
     { sleeperId: "rb1", name: "Alpha Back", position: "RB", team: "ATL", age: 24, ppg: 20 },
     { sleeperId: "rb2", name: "Beta Back", position: "RB", team: "BUF", age: 28, ppg: 14 },
@@ -248,15 +248,13 @@ describe("getRankingsView for a redraft league", () => {
     getProjectedPpg.mockResolvedValue(ok(BOARD));
   });
 
-  it("ranks on points above replacement and never touches the dynasty board", async () => {
+  it("ranks on points per game and never touches the dynasty board", async () => {
     const result = await getRankingsView("L1", QUERY);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.view.basis).toBe("redraft");
-    // QB replacement is the 2nd arm (19) and RB replacement the 2nd back (14), so the top back
-    // clears his bar by more than the top quarterback clears his — the reverse of raw PPG.
     expect(result.view.rows.map((row) => (row.kind === "player" ? [row.name, row.value] : null))).toEqual([
-      ["Alpha Arm", 6], ["Alpha Back", 6], ["Beta Arm", 0], ["Beta Back", 0], ["Gamma Back", 0],
+      ["Alpha Arm", 25], ["Alpha Back", 20], ["Beta Arm", 19], ["Beta Back", 14], ["Gamma Back", 11],
     ]);
     expect(getRankings).not.toHaveBeenCalled();
     expect(getPresets).not.toHaveBeenCalled();
@@ -324,14 +322,14 @@ describe("complete player pool", () => {
     expect(result.view.rows.every(row => row.kind === "player" && !["DEF", "K"].includes(row.position))).toBe(true);
   });
 
-  it("keeps free agents and injured players, excluding inactive historical entries unless rostered", async () => {
+  it("keeps assigned injured players and excludes unassigned free agents", async () => {
     const players = [catalogPlayer("fa", "TE", { team: null }), catalogPlayer("ir", "TE", { status: "Injured Reserve" }), catalogPlayer("retired", "TE", { status: "Inactive" }), catalogPlayer("owned", "TE", { status: "Inactive" })];
     getPlayerCatalog.mockResolvedValue(new Map(players.map(player => [player.id, player])));
     getLeague.mockResolvedValue({ ...ONE_QB_LEAGUE, settings: { type: 0 } });
     getLeagueRosters.mockResolvedValue([{ roster_id: 1, owner_id: null, players: ["owned"] }]);
     const result = await getRankingsView("L1", { ...QUERY, position: "TE" });
     if (!result.ok) throw new Error("expected ok");
-    expect(result.view.rows.map(row => row.kind === "player" && row.sleeperId)).toEqual(["fa", "ir", "owned"]);
+    expect(result.view.rows.map(row => row.kind === "player" && row.sleeperId)).toEqual(["ir", "owned"]);
   });
 
   it("paginates every tight end and deduplicates projections against the catalog", async () => {
@@ -364,5 +362,21 @@ describe("complete player pool", () => {
     getPlayerCatalog.mockRejectedValue(new Error("offline"));
     const result = await getRankingsView("L1", QUERY);
     expect(result).toMatchObject({ ok: false, error: { message: "Sleeper player directory unavailable" } });
+  });
+});
+
+
+describe("NFL team assignment is required", () => {
+  it.each([0, 2])("excludes unassigned and FA rows even when rostered or present upstream (type %s)", async type => {
+    getLeague.mockResolvedValue({ ...ONE_QB_LEAGUE, settings: { type } });
+    const entries = [catalogPlayer("released", "TE", { team: null }), catalogPlayer("fa", "TE", { team: "FA" }), catalogPlayer("empty", "TE", { team: "" }), catalogPlayer("assigned", "TE")];
+    getPlayerCatalog.mockResolvedValue(new Map(entries.map(player => [player.id, player])));
+    getLeagueRosters.mockResolvedValue([{ roster_id: 1, owner_id: null, players: ["released", "fa"] }]);
+    getProjectedPpg.mockResolvedValue(ok(entries.map(entry => ({ sleeperId: entry.id, name: entry.name, position: "TE", team: "BUF", age: 25, ppg: 15 }))));
+    getRankings.mockResolvedValue(ok(paged(entries.map(entry => player(entry.id, entry.name, 100, { position: "TE", team: "BUF" })))));
+    const result = await getRankingsView("L1", { ...QUERY, position: "TE" });
+    if (!result.ok) throw new Error("expected ok");
+    expect(result.view.total).toBe(1);
+    expect(result.view.rows).toEqual([expect.objectContaining({ sleeperId: "assigned", team: "BUF" })]);
   });
 });

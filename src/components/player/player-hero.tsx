@@ -18,7 +18,7 @@ export function PlayerHero({ profile, leagueId, username }: { profile: PlayerPro
   return (
     <header className="px-5 pb-5 pt-6 md:px-7 md:pt-8">
       <div className="flex items-center gap-4 pr-6">
-        <Avatar className="size-16 shrink-0 bg-muted md:size-20">
+        <Avatar shape={player.position === "DEF" ? "logo" : "circle"} className="size-16 shrink-0 bg-muted md:size-20">
           <AvatarImage alt="" src={playerImageUrl({ id: player.sleeperId, position: player.position, team: player.team })} />
           <AvatarFallback>{initials(player.name)}</AvatarFallback>
         </Avatar>

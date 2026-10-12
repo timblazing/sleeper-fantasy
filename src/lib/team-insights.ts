@@ -234,7 +234,7 @@ function buildMetrics(context: LeagueValueContext, team: LeagueTeam, outlook: Te
   const weakest = team.rooms.toSorted((a, b) => b.rank - a.rank)[0];
   const strongest = team.rooms.toSorted((a, b) => a.rank - b.rank)[0];
   return [
-    { id: "value", label: context.basis === "dynasty" ? "Team value" : "Roster PPG+", value: formatValue(team.value), detail: `${ordinal(team.valueRank)} of ${teams}`, tone: team.valueRank <= half ? "positive" : "warning" },
+    { id: "value", label: context.basis === "dynasty" ? "Team value" : "Roster PPG", value: formatValue(team.value), detail: `${ordinal(team.valueRank)} of ${teams}`, tone: team.valueRank <= half ? "positive" : "warning" },
     dynastyMetric(context, team, outlook, half),
     { id: "weakest", label: "Weakest spot", value: weakest.position, detail: `${ordinal(weakest.rank)} of ${teams}`, tone: weakest.rank > half ? "warning" : "neutral" },
     { id: "strongest", label: "Strongest spot", value: strongest.position, detail: `${ordinal(strongest.rank)} of ${teams}`, tone: "positive" },

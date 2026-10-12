@@ -55,6 +55,40 @@ describe("getMatchupBoard", () => {
     expect(board.matchups[0].home.slots[0].projectionHome).toBeNull();
   });
 
+  it("uses official scored points plus only the unfinished projections", async () => {
+    const { source, catalog, matchups } = makeTwelveTeamLeague();
+    catalog.set("p12", { ...catalog.get("p12")!, team: "BUF" });
+    catalog.set("p13", { ...catalog.get("p13")!, team: "SEA" });
+    source.getMatchups = async () => matchups.map(row => row.roster_id === 1 ? { ...row, points: 62, starters_points: [50, 0, 10] } : row);
+    const game = { opponent: "DEN", home: true, kickoff: null, detail: "", bye: false };
+    source.getWeekGamesByTeam = async () => new Map([
+      ["KC", { ...game, state: "post" as const }],
+      ["BUF", { ...game, state: "pre" as const }],
+      ["SEA", { ...game, state: "in" as const, period: 2, clockSeconds: 0 }],
+    ]);
+    source.getWeeklyProjections = async () => new Map(["p11", "p12", "p13"].map(id => [id, { stats: { rec: 20 }, opponent: "DEN" }]));
+    const board = await getMatchupBoard("L1", 5, source);
+    // Official 62 includes a two-point adjustment. Completed QB projection is discarded.
+    expect(board.matchups[0].home.projectedScore).toBe(62 + 20 + 10);
+  });
+
+  it("converges to the official total when all starters are final", async () => {
+    const { source } = makeTwelveTeamLeague();
+    source.getWeekGamesByTeam = async () => new Map([["KC", { opponent: "DEN", home: true, kickoff: null, detail: "Final", bye: false, state: "post" as const }]]);
+    source.getWeeklyProjections = async () => new Map(["p11", "p12", "p13"].map(id => [id, { stats: { rec: 20 }, opponent: "DEN" }]));
+    const board = await getMatchupBoard("L1", 5, source);
+    expect(board.matchups[0].home.projectedScore).toBe(board.matchups[0].home.score);
+    expect(board.matchups[0].away.projectedScore).toBe(board.matchups[0].away.score);
+    expect(board.matchups[0].homeWinProbability).toBe(0);
+  });
+
+  it("does not show a partial total when an unfinished starter has no projection", async () => {
+    const { source } = makeTwelveTeamLeague();
+    source.getWeeklyProjections = async () => new Map([["p11", { stats: { rec: 20 }, opponent: "DEN" }]]);
+    const board = await getMatchupBoard("L1", 5, source);
+    expect(board.matchups[0].home.projectedScore).toBeNull();
+  });
+
   it("returns no matchups when the week's rows are unavailable", async () => {
     const { source } = makeTwelveTeamLeague({ source: { getMatchups: async () => { throw new Error("sleeper down"); } } });
     const board = await getMatchupBoard("L1", 5, source);

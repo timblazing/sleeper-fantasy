@@ -123,7 +123,7 @@ describe("POST /api/roster-audit/trade", () => {
 });
 
 describe("evaluateTrade in a redraft league", () => {
-  /** A 12-team redraft league whose projection board prices four backs at 12/8/4/0 above replacement. */
+  /** A 12-team redraft league whose projection board prices four backs at 22/18/14/10 projected PPG. */
   const redraftSource = () => makeTwelveTeamLeague({
     league: { roster_positions: ["RB"], settings: { type: 0, num_teams: 4 } },
     source: {
@@ -139,12 +139,12 @@ describe("evaluateTrade in a redraft league", () => {
 
   const player = (id: string) => ({ type: "player" as const, id });
 
-  it("prices both sides in points above replacement and names the winner", async () => {
+  it("prices both sides in points per game and names the winner", async () => {
     const result = await evaluateTrade("L1", [player("p1")], [player("p2")], redraftSource());
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.data.sideA.value).toBe(12);
-    expect(result.data.sideB.value).toBe(8);
+    expect(result.data.sideA.value).toBe(22);
+    expect(result.data.sideB.value).toBe(18);
     expect(result.data.verdict.winner).toBe("sideA");
     expect(result.data.verdict.difference).toBe(4);
   });
@@ -174,10 +174,9 @@ describe("evaluateTrade in a redraft league", () => {
     const proportionate = await evaluateTrade("L1", [player("p1"), player("p2")], [player("p1"), player("p3")], source);
     expect(lopsided.ok && proportionate.ok).toBe(true);
     if (!lopsided.ok || !proportionate.ok) return;
-    // 12 for nothing is the whole deal one-sided; 20 for 16 is the same 4-point gap inside a
-    // much bigger deal, which is a materially fairer trade.
-    expect(lopsided.data.verdict.grade).toBe("F");
+    // 22 for 10 is a much larger share of the deal than 40 for 36.
+    expect(lopsided.data.verdict.grade).toBe("D");
     expect(proportionate.data.verdict.difference).toBe(4);
-    expect(proportionate.data.verdict.grade).toBe("B");
+    expect(proportionate.data.verdict.grade).toBe("A-");
   });
 });

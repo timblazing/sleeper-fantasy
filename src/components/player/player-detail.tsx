@@ -14,15 +14,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlayerGameLog } from "@/components/player/player-game-log";
 import { formatValue } from "@/lib/display";
 import type { PlayerLeagueContext } from "@/lib/player-league-context";
+import type { ValueBasis } from "@/lib/value-basis";
 import type { PlayerProfile } from "@/lib/roster-audit";
 
-export function PlayerDetail({ profile, context, leagueId, isSuperflex, username }: { profile: PlayerProfile; context: PlayerLeagueContext; leagueId: string; isSuperflex: boolean; username?: string }) {
+export function PlayerDetail({ profile, context, leagueId, isSuperflex, username, basis = "dynasty", projectedPpg = null, projectedRankOverall = null, projectedRankPosition = null }: { basis?: ValueBasis; projectedPpg?: number | null; projectedRankOverall?: number | null; projectedRankPosition?: number | null; profile: PlayerProfile; context: PlayerLeagueContext; leagueId: string; isSuperflex: boolean; username?: string }) {
   const [tab, setTab] = useState("summary");
   const scores = profile.weekly.flatMap(line => line.pointsPpr == null ? [] : [line.pointsPpr]);
   const ppgMetric = profile.rankMetrics.find(metric => /points.*game|ppg|fantasy_points_ppr_avg/i.test(`${metric.key} ${metric.label}`));
   const ppg = ppgMetric?.value ?? (scores.length ? scores.reduce((sum, score) => sum + score, 0) / scores.length : null);
-  const overall = isSuperflex ? profile.value.rankOverallSf : profile.value.rankOverall1qb;
-  const position = isSuperflex ? profile.value.rankPositionSf : profile.value.rankPosition1qb;
+  const dynasty = basis === "dynasty";
+  const overall = !dynasty ? projectedRankOverall : isSuperflex ? profile.value.rankOverallSf : profile.value.rankOverall1qb;
+  const position = !dynasty ? projectedRankPosition : isSuperflex ? profile.value.rankPositionSf : profile.value.rankPosition1qb;
 
   const hasHistory = profile.career.length || profile.injury || profile.combine || profile.tradeMarket?.trades.length;
   return (
@@ -35,20 +37,22 @@ export function PlayerDetail({ profile, context, leagueId, isSuperflex, username
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[max(24px,env(safe-area-inset-bottom))] md:px-7 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsContent value="summary">
             <dl className="grid grid-cols-3 gap-4 py-5">
-              <div><dt className="text-[11px] text-muted-foreground">Dynasty rank</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{position == null ? "—" : `#${position}`} <span className="text-xs font-normal text-muted-foreground">{profile.player.position}</span></dd><dd className="text-xs text-muted-foreground">{overall == null ? "—" : `#${overall}`} overall · {isSuperflex ? "SF" : "1QB"}</dd></div>
+              <div><dt className="text-[11px] text-muted-foreground">{dynasty ? "Dynasty rank" : "Projected rank"}</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{position == null ? "—" : `#${position}`} <span className="text-xs font-normal text-muted-foreground">{profile.player.position}</span></dd><dd className="text-xs text-muted-foreground">{overall == null ? "—" : `#${overall}`} overall · {dynasty ? isSuperflex ? "SF" : "1QB" : "PPR"}</dd></div>
               <div className="min-w-0"><dt className="text-[11px] text-muted-foreground">In your league</dt><dd className="mt-1 text-sm font-medium">{context.owner ? context.owner.isMine ? "Your team" : "Rostered" : "Free agent"}</dd><dd className="mt-1 truncate text-xs text-muted-foreground">{context.owner ? <TeamLink leagueId={leagueId} rosterId={context.owner.rosterId} username={username}>{context.owner.teamName}</TeamLink> : "Available"}</dd></div>
-              <div><dt className="text-[11px] text-muted-foreground">Pts / game</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{ppg?.toFixed(2) ?? "—"}</dd><dd className="text-xs text-muted-foreground">PPR · {profile.rankSeason ?? profile.season ?? "Season"}</dd></div>
+              <div><dt className="text-[11px] text-muted-foreground">Season PPG</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{ppg?.toFixed(2) ?? "—"}</dd><dd className="text-xs text-muted-foreground">PPR · {profile.rankSeason ?? profile.season ?? "Season"}</dd></div>
             </dl>
+            {dynasty ? <>
             <section className="flex items-center justify-between gap-4 border-t py-5">
               <div><h2 className="text-xs text-muted-foreground">Dynasty value · {isSuperflex ? "SF" : "1QB"}</h2><p className="mt-1 text-2xl font-semibold tabular-nums">{formatValue(isSuperflex ? profile.value.valueSf : profile.value.value1qb)}</p></div>
               <dl className="flex gap-5">{[["7d", profile.value.trend7d], ["30d", profile.value.trend30d]].map(([label, trend]) => <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className={`mt-1 text-sm font-medium tabular-nums ${Number(trend) > 0 ? "text-positive" : Number(trend) < 0 ? "text-negative" : "text-muted-foreground"}`}>{Number(trend) > 0 ? "+" : ""}{formatValue(Number(trend))}</dd></div>)}</dl>
             </section>
+            </> : <section className="border-t py-5"><h2 className="text-xs text-muted-foreground">Projected PPG · PPR</h2><p className="mt-1 text-2xl font-semibold tabular-nums">{projectedPpg?.toFixed(1) ?? "—"}</p></section>}
             <PlayerPercentiles metrics={profile.rankMetrics} position={profile.player.position} season={profile.rankSeason ?? profile.season} />
-            <PlayerProjection curve={profile.projectionCurve} outcome={profile.outcome} ppg={profile.projectedPpg} ppgPpr={profile.projectedPpgPpr} summary={null} />
+            {dynasty ? <PlayerProjection curve={profile.projectionCurve} outcome={profile.outcome} ppg={profile.projectedPpg} ppgPpr={profile.projectedPpgPpr} summary={null} /> : null}
             <PlayerSnapTrend avgSnapPct={profile.avgSnapPct} snaps={profile.snapsWeekly} />
             <PlayerAdvanced advanced={profile.advanced} />
             <PlayerCliffRiskCard cliffRisk={profile.cliffRisk} />
-            {profile.related ? <><RelatedList title="Similar value" description="" players={profile.related.similarValue} leagueId={leagueId} username={username} /><RelatedList title="Same tier" description="" players={profile.related.sameTier} leagueId={leagueId} username={username} /></> : null}
+            {dynasty && profile.related ? <><RelatedList title="Similar value" description="" players={profile.related.similarValue} leagueId={leagueId} username={username} /><RelatedList title="Same tier" description="" players={profile.related.sameTier} leagueId={leagueId} username={username} /></> : null}
           </TabsContent>
           <TabsContent value="game-log">
             {profile.weekly.length ? <>

@@ -1,6 +1,6 @@
 import { deriveLeagueFormat, isSuperflexLeague } from "@/lib/league-features";
-import { toRedraftValues } from "@/lib/redraft-values";
-import { getPlayerCatalog } from "@/lib/players";
+import { toProjectedPpg } from "@/lib/redraft-values";
+import { getPlayerCatalog, NFL_TEAMS } from "@/lib/players";
 import { ROOM_POSITIONS } from "@/lib/roster-positions";
 import { getMovers, getPicks, getPresets, getProjectedPpg, getRankings, resolvePreset } from "@/lib/roster-audit";
 import type { Attribution, RaError, RaPick, RaPlayerValue, RaPreset, RaProjectedPlayer } from "@/lib/roster-audit";
@@ -75,32 +75,35 @@ const leaguePositions = (league: SleeperLeague): string[] => [
   ...ROOM_POSITIONS, ...["DEF", "K"].filter((position) => league.roster_positions.includes(position)),
 ];
 
+const isNflTeam = (team: string | null): boolean => team !== null && Object.hasOwn(NFL_TEAMS, team);
+
 function catalogPool(catalog: Map<string, NflPlayer>, positions: string[], ownership: Map<string, RankingsOwner>): NflPlayer[] {
-  return [...catalog.values()].filter((player) => player.position !== null && positions.includes(player.position)
+  return [...catalog.values()].filter((player) => player.position !== null && positions.includes(player.position) && isNflTeam(player.team)
     && (player.status !== "Inactive" || ownership.has(player.id)));
 }
 
 const describeRedraftLeague = (league: SleeperLeague): string =>
   [`${league.settings.num_teams ?? 12}T`, isSuperflexLeague(league) ? "SF" : "1QB", "PPR"].join(" · ");
 
-/** Complete Sleeper player pool enriched with PPR projections. Replacement is computed
- * across the combined offensive projection board before any user filters are applied. */
+/** Complete Sleeper player pool enriched with PPR projections. Raw projected PPG is
+ * shared with the roster and player-detail views. */
 async function redraftRankingsView(leagueId: string, league: SleeperLeague, query: RankingsQuery): Promise<RankingsResult> {
   const [projected, ownership, catalog] = await Promise.all([getProjectedPpg(), loadOwnership(leagueId, query.username), getPlayerCatalog().catch(() => null)]);
   if (!catalog) return { ok: false, error: upstream("Sleeper player directory unavailable") };
   if (!projected.ok) return { ok: false, error: projected.error };
 
   const positions = leaguePositions(league);
-  const values = toRedraftValues(projected.data, league);
+  const eligibleProjections = projected.data.filter(player => isNflTeam(catalog.has(player.sleeperId) ? catalog.get(player.sleeperId)!.team : player.team));
+  const values = toProjectedPpg(eligibleProjections);
   // Catalog membership is independent of projection coverage. Missing values stay unknown.
   const pool = new Map<string, Omit<RaProjectedPlayer, "ppg">>();
   for (const player of catalogPool(catalog, positions, ownership)) pool.set(player.id, { sleeperId: player.id, name: player.name, position: player.position!, team: player.team, age: player.age });
-  for (const player of projected.data) if (positions.includes(player.position)) pool.set(player.sleeperId, { ...player, ...pool.get(player.sleeperId) });
+  for (const player of eligibleProjections) if (positions.includes(player.position)) pool.set(player.sleeperId, { ...player, ...pool.get(player.sleeperId) });
   const position = query.position === "picks" || query.position === "rookies" ? "all" : query.position;
   const needle = query.search.trim().toLowerCase();
 
   const matches = (player: Omit<RaProjectedPlayer, "ppg">) =>
-    positions.includes(player.position)
+    positions.includes(player.position) && isNflTeam(player.team)
     && (position === "all" || player.position === position)
     && (!needle || player.name.toLowerCase().includes(needle))
     && (query.minAge === undefined || (player.age !== null && player.age >= query.minAge))
@@ -120,7 +123,7 @@ async function redraftRankingsView(leagueId: string, league: SleeperLeague, quer
   // still means RB3 after a search narrows the page to one player.
   const positionRank = new Map<string, number>();
   for (const room of ROOM_POSITIONS) {
-    projected.data
+    eligibleProjections
       .filter((player) => player.position === room)
       .toSorted((a, b) => (values.get(b.sleeperId) ?? 0) - (values.get(a.sleeperId) ?? 0))
       .forEach((player, index) => positionRank.set(player.sleeperId, index + 1));
@@ -219,7 +222,7 @@ export async function getRankingsView(leagueId: string, query: RankingsQuery): P
   }
   const needle = query.search.toLowerCase();
   const filtered: RankingsRow[] = picksOnly ? [] : [...pool.values()].filter((player) =>
-    (query.position === "all" || (query.position === "rookies" ? player.yearsExp === 0 : player.position === query.position))
+    isNflTeam(player.team) && (query.position === "all" || (query.position === "rookies" ? player.yearsExp === 0 : player.position === query.position))
     && (!needle || player.name.toLowerCase().includes(needle))
     && (query.minAge === undefined || (player.age !== null && player.age >= query.minAge))
     && (query.maxAge === undefined || (player.age !== null && player.age <= query.maxAge)));

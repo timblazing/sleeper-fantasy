@@ -63,7 +63,7 @@ function TeamSelect({ label, teams, value, onChange }: { label: string; teams: T
 }
 
 function AssetAvatar({ asset }: { asset: Pick<StagedAsset, "imageUrl" | "name" | "position"> }) {
-  return <Avatar className="size-9 bg-muted">
+  return <Avatar shape={asset.position === "DEF" ? "logo" : "circle"} className="size-9 bg-muted">
     {asset.imageUrl ? <AvatarImage alt="" src={asset.imageUrl} /> : null}
     <AvatarFallback className="text-xs font-medium">{asset.position ?? "PK"}</AvatarFallback>
   </Avatar>;
@@ -154,7 +154,7 @@ function Side({ data, title, description, teamId, onTeamChange, assets, onAdd, o
           ? <div className="divide-y">{assets.map((asset) => <StagedRow asset={asset} key={asset.key} onRemove={() => onRemove(asset.key)} />)}</div>
           : <div className="flex min-h-28 flex-col items-center justify-center gap-1 px-4 py-5 text-center"><p className="text-sm font-medium">{title === "You receive" ? "What comes back?" : "What would you give up?"}</p><p className="text-xs text-muted-foreground">{hasPicks ? "Add players or draft picks from the list below." : "Add players from the list below."}</p></div>}
         {assets.length ? <div className="flex items-center justify-between border-t bg-muted/30 px-4 py-2 text-sm">
-          <span className="text-muted-foreground">{basisMeta(data.league.basis).hasMarket ? "Market value" : "Points above replacement"}</span>
+          <span className="text-muted-foreground">{basisMeta(data.league.basis).hasMarket ? "Market value" : "Projected PPG"}</span>
           <span className="tabular-nums font-medium">{data.valuesReady ? formatter.format(total) : "—"}</span>
         </div> : null}
       </div>
@@ -181,7 +181,7 @@ function Verdict({ basis, trade }: { basis: TradeLabData["league"]["basis"]; tra
   return <Card>
     <CardHeader>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div><p className="mb-2 text-xs font-medium text-muted-foreground">Calculated comparison</p><CardTitle>{winnerLabel}</CardTitle><CardDescription>{trade.verdict.difference ? `${formatter.format(trade.verdict.difference)} ${basisMeta(basis).hasMarket ? "value" : "PPG+"} gap` : `Both sides carry the same ${basisMeta(basis).hasMarket ? "market value" : "projected production"}`}</CardDescription></div>
+        <div><p className="mb-2 text-xs font-medium text-muted-foreground">Calculated comparison</p><CardTitle>{winnerLabel}</CardTitle><CardDescription>{trade.verdict.difference ? `${formatter.format(trade.verdict.difference)} ${basisMeta(basis).hasMarket ? "value" : "PPG"} gap` : `Both sides carry the same ${basisMeta(basis).hasMarket ? "market value" : "projected production"}`}</CardDescription></div>
         <Badge aria-label={`Trade grade ${trade.verdict.grade}`} className={cn("text-base", gradeTone(trade.verdict.grade))} variant="outline">{trade.verdict.grade}</Badge>
       </div>
     </CardHeader>
@@ -194,7 +194,7 @@ function Verdict({ basis, trade }: { basis: TradeLabData["league"]["basis"]; tra
         </div>
       </div>
 
-      <p className="text-xs leading-relaxed text-muted-foreground">{basisMeta(basis).hasMarket ? "Market values compare the assets in this deal. They do not account for your roster needs or competitive window." : "PPG+ compares projected points above replacement. Check your starting lineup before deciding."}</p>
+      <p className="text-xs leading-relaxed text-muted-foreground">{basisMeta(basis).hasMarket ? "Market values compare the assets in this deal. They do not account for your roster needs or competitive window." : "PPG compares raw projected scoring. Check your starting lineup before deciding."}</p>
 
       {trade.cliffWarnings.length ? <div className="flex flex-col gap-3">
         <p className="text-xs font-medium text-muted-foreground">Age and decline risk</p>

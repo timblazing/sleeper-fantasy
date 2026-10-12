@@ -29,7 +29,7 @@ describe("gradeForSurplus", () => {
   });
 
   // The same ladder, read in the redraft basis: a swing of three points per game is one band.
-  it("scales the same bands to points above replacement for a redraft league", () => {
+  it("scales the same bands to points per game for a redraft league", () => {
     expect([3.6, 1.8, 0, -1.8, -3.6].map((surplus) => gradeForSurplus(surplus, "redraft"))).toEqual(["A+", "A", "B-", "D", "F"]);
     // A dynasty-sized number would otherwise grade every redraft manager A+.
     expect(gradeForSurplus(600, "redraft")).toBe("A+");
@@ -122,7 +122,7 @@ describe("getDraftGradeData", () => {
       getLeagueUsers: async () => [1, 2, 3, 4].map((n) => makeUser({ user_id: `U${n}`, metadata: { team_name: `Team ${n}` } })),
       getPlayerCatalog: async () => catalog,
       getPickCurve: async () => { curveRead = true; throw new Error("must not be read"); },
-      // 4 teams × 1 starting RB, so the 4th back is replacement: values are 12/8/4/0.
+      // Raw projected PPG is benchmarked against the same class.
       getProjectedPpg: async () => ({
         ok: true,
         attribution: { text: "RosterAudit", url: "https://rosteraudit.com" },
@@ -135,7 +135,7 @@ describe("getDraftGradeData", () => {
     expect(data.basis).toBe("redraft");
     expect(data.curveBacked).toBe(false);
     // Picked in value order, so every pick exactly meets its slot and nobody gains or loses.
-    expect(data.allPicks.map((pick) => pick.value)).toEqual([12, 8, 4, 0]);
+    expect(data.allPicks.map((pick) => pick.value)).toEqual([22, 18, 14, 10]);
     expect(data.allPicks.map((pick) => pick.surplus)).toEqual([0, 0, 0, 0]);
     expect(data.managers.every((manager) => manager.grade === "B-")).toBe(true);
   });

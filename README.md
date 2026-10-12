@@ -23,7 +23,7 @@
 - Live matchups, standings, power rankings, playoff odds, and league history
 - Player rankings, profiles, projections, injuries, and scouting reports
 - Trade analysis powered by RosterAudit
-- Dynasty, keeper, and redraft leagues — dynasty pages are priced on the dynasty market, everything else on projected points above replacement
+- Dynasty, keeper, and redraft leagues — dynasty pages are priced on the dynasty market, everything else on projected points per game
 - Username-based league discovery with no manual league IDs
 - A sidebar footer link to the project on GitHub
 

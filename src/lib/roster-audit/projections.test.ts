@@ -23,7 +23,7 @@ describe("complete offensive projection board", () => {
     expect(new Set(result.data.map(player => player.position))).toEqual(new Set(["QB", "RB", "WR", "TE"]));
   });
 
-  it("fails rather than calculating replacement from an incomplete position board", async () => {
+  it("fails rather than returning an incomplete position board", async () => {
     raFetch.mockResolvedValueOnce({ ok: false, error: { kind: "rate-limited", message: "429", retryable: false } });
     raFetch.mockResolvedValue({ ok: true, attribution, data: { rankings: [] } });
     expect(await getProjectedPpg()).toMatchObject({ ok: false, error: { kind: "rate-limited" } });

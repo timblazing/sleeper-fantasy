@@ -100,7 +100,7 @@ export type DraftGradeData = {
  *
  * The bands are written as fractions of the basis's `gradeUnit` so the same ladder reads correctly
  * in either currency: 1,000 dynasty value units (a mid-first is ~2,900, a late-third ~130) and
- * 3 points per game above replacement span one band each.
+ * 3 points per game span one band each.
  */
 const GRADE_BANDS: [number, string][] = [[0.9, "A+"], [0.5, "A"], [0.25, "A-"], [0.12, "B+"], [0.04, "B"], [-0.04, "B-"], [-0.12, "C+"], [-0.25, "C"], [-0.5, "C-"], [-0.9, "D"]];
 

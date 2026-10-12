@@ -147,11 +147,11 @@ appropriate to their content. Sheet headers/tabs stay fixed while content scroll
 
 ## Data and scrolling rules
 
-- Dynasty market value, redraft PPG+, weekly projected points and actual points
-  are different units. Name the unit beside the number. PPG+ preserves one decimal;
+- Dynasty market value, projected PPG, weekly projected points and actual points
+  are different units. Name the unit beside the number. PPG preserves one decimal;
   zero is a measurement, not an unavailable value.
 - Waivers exclude rostered assets and use this league's weekly scoring when
-  projections exist; fallback boards name their market/PPG+ basis explicitly.
+  projections exist; fallback boards name their market/PPG basis explicitly.
 - Scoring charts use completed weeks from the current season; missing observations
   remain gaps. Scouting counts based on roster values display unavailable when the
   value feed fails. Behavioral history remains independently useful.

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 // Not rounded to an integer: dynasty values are whole already, and a redraft league's numbers are
-// points above replacement carried to a tenth, where rounding would collapse the whole scale.
+// points per game carried to a tenth, where rounding would collapse the whole scale.
 const formatter = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
 
 const displayed = (value: number) => Math.round(value * 10) / 10 || 0;

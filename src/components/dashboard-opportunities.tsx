@@ -14,7 +14,7 @@ const ROOM_BAR: Record<string, string> = {
 export function DashboardRoster({ data, className }: { data: OverviewData; className?: string }) {
   if (!data.team) return null;
   return <Card className={className}>
-    <PanelHeader title="Roster edge" description={data.league.isDynasty ? "Position value against the league" : "Projected PPG+ against the league"} actions={<PanelLink href={withUsername(`/${data.league.id}/teams/${data.team.rosterId}`, data.username)} label="Open your roster" />} />
+    <PanelHeader title="Roster edge" description={data.league.isDynasty ? "Position value against the league" : "Projected PPG against the league"} actions={<PanelLink href={withUsername(`/${data.league.id}/teams/${data.team.rosterId}`, data.username)} label="Open your roster" />} />
     <CardContent className="flex flex-1 flex-col">
       {data.valuesReady ? <div className="grid grid-cols-2 gap-x-5 gap-y-4">{data.rooms.map(room => {
         const relative = room.leagueAvg > 0 ? (room.value / room.leagueAvg - 1) * 100 : null;

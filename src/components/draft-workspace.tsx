@@ -119,7 +119,7 @@ function ManagerTable({ data, onSelect }: { data: DraftGradeData; onSelect: (ros
       <CardContent className="border-t pt-4 text-xs leading-relaxed text-muted-foreground">
         {basis === "dynasty"
           ? "Grades compare each player’s current dynasty value against the expected value of the draft slot where they were selected."
-          : "Grades compare each player’s projected points per game above replacement against what the slot they were taken at returned across the class."}{" "}
+          : "Grades compare each player’s projected points per game against what the slot they were taken at returned across the class."}{" "}
         Surplus = current value − slot value. Hit rate measures picks worth at least their draft cost. Select a manager for their picks.
       </CardContent>
     </Card>

@@ -32,7 +32,7 @@ function PlayerSide({ entry, reverse, leagueId, username }: { entry: RosterSlot;
 
   return (
     <div className={cn("flex min-w-0 items-center gap-1.5 rounded-lg bg-background/40 px-1.5 py-1.5 sm:gap-2 sm:px-2 sm:py-2", reverse && "flex-row-reverse text-right")}>
-      <Avatar className="size-6 shrink-0 bg-muted sm:size-8">
+      <Avatar shape={player?.position === "DEF" ? "logo" : "circle"} className="size-6 shrink-0 bg-muted sm:size-8">
         {player ? <AvatarImage alt="" src={headshotUrl(player)} /> : null}
         <AvatarFallback className="text-xs">{player?.position ?? "—"}</AvatarFallback>
       </Avatar>

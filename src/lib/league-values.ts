@@ -2,7 +2,7 @@ import type { LeagueFormat } from "@/lib/league-features";
 import { getLeagueBase, teamIdentity, type LeagueBase } from "@/lib/league-context";
 import { liveSource, type LeagueSource } from "@/lib/league-source";
 import { resolvePlayer } from "@/lib/players";
-import { toRedraftValues } from "@/lib/redraft-values";
+import { toProjectedPpg } from "@/lib/redraft-values";
 import { ROOM_POSITIONS, type RoomPosition } from "@/lib/roster-positions";
 import type { Attribution } from "@/lib/roster-audit";
 import type { NflPlayer, NflState, SleeperLeague, SleeperRoster } from "@/lib/types";
@@ -15,6 +15,7 @@ export type { RoomPosition };
 export type ValuedPlayer = {
   player: NflPlayer;
   value: number;
+  valueAvailable?: boolean;
   /** Rank across every valued player in the league's format, 1 = most valuable. */
   rankOverall: number | null;
   /** Rank within the player's own position. */
@@ -69,7 +70,7 @@ export type LeagueValueContext = {
   regularSeason: boolean;
   superflex: boolean;
   formatKey: string;
-  /** Which currency `values` is quoted in — dynasty market value, or points above replacement. */
+  /** Which currency `values` is quoted in — dynasty market value, or points per game. */
   basis: ValueBasis;
   catalog: Map<string, NflPlayer>;
   catalogReady: boolean;
@@ -112,8 +113,7 @@ function buildRooms(roster: ValuedPlayer[], leagueRooms: Map<string, number[]>):
  * The one place a player's worth is read, for either basis.
  *
  * Dynasty leagues take RosterAudit's market values in the league's own superflex/TE-premium
- * format. Every other league takes the projected points-per-game board and converts it to points
- * above replacement against its own starting lineup (`src/lib/redraft-values.ts`). Both degrade
+ * format. Every other league uses the raw projected points-per-game board. Both degrade
  * to an empty map rather than throwing: `valuesReady` is how callers show a values-free page.
  */
 export async function loadValueMap(
@@ -124,7 +124,7 @@ export async function loadValueMap(
   if (format.basis === "redraft") {
     const result = await source.getProjectedPpg();
     return {
-      values: result.ok ? toRedraftValues(result.data, league) : new Map<string, number>(),
+      values: result.ok ? toProjectedPpg(result.data) : new Map<string, number>(),
       attribution: result.ok ? result.attribution : null,
     };
   }
@@ -172,6 +172,7 @@ export async function getLeagueValueContext(leagueId: string, source: LeagueSour
       .map((id) => ({
         player: resolvePlayer(catalog, id),
         value: values.get(id) ?? 0,
+        valueAvailable: values.has(id),
         rankOverall: rankOverall.get(id) ?? null,
         rankPosition: rankPosition.get(id) ?? null,
         ownerRosterId: roster.roster_id,

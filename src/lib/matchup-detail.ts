@@ -44,11 +44,14 @@ export async function getMatchupBoard(leagueId: string, week: number, source: Le
     });
     const startersSet = new Set(starters);
     const benchPoints = Object.entries(row.players_points ?? {}).reduce((sum, [id, value]) => (startersSet.has(id) ? sum : sum + value), 0);
-    const projected = slots.filter((slot) => slot.player && slot.projection != null);
-    const projectedScore = projected.length ? projected.reduce((sum, slot) => sum + (slot.projection ?? 0), 0) : null;
-    // The forecast blends points already banked with what is left to play, so the win probability
-    // tracks the week instead of restating the pregame projection.
-    forecasts.set(row.roster_id, liveForecast(slots.filter((slot) => slot.player).map((slot) => ({ points: slot.points, projection: slot.projection, state: slot.game?.state ?? null, period: slot.game?.period, clockSeconds: slot.game?.clockSeconds }))));
+    const occupied = slots.filter(slot => slot.player);
+    const complete = occupied.every(slot => slot.game?.state === "post" || slot.game?.bye || slot.projection !== null);
+    const forecast = complete ? liveForecast(occupied.map(slot => ({ points: slot.points, projection: slot.projection, state: slot.game?.bye ? "post" : slot.game?.state ?? null, period: slot.game?.period, clockSeconds: slot.game?.clockSeconds }))) : null;
+    // Anchor to Sleeper's official score so scoring adjustments are retained. Add only
+    // the unfinished portion, rather than summing pregame projections for completed games.
+    const banked = occupied.reduce((sum, slot) => sum + (slot.points ?? 0), 0);
+    const projectedScore = forecast ? forecast.mean + (row.points ?? banked) - banked : null;
+    forecasts.set(row.roster_id, forecast && projectedScore !== null ? { ...forecast, mean: projectedScore } : null);
     return { team, score: row.points ?? 0, projectedScore, slots, benchPoints };
   };
 

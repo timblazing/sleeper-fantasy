@@ -171,7 +171,7 @@ function Dossier({ profile, report }: { profile: ManagerProfile; report: Scoutin
             {dynasty && report.valuesReady && profile.window ? <Badge variant={WINDOW_VARIANT[profile.window]}>{profile.window}</Badge> : null}
             {profile.isUser ? <Badge variant="secondary">Your team</Badge> : null}
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">@{profile.manager} · {record.wins}-{record.losses}{record.ties ? `-${record.ties}` : ""} · {report.valuesReady ? `#${profile.valueRank} of ${profile.teams} in ${dynasty ? "dynasty value" : "projected roster PPG+"}` : "Roster values unavailable"}</p>
+          <p className="mt-1 text-xs text-muted-foreground">@{profile.manager} · {record.wins}-{record.losses}{record.ties ? `-${record.ties}` : ""} · {report.valuesReady ? `#${profile.valueRank} of ${profile.teams} in ${dynasty ? "dynasty value" : "projected roster PPG"}` : "Roster values unavailable"}</p>
         </div>
       </div>
       {report.valuesReady && report.userRosterId && !profile.isUser ? <Button nativeButton={false} size="sm" variant="outline" render={<Link href={withUsername(`/${report.league.id}/trade`, report.username)} />}>Explore a deal</Button> : null}
@@ -183,7 +183,7 @@ function Dossier({ profile, report }: { profile: ManagerProfile; report: Scoutin
           {profile.play ? <p className="max-w-prose text-sm leading-relaxed">{profile.play}</p> : <p className="text-sm text-muted-foreground">{profile.isUser ? "Compare your position strengths with the other managers to find a complementary deal." : "No clear complementary trade identified. Compare both sides before making an offer."}</p>}
           <RoomPills label={dynasty ? "Needs" : "Weaker rooms"} rooms={profile.needs} teams={profile.teams} tone="need" />
           <RoomPills label={dynasty ? "Depth" : "Stronger rooms"} rooms={profile.surpluses} teams={profile.teams} tone="surplus" />
-          <p className="text-xs leading-relaxed text-muted-foreground">{dynasty ? "Position ranks compare dynasty market value in this league." : "Position ranks use projected points above replacement in this league’s lineup."}</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">{dynasty ? "Position ranks compare dynasty market value in this league." : "Position ranks use projected points per game in this league’s lineup."}</p>
         </> : <p className="text-sm text-muted-foreground">Current roster values are unavailable. Position needs and trade-fit suggestions will return when the feed recovers.</p>}
       </section>
       <ManagerActivity profile={profile} basis={report.basis} />

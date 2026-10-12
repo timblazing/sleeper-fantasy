@@ -1,10 +1,7 @@
 // The currency a league's numbers are quoted in, and the words that go with it.
 //
-// A dynasty league carries rosters across seasons, so a player is worth whatever the dynasty
-// market pays for him — that is RosterAudit's value board. A redraft league lasts one season,
-// so the only thing a player is worth is the points he is projected to score above the man who
-// would start in his place. The two are different units, not different scales: mixing them is
-// what the old "redraft leagues are not supported yet" lock existed to prevent.
+// Dynasty leagues use market values. Redraft and keeper leagues use raw projected
+// points per game. These remain distinct units throughout the application.
 //
 // Pure presentation data, no I/O — client components import this.
 
@@ -20,7 +17,7 @@ export type ValueBasisMeta = {
   /**
    * The surplus-per-pick that spans one draft-grade band, in this basis's units. Dynasty values
    * put a mid-first around 2,900, so a 1,000-unit swing is the scale a grade should move on;
-   * points above replacement top out near 10, so 3 plays the same role there.
+   * projected PPG differences use a three-point band.
    */
   gradeUnit: number;
   /** True when this basis has draft-pick values, trends, and tiers behind it. */
@@ -39,9 +36,9 @@ export const VALUE_BASIS: Record<ValueBasis, ValueBasisMeta> = {
     decimals: 0,
   },
   redraft: {
-    noun: "projected points above replacement",
-    columnLabel: "PPG+",
-    blurb: "Projected points per game above replacement in this league's starting lineup, ranked and filterable.",
+    noun: "projected points per game",
+    columnLabel: "Proj PPG",
+    blurb: "Projected PPR points per game, ranked and filterable.",
     gradeUnit: 3,
     hasMarket: false,
     decimals: 1,
@@ -59,7 +56,7 @@ export function roundValue(value: number, basis: ValueBasis): number {
 /**
  * Adds values and snaps the total back to a tenth.
  *
- * Redraft values are points above replacement carried to one decimal, so a plain sum drifts into
+ * Redraft values are points per game carried to one decimal, so a plain sum drifts into
  * float noise (`88.69999999999999`) and every `toLocaleString` in the app prints it. Dynasty
  * values are whole numbers, where this rounds nothing.
  */

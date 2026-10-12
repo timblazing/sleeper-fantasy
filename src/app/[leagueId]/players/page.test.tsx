@@ -67,10 +67,10 @@ describe("PlayersPage", () => {
 
   // The page used to replace its whole body with a "needs a dynasty league" lock. A redraft
   // league now gets the same table, described in the currency its rows are actually quoted in.
-  it("renders the rankings table for a redraft league, described as points above replacement", async () => {
+  it("renders the rankings table for a redraft league, described as points per game", async () => {
     await renderPage(false);
     expect(screen.getByText("Bijan Robinson")).toBeInTheDocument();
-    expect(screen.getByText("Projected points per game above replacement in this league's starting lineup, ranked and filterable.")).toBeInTheDocument();
+    expect(screen.getByText("Projected PPR points per game, ranked and filterable.")).toBeInTheDocument();
     expect(screen.queryByText("Players needs a dynasty league")).not.toBeInTheDocument();
   });
 

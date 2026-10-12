@@ -421,7 +421,7 @@ function buildInsights(args: {
       title: dynasty ? `Desperate for ${room.position} (ranked #${room.rank} of ${teams})` : `${room.position} scoring need (#${room.rank} of ${teams})`,
       detail: dynasty
         ? `${room.value.toLocaleString("en-US")} against a ${Math.round(room.leagueAvg).toLocaleString("en-US")} league average.${mine ? ` You are #${mine.rank} there — they should be willing to overpay.` : " Critical hole they must address."}`
-        : `${room.value.toLocaleString("en-US", { maximumFractionDigits: 1 })} projected PPG+ against a ${room.leagueAvg.toLocaleString("en-US", { maximumFractionDigits: 1 })} league average.${mine ? ` Your #${mine.rank} room may provide a complementary trade fit.` : " Compare their starters before proposing a deal."}`,
+        : `${room.value.toLocaleString("en-US", { maximumFractionDigits: 1 })} projected PPG against a ${room.leagueAvg.toLocaleString("en-US", { maximumFractionDigits: 1 })} league average.${mine ? ` Your #${mine.rank} room may provide a complementary trade fit.` : " Compare their starters before proposing a deal."}`,
       thisLeague: true,
     });
   }
@@ -637,7 +637,7 @@ function buildInsights(args: {
       tone: "positive",
       strength: "moderate",
       title: `${room.position} surplus fills your #${mine.rank} room`,
-      detail: dynasty ? `They are #${room.rank} of ${teams} at ${room.position} with ${room.starterCount} bodies. Worth making an offer — the depth is spare to them.` : `They are #${room.rank} of ${teams} in projected ${room.position} PPG+. Check their starters and depth before proposing a scoring swap.`,
+      detail: dynasty ? `They are #${room.rank} of ${teams} at ${room.position} with ${room.starterCount} bodies. Worth making an offer — the depth is spare to them.` : `They are #${room.rank} of ${teams} in projected ${room.position} PPG. Check their starters and depth before proposing a scoring swap.`,
       thisLeague: true,
     });
   }

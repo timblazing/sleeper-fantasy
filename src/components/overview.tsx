@@ -87,7 +87,7 @@ export function Overview({ data, picture, history, pulse }: { data: OverviewData
     { label: "Season record", icon: CalendarCheck, color: "var(--series-2)", value: `${data.team.wins}–${data.team.losses}${data.team.ties ? `–${data.team.ties}` : ""}`, detail: data.team.name },
     { label: "Points per game", icon: Flame, color: "var(--series-5)", value: games ? (data.team.pointsFor / games).toFixed(1) : "—", detail: games ? `#${data.team.powerRank} of ${data.league.teams} in scoring` : "Waiting for kickoff" },
     { label: "Playoff odds", icon: Target, color: "var(--series-1)", value: playoff ? `${playoff.playoffOdds.toFixed(1)}%` : "—", detail: playoff ? `${playoff.projectedWins.toFixed(1)} projected wins` : "Simulation unavailable" },
-    { label: data.league.isDynasty ? "Dynasty value rank" : "Roster strength", icon: Gem, color: "var(--series-4)", value: data.valuesReady ? `#${data.team.valueRank}` : "—", detail: data.valuesReady ? `of ${data.league.teams} · ${data.league.isDynasty ? "market value" : "projected PPG+"}` : "Player values unavailable" },
+    { label: data.league.isDynasty ? "Dynasty value rank" : "Roster strength", icon: Gem, color: "var(--series-4)", value: data.valuesReady ? `#${data.team.valueRank}` : "—", detail: data.valuesReady ? `of ${data.league.teams} · ${data.league.isDynasty ? "market value" : "projected PPG"}` : "Player values unavailable" },
   ] : [];
   return (
     <PageContainer className="flex flex-col gap-5">

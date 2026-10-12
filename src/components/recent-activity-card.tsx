@@ -22,7 +22,7 @@ function PlayerMove({ kind, player }: { kind: "add" | "drop"; player: NflPlayer 
   const Icon = kind === "add" ? PlusIcon : MinusIcon;
   return (
     <div className="flex items-center gap-2.5">
-      <Avatar className="size-9 shrink-0">
+      <Avatar shape={player.position === "DEF" ? "logo" : "circle"} className="size-9 shrink-0">
         <AvatarImage alt="" src={headshotUrl(player)} />
         <AvatarFallback className="text-xs">{player.position ?? "NFL"}</AvatarFallback>
       </Avatar>
