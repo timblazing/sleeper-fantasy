@@ -20,15 +20,15 @@
   --positive: var(--success-foreground);
   --negative: var(--destructive-text);
   --destructive-foreground: var(--background);
-  --chart-1: var(--foreground);
-  --chart-2: var(--muted-foreground);
-  --chart-3: #737373;
-  --chart-4: #525252;
-  --chart-5: #404040;
+  --chart-1: var(--series-1);
+  --chart-2: var(--series-2);
+  --chart-3: var(--series-3);
+  --chart-4: var(--series-4);
+  --chart-5: var(--series-5);
 }
 
-@media (prefers-color-scheme: dark) {
-:root {
+
+.dark {
   --position-qb-background: oklch(0.3 0.075 20 / 55%);
   --position-qb-foreground: oklch(0.76 0.145 22);
   --position-rb-background: oklch(0.3 0.06 155 / 55%);
@@ -48,10 +48,9 @@
   --positive: var(--success-foreground);
   --negative: var(--destructive-text);
   --destructive-foreground: var(--background);
-  --chart-1: var(--foreground);
-  --chart-2: var(--muted-foreground);
-  --chart-3: #737373;
-  --chart-4: #525252;
-  --chart-5: #404040;
-}
+  --chart-1: var(--series-1);
+  --chart-2: var(--series-2);
+  --chart-3: var(--series-3);
+  --chart-4: var(--series-4);
+  --chart-5: var(--series-5);
 }

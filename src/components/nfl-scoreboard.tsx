@@ -110,7 +110,7 @@ export function NflScoreTicker() {
             </div>
           ))}
         </div>
-        <span className="w-[3.35rem] shrink-0 text-[10px] leading-tight text-positive">
+        <span className="w-[3.35rem] shrink-0 text-xs leading-tight text-positive">
           <span className="mb-0.5 flex items-center gap-1"><span className="size-1.5 rounded-full bg-positive" />{period}</span>{clock}
         </span>
       </button>

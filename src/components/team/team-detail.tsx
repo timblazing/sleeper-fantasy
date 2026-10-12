@@ -39,9 +39,9 @@ function TeamHero({ team, leagueName, season, teams, valuesReady, basis = "dynas
       </div>
       <p className="mt-4 text-xs text-muted-foreground">{leagueName} · {season}</p>
       <dl className="mt-5 grid grid-cols-3 gap-4">
-        <div><dt className="text-[11px] text-muted-foreground">Record</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{team.wins}-{team.losses}{team.ties ? `-${team.ties}` : ""}</dd></div>
-        <div><dt className="text-[11px] text-muted-foreground">{basis === "dynasty" ? "Roster value" : "Roster PPG"}</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{valuesReady ? `#${team.valueRank}` : "—"}</dd><dd className="text-xs text-muted-foreground">{valuesReady ? `${team.value.toLocaleString("en-US", { maximumFractionDigits: basisMeta(basis).decimals })} · ${teams} teams` : "Unavailable"}</dd></div>
-        <div><dt className="text-[11px] text-muted-foreground">Scoring</dt><dd className="mt-1 text-xl font-semibold tabular-nums">#{team.powerRank}</dd><dd className="text-xs text-muted-foreground">{team.pointsFor.toFixed(1)} pts</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Record</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{team.wins}-{team.losses}{team.ties ? `-${team.ties}` : ""}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">{basis === "dynasty" ? "Roster value" : "Roster PPG"}</dt><dd className="mt-1 text-xl font-semibold tabular-nums">{valuesReady ? `#${team.valueRank}` : "—"}</dd><dd className="text-xs text-muted-foreground">{valuesReady ? `${team.value.toLocaleString("en-US", { maximumFractionDigits: basisMeta(basis).decimals })} · ${teams} teams` : "Unavailable"}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Scoring</dt><dd className="mt-1 text-xl font-semibold tabular-nums">#{team.powerRank}</dd><dd className="text-xs text-muted-foreground">{team.pointsFor.toFixed(1)} pts</dd></div>
       </dl>
     </header>
   );

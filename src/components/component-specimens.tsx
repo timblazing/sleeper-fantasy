@@ -25,6 +25,9 @@ import { specimenContext, specimenProfile } from "@/lib/design-specimens";
 
 const views = [{ value: "overview", label: "Summary" }, { value: "production", label: "Game log" }, { value: "team", label: "Team" }, { value: "history", label: "History" }];
 const chartData = [{ week: "W1", points: 16 }, { week: "W2", points: 0 }, { week: "W3", points: null }, { week: "W4", points: 24 }, { week: "W5", points: 18 }];
+const NEUTRAL_TOKENS = ["background", "foreground", "card", "primary", "secondary", "muted", "accent", "border", "ring", "destructive", "success", "warning", "info"];
+const SERIES = [1, 2, 3, 4, 5, 6, 7, 8];
+const RADII = ["sm", "md", "lg", "xl", "2xl", "3xl", "4xl"];
 const chartConfig = { points: { label: "Points", color: SINGLE_SERIES_COLOR } };
 
 export function ComponentSpecimens({ position = "all" }: { position?: string }) {
@@ -33,6 +36,36 @@ export function ComponentSpecimens({ position = "all" }: { position?: string }) 
   const animate = useChartAnimation();
   return (
     <div className="space-y-8">
+      <Card>
+        <PanelHeader title="Foundations" description="Neutral OKLCH palette from the components repo, a project-owned colored data palette, and the radius scale. Swatches follow the active theme." />
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-7">
+            {NEUTRAL_TOKENS.map((token) => (
+              <div key={token} className="space-y-1.5">
+                <div className="h-10 rounded-lg border" style={{ background: `var(--${token})` }} />
+                <p className="type-caption text-muted-foreground">{token}</p>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
+            {SERIES.map((n) => (
+              <div key={n} className="space-y-1.5">
+                <div className="h-10 rounded-lg" style={{ background: `var(--series-${n})` }} />
+                <p className="type-caption text-muted-foreground">series-{n}</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-end gap-3">
+            {RADII.map((r) => (
+              <div key={r} className="space-y-1.5">
+                <div className="size-12 border bg-foreground/10" style={{ borderRadius: `var(--radius-${r})` }} />
+                <p className="type-caption text-muted-foreground">{r}</p>
+              </div>
+            ))}
+          </div>
+          <p className="type-caption text-muted-foreground">Elevation: in-flow surfaces use borders only; popovers and menus use shadow-md, dialogs and sheets use shadow-lg.</p>
+        </CardContent>
+      </Card>
       <Card>
         <PanelHeader title="Metrics and status" description="Sentence-case labels, tabular values, and colors with a purpose." actions={<Button variant="outline" onClick={() => setOpen(true)}>Open detail</Button>} />
         <CardContent className="space-y-6">
@@ -68,7 +101,7 @@ export function ComponentSpecimens({ position = "all" }: { position?: string }) 
       </Card>
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <PanelHeader title="Scoring chart" description="Neutral data, flat fill, a measured zero, and a gap for missing data." />
+          <PanelHeader title="Scoring chart" description="Colored series, flat fill, a measured zero, and a gap for missing data." />
           <CardContent>
             <ChartContainer config={chartConfig} className="h-56 w-full aspect-auto">
               <AreaChart accessibilityLayer data={chartData}><CartesianGrid {...CHART_GRID} /><XAxis {...CHART_AXIS} dataKey="week" /><YAxis {...CHART_AXIS} width={32} /><ChartTooltip content={<ChartTooltipContent />} /><Area dataKey="points" stroke="var(--color-points)" fill="var(--color-points)" fillOpacity={0.12} connectNulls={false} isAnimationActive={animate} /></AreaChart>

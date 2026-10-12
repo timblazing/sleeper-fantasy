@@ -7,7 +7,7 @@
   letter-spacing: -0.05em;
 }
 @utility type-heading {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: clamp(1.875rem, 3vw, 2.25rem);
   font-weight: 500;
   line-height: 1.1;

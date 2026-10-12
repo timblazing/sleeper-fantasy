@@ -29,7 +29,7 @@ export function PlayerHero({ profile, leagueId, username }: { profile: PlayerPro
       </div>
       <div className="mt-5 flex items-center justify-between gap-3">
         <dl className="grid flex-1 grid-cols-4 gap-3">
-          {bio.map(({ label, value }) => <div key={label}><dt className="text-[11px] text-muted-foreground">{label}</dt><dd className="mt-0.5 text-sm font-medium tabular-nums">{value ?? "—"}</dd></div>)}
+          {bio.map(({ label, value }) => <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-0.5 text-sm font-medium tabular-nums">{value ?? "—"}</dd></div>)}
         </dl>
         <Link className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")} href={withUsername(`/${leagueId}/trade`, username)}>Trade <ArrowUpRight className="size-3.5" /></Link>
       </div>

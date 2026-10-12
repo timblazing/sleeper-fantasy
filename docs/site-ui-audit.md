@@ -78,7 +78,6 @@ removing the unwanted summary cards and replacing the scouting sidebar.
 - `npm run typecheck`
 - `npm run lint`
 - `npm test` (472 passing tests, including redraft scouting semantics and selector behavior)
-- `npm run design:check` (pinned foundations remain verified)
 - `npm run build`
 - `git diff --check`
 

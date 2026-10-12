@@ -127,9 +127,9 @@ function ManagerActivity({ profile, basis }: { profile: ManagerProfile; basis: V
               <div className="mt-3 flex h-16 items-end gap-2">
                 {days.map((day, index) => (
                   <div key={day} className="flex min-w-0 flex-1 flex-col items-center gap-1" title={`${day}: ${tendencies.activityByDay[index] ?? 0} moves`}>
-                    <span className="text-[10px] text-muted-foreground tabular-nums">{tendencies.activityByDay[index] ?? 0}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">{tendencies.activityByDay[index] ?? 0}</span>
                     <div aria-hidden="true" className="w-full max-w-9 rounded-t-sm bg-info/60" style={{ height: `${(tendencies.activityByDay[index] ?? 0) / peak * 42}px` }} />
-                    <span className="text-[10px] text-muted-foreground">{day}</span>
+                    <span className="text-xs text-muted-foreground">{day}</span>
                   </div>
                 ))}
               </div>
@@ -228,7 +228,7 @@ export function ScoutingReportView({ report }: { report: ScoutingReport }) {
       <h2 className="text-sm font-medium">Choose a manager</h2>
       <p className="text-xs text-muted-foreground sm:hidden">Swipe to browse teams.</p>
       <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">{visible.map(profile => <Button key={profile.rosterId} variant={selected?.rosterId === profile.rosterId ? "default" : "outline"} className="h-auto min-h-10 max-w-full shrink-0 justify-start gap-2 px-3 py-2" aria-pressed={selected?.rosterId === profile.rosterId} aria-controls="manager-report" onClick={() => setSelectedId(profile.rosterId)}>
-        <Avatar aria-hidden="true" className="size-6 shrink-0"><AvatarImage src={profile.avatar ? avatarUrl(profile.avatar) : undefined} alt="" /><AvatarFallback className="text-[10px]">{initials(profile.manager)}</AvatarFallback></Avatar><span className="truncate">{profile.name}</span>{profile.isUser ? <span className="text-[10px] opacity-70">You</span> : null}
+        <Avatar aria-hidden="true" className="size-6 shrink-0"><AvatarImage src={profile.avatar ? avatarUrl(profile.avatar) : undefined} alt="" /><AvatarFallback className="text-xs">{initials(profile.manager)}</AvatarFallback></Avatar><span className="truncate">{profile.name}</span>{profile.isUser ? <span className="text-xs opacity-70">You</span> : null}
       </Button>)}</div>
     </section>
     {selected ? <Card id="manager-report" className="gap-0 py-0"><CardContent className="p-4 md:p-6"><Dossier profile={selected} report={report} /></CardContent></Card> : <Empty className="min-h-48 border"><EmptyHeader><EmptyMedia variant="icon"><BinocularsIcon /></EmptyMedia><EmptyTitle>No managers match</EmptyTitle><EmptyDescription>Try another filter or search.</EmptyDescription></EmptyHeader></Empty>}
