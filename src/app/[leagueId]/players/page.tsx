@@ -15,7 +15,7 @@ import { parseRankingsQuery, type RankingsSearchParams } from "@/lib/rankings-qu
 import type { RaError } from "@/lib/roster-audit";
 import { basisMeta } from "@/lib/value-basis";
 
-export const metadata: Metadata = { title: "Players" };
+export const metadata: Metadata = { title: "Rankings" };
 
 // PLAN.md line 47: each failure kind gets its own explanation, and line 46 forbids
 // auto-retrying a rate limit — the reader retries by reloading.
@@ -52,7 +52,7 @@ export default async function PlayersPage({ params, searchParams }: { params: Pr
   // only its own content inside the standard container.
   return (
     <PageContainer className="flex flex-col gap-5">
-      <PageHeader description={meta.blurb} title="Players" />
+      <PageHeader description={meta.blurb} title="Rankings" />
       {result.ok ? (
         <>
           <RankingsToolbar positions={result.view.positions} basis={result.view.basis} leagueId={leagueId} query={query} />

@@ -218,7 +218,7 @@ export function ScoutingReportView({ report }: { report: ScoutingReport }) {
   const visible = report.profiles.filter(profile => active.match(profile) && `${profile.name} ${profile.manager}`.toLowerCase().includes(search.toLowerCase()));
   const selected = visible.find(profile => profile.rosterId === selectedId) ?? visible.find(profile => !profile.isUser) ?? visible[0] ?? null;
   return <PageContainer className="flex flex-col gap-5">
-    <PageHeader title="Scouting report" description={dynasty ? report.valuesReady ? report.marketSummary : "Manager behavior and league history. Current roster values are unavailable." : "Find a scoring fit for this season. Compare position needs, trade habits, and recorded manager activity."} />
+    <PageHeader title="Scouting Report" description={dynasty ? report.valuesReady ? report.marketSummary : "Manager behavior and league history. Current roster values are unavailable." : "Find a scoring fit for this season. Compare position needs, trade habits, and recorded manager activity."} />
     {!report.userRosterId ? <div className="flex items-start gap-3 rounded-lg border bg-card p-4 text-sm text-muted-foreground"><UserSearchIcon className="size-4 shrink-0" /><p>Connect your Sleeper account for personalized trade fits and recommendations.</p></div> : null}
     <div className="flex flex-wrap items-center justify-between gap-3">
       <ResponsiveTabs label="Filter managers" mode="filter" value={active.id} onValueChange={setFilter} items={filters.map(entry => ({ value: entry.id, label: entry.label }))} />
