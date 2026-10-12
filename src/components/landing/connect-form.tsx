@@ -65,7 +65,7 @@ export function ConnectForm({ preselectLeagueId, demoHref }: { preselectLeagueId
                 onClick={() => open(league.id, found.username)}
                 type="button"
               >
-                <Avatar className="size-9">
+                <Avatar className="size-9" shape={league.avatar ? "logo" : "circle"}>
                   {league.avatar ? <AvatarImage alt="" src={leagueAvatarProxyUrl(league.avatar)} /> : null}
                   <AvatarFallback>{league.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>

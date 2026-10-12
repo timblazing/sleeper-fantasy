@@ -3,6 +3,10 @@
 </p>
 
 <p align="center">
+  <a href="docs/screenshots/landing.png"><img alt="League discovery" src="docs/screenshots/landing.png" /></a>
+</p>
+
+<p align="center">
   <a href="docs/screenshots/dashboard.png"><img alt="Dashboard" src="docs/screenshots/dashboard.png" /></a>
 </p>
 
