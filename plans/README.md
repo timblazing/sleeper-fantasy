@@ -20,7 +20,7 @@ status row when complete.
 | 007 | Adopt current design system + light/dark toggle | P1 | M | — | DONE |
 | 008 | Landing page replaces the connect dialog | P1 | M | 007 | DONE |
 | 009 | Sidebar IA + split dashboard into pages | P1 | L | 007 | DONE |
-| 010 | Command palette + consistency pass | P2 | M | 007–009 | TODO |
+| 010 | Command palette + consistency pass | P2 | M | 007–009 | DONE |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale).
 
@@ -57,6 +57,7 @@ are stated relative to that 421-test baseline.
 - Plan 007: executed on `main` (tokens copied from components repo, class-based dark mode via next-themes, ThemeToggle in league header and /design-system, drift cleanup); typecheck, lint, test (59 files, 482 tests) and build pass. Left literal hex in `nfl-field.tsx` (field illustration/team colors).
 - Plan 008: executed on `main` (landing page at `/` with masked dot-field hero, pill username form, in-page league picker, `?league=` preselect, features strip, footer; connect dialog removed; "Switch account" in NavUser); typecheck, lint, test (59 files, 485 tests) and build pass; browser-verified at 1440 and 393 in both themes.
 - Plan 009: executed on `main` (League/Players/Tools sidebar with WK badge on Matchups; new Standings, Teams, Activity, History and Injuries pages with loading skeletons; dashboard slimmed to a playoff-odds mini list and 4 recent moves linking out; `/players?view=injuries` redirects to `/injuries`; `/teams/[id]` direct loads render the Teams grid behind the sheet); typecheck, lint, test and build pass; browser-verified at 1440 and 393 in both themes, both league formats.
+- Plan 010: executed on `main` (⌘K / Ctrl+K command palette on shadcn `command`/cmdk with Pages, Teams, Players, Leagues and Theme groups, search button in the header, new `/api/leagues/[leagueId]/teams` route; flat bordered summary metric cards; Roster edge layout tightened; Rankings/Scouting Report titles aligned with the sidebar); typecheck, lint, test and build pass; browser-verified at 1440 and 393 in both themes, both leagues, no horizontal overflow at 393.
 
 ## Findings considered and rejected
 
