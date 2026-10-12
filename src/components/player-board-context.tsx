@@ -19,6 +19,6 @@ export function PlayerBoardContext({ view, pulse, username }: { view: RankingsVi
         </li>)}</ul>
       </section>)}</CardContent>
     </Card> : null}
-    <Card><CardHeader><CardTitle>{view.basis === "dynasty" ? "Value, not weekly points" : "What PPG+ tells you"}</CardTitle></CardHeader><CardContent><p className="text-sm leading-relaxed text-muted-foreground">{view.basis === "dynasty" ? "Market value compares long-term assets in your league format. Use weekly projections for lineup and waiver decisions." : "Projected PPR points per game above the replacement starter at each position. A higher number means more scoring advantage; zero is replacement level."}</p></CardContent></Card>
+    <Card><CardHeader><CardTitle>{view.basis === "dynasty" ? "Value, not weekly points" : "What PPG+ tells you"}</CardTitle></CardHeader><CardContent><p className="text-sm leading-relaxed text-muted-foreground">{view.basis === "dynasty" ? "Market value compares long-term assets in your league format. Use weekly projections for lineup and waiver decisions." : "Projected PPR points per game above the replacement starter at each position. A higher number means more scoring advantage; zero is replacement level. A dash means no projection is available."}</p></CardContent></Card>
   </aside>;
 }

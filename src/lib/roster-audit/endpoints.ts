@@ -76,17 +76,18 @@ export const searchPlayers = (params: { q?: string; position?: string; limit?: n
 
 export const getPlayerStats = (sleeperId: string) => raFetch(`/player-stats/${sleeperId}`, playerStatsResponseSchema, { ttl: 21600 });
 
-/**
- * The projected points-per-game board — the whole board, deliberately unfiltered by position.
- *
- * This is the redraft leagues' value source. Replacement level is a league-wide comparison
- * across every position at once (`src/lib/redraft-values.ts`), so asking for one position at a
- * time would make the numbers incomparable. Dynasty columns ride along on the same payload and
- * are dropped here: a redraft league must never see them.
- */
-export const getProjectedPpg = (): Promise<RaResult<RaProjectedPlayer[]>> =>
-  mapResult(raFetch("/projections/ppg-rankings", ppgRankingsResponseSchema, { ttl: 21600 }), (data) =>
-    data.rankings.map((row) => ({ sleeperId: row.sleeper_id, name: row.name, position: row.position, team: row.team, age: row.age, ppg: row.ppg })));
+/** Fetch each offensive position separately: the endpoint defaults to only the top 100
+ * overall and caps limit at 200. Keep PPR explicit to match the redraft value basis. */
+export async function getProjectedPpg(): Promise<RaResult<RaProjectedPlayer[]>> {
+  const results = await Promise.all(["QB", "RB", "WR", "TE"].map((position) =>
+    raFetch(`/projections/ppg-rankings?position=${position}&limit=200&scoring=ppr`, ppgRankingsResponseSchema, { ttl: 21600 })));
+  const players = new Map<string, RaProjectedPlayer>();
+  for (const result of results) {
+    if (!result.ok) return result;
+    for (const row of result.data.rankings) players.set(row.sleeper_id, { sleeperId: row.sleeper_id, name: row.name, position: row.position, team: row.team, age: row.age, ppg: row.ppg });
+  }
+  return { ok: true, data: [...players.values()], attribution: results[0].ok ? results[0].attribution : { text: "Values by RosterAudit.com", url: "https://rosteraudit.com" } };
+}
 
 export type TradeSettings = { isSuperflex: boolean; isTePremium: boolean; leagueSize?: number; scoringFormat?: string };
 

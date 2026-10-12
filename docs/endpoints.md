@@ -1934,6 +1934,19 @@ The project's live verification observed `401` without a key for both endpoints.
 
 ## 4.12 Projection rankings
 
+Verified 2026-10-12: the unfiltered request defaults to `limit=100` across all
+positions and half-PPR scoring. That response contained just two TEs. `limit` caps
+at 200, so fetch QB, RB, WR, and TE separately with `position`, `limit=200`, and
+`scoring=ppr`, then combine the responses before computing replacement levels.
+The TE request returned 65 projected players. K/DEF are not supported projection
+filters: those requests returned offensive rows, so do not use them for K/DEF values.
+
+The Players table uses Sleeper's catalog for membership, including active free
+agents, injured players, and rostered inactive players. Projections and dynasty
+values enrich that pool; missing values display a dash. DEF and K appear only when
+present in the connected league's roster positions. Dynasty rankings load every
+upstream page before local filters and pagination.
+
 ```http
 GET /projections/ppg-rankings
 ```

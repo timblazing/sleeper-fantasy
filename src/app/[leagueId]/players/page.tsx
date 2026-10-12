@@ -59,7 +59,7 @@ export default async function PlayersPage({ params, searchParams }: { params: Pr
       <PlayersTabs leagueId={leagueId} username={query.username} value="rankings">
       {result.ok ? (
         <>
-          <RankingsToolbar basis={result.view.basis} leagueId={leagueId} query={query} />
+          <RankingsToolbar positions={result.view.positions} basis={result.view.basis} leagueId={leagueId} query={query} />
           <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             <div className="min-w-0"><RankingsTable query={query} view={result.view} /></div>
             <PlayerBoardContext view={result.view} pulse={pulse} username={query.username} />

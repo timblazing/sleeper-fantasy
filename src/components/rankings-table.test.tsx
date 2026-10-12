@@ -23,6 +23,12 @@ const view = (rows: RankingsView["rows"], over: Partial<RankingsView> = {}): Ran
 });
 
 describe("RankingsTable", () => {
+  it("shows missing values as unavailable without a value bar", () => {
+    render(<RankingsTable query={QUERY} view={view([playerRow({ value: 0, valueAvailable: false })], { basis: "redraft" })} />);
+    expect(screen.getByTitle("No value available")).toHaveTextContent("—");
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+  });
+
   it("badges the signed-in user's row and names the owner on someone else's", () => {
     render(<RankingsTable query={QUERY} view={view([
       playerRow({ owner: { teamName: "Fourth & Long", isMine: true } }),

@@ -9,7 +9,7 @@
 
 import type { ValueBasis } from "@/lib/value-basis";
 
-export const RANKINGS_POSITIONS = ["all", "QB", "RB", "WR", "TE", "picks", "rookies"] as const;
+export const RANKINGS_POSITIONS = ["all", "QB", "RB", "WR", "TE", "DEF", "K", "picks", "rookies"] as const;
 export const RANKINGS_SORTS = ["value", "age", "name"] as const;
 export const MIN_RANKINGS_AGE = 20;
 export const MAX_RANKINGS_AGE = 45;
@@ -68,8 +68,9 @@ export function serializeRankingsQuery(query: RankingsQuery, overrides: Partial<
 }
 
 /** Redraft has no pick market and no rookie board, so those two tabs do not exist there. */
-export const rankingsPositionsFor = (basis: ValueBasis): readonly RankingsPosition[] =>
-  basis === "dynasty" ? RANKINGS_POSITIONS : RANKINGS_POSITIONS.filter((position) => position !== "picks" && position !== "rookies");
+export const rankingsPositionsFor = (basis: ValueBasis, positions: readonly string[] = ["QB", "RB", "WR", "TE"]): readonly RankingsPosition[] =>
+  RANKINGS_POSITIONS.filter((position) =>
+    position === "all" || (position === "picks" || position === "rookies" ? basis === "dynasty" : positions.includes(position)));
 
 export const rankingsHref = (leagueId: string, query: RankingsQuery, overrides: Partial<RankingsQuery> = {}) => `/${leagueId}/players${serializeRankingsQuery(query, overrides)}`;
 

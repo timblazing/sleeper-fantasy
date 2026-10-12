@@ -23,6 +23,7 @@ function Trend({ value }: { value: number }) {
 }
 
 function RankingsRowCells({ row, leagueId, username, maxValue, showTrend }: { row: RankingsRow; leagueId: string; username?: string; maxValue: number; showTrend: boolean }) {
+  const available = row.kind === "pick" || row.valueAvailable !== false;
   const share = maxValue > 0 ? Math.max(2, Math.round((row.value / maxValue) * 100)) : 0;
   const mine = row.kind === "player" && row.owner?.isMine;
 
@@ -40,7 +41,7 @@ function RankingsRowCells({ row, leagueId, username, maxValue, showTrend }: { ro
         {row.kind === "pick" ? <Badge size="position" variant="outline">Pick</Badge> : <PositionBadge label={row.position} position={row.position} />}
       </TableCell>
       <TableCell className="text-left max-md:pr-4">
-        <div className="flex flex-col items-start gap-1 sm:min-w-28"><span className="tabular-nums font-medium">{row.value.toLocaleString()}</span><Progress className="w-full max-sm:hidden" value={share} /></div>
+        <div className="flex flex-col items-start gap-1 sm:min-w-28"><span className="tabular-nums font-medium">{available ? row.value.toLocaleString() : <span title="No value available">—</span>}</span>{available ? <Progress className="w-full max-sm:hidden" value={share} /> : null}</div>
       </TableCell>
       <TableCell className="hidden text-muted-foreground md:table-cell max-lg:pr-4">{row.kind === "pick" ? "—" : row.age !== null ? row.age.toFixed(1) : "—"}</TableCell>
       {showTrend ? <TableCell className="hidden lg:table-cell">{row.kind === "pick" ? <span className="text-muted-foreground">—</span> : <Trend value={row.trend7d} />}</TableCell> : null}

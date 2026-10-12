@@ -17,6 +17,13 @@ describe("RankingsToolbar position filters", () => {
     expect(positionButtons().map((anchor) => anchor.textContent)).toEqual(["All", "QB", "RB", "WR", "TE"]);
   });
 
+  it("offers DEF and K only when supplied by the league", () => {
+    render(<RankingsToolbar basis="redraft" leagueId="L1" query={QUERY} positions={["QB", "RB", "WR", "TE", "DEF", "K"]} />);
+    expect(positionButtons().map(anchor => anchor.textContent)).toEqual(["All", "QB", "RB", "WR", "TE", "DEF", "K"]);
+    expect(screen.getByText("DEF").closest("a")).toHaveAttribute("href", "/L1/players?position=DEF");
+    expect(screen.getByText("K").closest("a")).toHaveAttribute("href", "/L1/players?position=K");
+  });
+
   it("offers Rookies immediately after Picks", () => {
     render(<RankingsToolbar basis="dynasty" leagueId="L1" query={QUERY} />);
     expect(positionButtons().map((anchor) => anchor.textContent)).toEqual(["All", "QB", "RB", "WR", "TE", "Picks", "Rookies"]);

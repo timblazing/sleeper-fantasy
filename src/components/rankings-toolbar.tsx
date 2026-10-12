@@ -15,12 +15,12 @@ const positionLabel = (position: string) => (position === "all" ? "All" : positi
  *  One row, two clusters: position is the filter people reach for constantly so it stays
  *  segmented and always visible; search is typed rarely but needs its own box. An age range
  *  arriving in the URL still applies and shows as a removable badge below. */
-export function RankingsToolbar({ basis, leagueId, query }: { basis: ValueBasis; leagueId: string; query: RankingsQuery }) {
+export function RankingsToolbar({ basis, leagueId, query, positions }: { positions?: readonly string[]; basis: ValueBasis; leagueId: string; query: RankingsQuery }) {
   const ageLabel = describeAgeRange(query);
-  const positions = rankingsPositionsFor(basis);
+  const options = rankingsPositionsFor(basis, positions);
   return (
     <FilterToolbar
-      options={positions.map((position) => ({ value: position, label: positionLabel(position), href: rankingsHref(leagueId, query, { position }) }))}
+      options={options.map((position) => ({ value: position, label: positionLabel(position), href: rankingsHref(leagueId, query, { position }) }))}
       value={query.position}
       search={<RankingsSearch leagueId={leagueId} query={query} />}
       resetHref={query.position !== "all" || query.search || ageLabel ? rankingsHref(leagueId, query, { position: "all", search: "", minAge: undefined, maxAge: undefined }) : undefined}
