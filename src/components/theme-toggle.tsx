@@ -1,39 +1,52 @@
 "use client";
 
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSyncExternalStore } from "react";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { flushSync } from "react-dom";
+import { cn } from "@/lib/utils";
 
-const OPTIONS = [
-  { value: "light", label: "Light", Icon: Sun },
-  { value: "dark", label: "Dark", Icon: Moon },
-  { value: "system", label: "System", Icon: Monitor },
+const THEMES = [
+  ["light", Sun],
+  ["dark", Moon],
 ] as const;
 
 const subscribe = () => () => {};
 
-export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  // The stored theme is unknown on the server; render a neutral icon until mounted to avoid a hydration mismatch.
+// Fumadocs-style light/dark pill: one button, the active theme's icon sits in a filled circle.
+export function ThemeToggle({ className }: { className?: string }) {
+  const { resolvedTheme, setTheme } = useTheme();
+  // The resolved theme is unknown on the server; highlight nothing until mounted to avoid a hydration mismatch.
   const mounted = useSyncExternalStore(subscribe, () => true, () => false);
-  const Icon = !mounted ? Monitor : theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
+  const value = mounted ? resolvedTheme : null;
+
+  const toggle = () => {
+    const next = value === "light" ? "dark" : "light";
+    if (document.startViewTransition) document.startViewTransition(() => flushSync(() => setTheme(next)));
+    else setTheme(next);
+  };
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Change theme" />}>
-        <Icon aria-hidden="true" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-36">
-        <DropdownMenuGroup>
-          {OPTIONS.map(({ value, label, Icon: Option }) => (
-            <DropdownMenuItem key={value} onClick={() => setTheme(value)}>
-              <Option aria-hidden="true" />
-              <span className={mounted && theme === value ? "font-medium" : undefined}>{label}</span>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <button
+      type="button"
+      aria-label="Toggle theme"
+      onClick={toggle}
+      className={cn(
+        "inline-flex shrink-0 items-center overflow-hidden rounded-full border p-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        className,
+      )}
+    >
+      {THEMES.map(([key, Icon]) => (
+        <Icon
+          key={key}
+          aria-hidden="true"
+          fill="currentColor"
+          className={cn(
+            "size-6.5 rounded-full p-1.5 transition-colors",
+            value === key ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+          )}
+        />
+      ))}
+    </button>
   );
 }

@@ -81,10 +81,12 @@ export function CommandMenu({ league }: { league: LeagueChrome }) {
       <Button variant="ghost" size="icon" className="md:hidden" aria-label="Search" onClick={() => setOpen(true)}>
         <Search aria-hidden="true" />
       </Button>
-      <Button variant="outline" className="hidden w-52 justify-start gap-2 font-normal text-muted-foreground md:inline-flex" onClick={() => setOpen(true)}>
+      <Button variant="outline" className="hidden h-9 w-52 justify-start gap-2 rounded-full bg-secondary/50 py-1.5 pr-1.5 pl-3 font-normal text-muted-foreground md:inline-flex" onClick={() => setOpen(true)}>
         <Search aria-hidden="true" />
-        <span>Search…</span>
-        <kbd className="ml-auto rounded border bg-muted px-1.5 font-sans text-[11px] text-muted-foreground">⌘K</kbd>
+        <span>Search</span>
+        <span className="ml-auto inline-flex gap-0.5">
+          {["⌘", "K"].map((key) => <kbd key={key} className="rounded-md border bg-background px-1.5 font-sans text-xs text-muted-foreground">{key}</kbd>)}
+        </span>
       </Button>
       <CommandDialog open={open} onOpenChange={setOpenAndReset} title="Search" description="Jump to a page, team, player or league, or change theme.">
         <Command>

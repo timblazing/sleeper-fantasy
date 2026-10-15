@@ -103,11 +103,11 @@ export function Overview({ data, picture, pulse }: { data: OverviewData; picture
       <div className={ROW}>
         <div className={cn(SIDE, !picture && "xl:col-span-2")}>
           {picture ? <DashboardPlayoffs leagueId={data.league.id} picture={picture} username={data.username} /> : null}
-          <RecentActivityCard className="xl:flex-1" activity={data.activity} href={withUsername(`/${data.league.id}/activity`, data.username)} leagueId={data.league.id} limit={4} username={data.username} />
+          <DashboardRoster className="xl:flex-1" data={data} />
         </div>
         <div className={SIDE}>
           <DashboardPriorities data={data} />
-          <DashboardRoster className="xl:flex-1" data={data} />
+          <RecentActivityCard className="xl:flex-1" activity={data.activity} href={withUsername(`/${data.league.id}/activity`, data.username)} leagueId={data.league.id} limit={4} username={data.username} />
         </div>
       </div>
     </PageContainer>

@@ -8,22 +8,18 @@ import { cn, withUsername } from "@/lib/utils";
 const initials = (name: string) => name.split(/\s|&/).filter(Boolean).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
 const pct = (value: number) => (value >= 99.95 ? ">99.9%" : value < 0.05 && value > 0 ? "<0.1%" : `${value.toFixed(1)}%`);
 
-/** The top of the playoff race, plus the connected team when it sits further down. Full table lives on Standings. */
+/** Every team's playoff odds, best first. The full race (seeds, schedule) lives on Standings. */
 export function DashboardPlayoffs({ picture, leagueId, username, className }: { picture: PlayoffPicture; leagueId: string; username?: string; className?: string }) {
   const sorted = picture.rows.toSorted((a, b) => b.playoffOdds - a.playoffOdds);
-  const top = sorted.slice(0, 5);
-  const mine = sorted.findIndex((row) => row.isUser);
-  const rows = mine >= 5 ? [...top.slice(0, 4), sorted[mine]] : top;
-  const rankOf = (rosterId: number) => sorted.findIndex((row) => row.rosterId === rosterId) + 1;
 
   return (
     <Card className={className}>
       <PanelHeader title="Playoff odds" description={`Top ${picture.playoffTeams} of ${picture.teams} teams make the bracket`} actions={<PanelLink href={withUsername(`/${leagueId}/standings`, username)} label="Open standings and playoff race" />} />
       <CardContent className="flex flex-1 flex-col">
         <ol aria-label="Playoff odds" className="flex flex-col divide-y">
-          {rows.map((row) => (
+          {sorted.map((row, index) => (
             <li key={row.rosterId} className={cn("flex items-center gap-3 py-2.5 first:pt-0 last:pb-0", row.isUser && "-mx-2 rounded-md bg-primary/[0.07] px-2 first:pt-2.5 last:pb-2.5")}>
-              <span className="w-5 shrink-0 text-center text-xs tabular-nums text-muted-foreground">{rankOf(row.rosterId)}</span>
+              <span className="w-5 shrink-0 text-center text-xs tabular-nums text-muted-foreground">{index + 1}</span>
               <Avatar className="size-6 shrink-0">
                 {row.avatar ? <AvatarImage alt="" src={`https://sleepercdn.com/avatars/thumbs/${row.avatar}`} /> : null}
                 <AvatarFallback className="text-xs">{initials(row.name)}</AvatarFallback>

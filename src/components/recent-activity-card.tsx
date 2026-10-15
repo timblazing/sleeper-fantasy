@@ -28,7 +28,7 @@ function PlayerMove({ kind, player }: { kind: "add" | "drop"; player: NflPlayer 
       </Avatar>
       <div className="min-w-0 flex-1">
         <p className={cn("flex items-center gap-1 text-xs font-medium", kind === "add" ? "text-positive" : "text-negative")}>
-          <Icon className="size-3" aria-hidden="true" />{kind}
+          <Icon className="size-3" aria-hidden="true" /><span className="sr-only">{kind}</span>
         </p>
         <p className="truncate text-sm font-medium">{player.name}</p>
         <p className="text-xs text-muted-foreground">{[player.position, player.team].filter(Boolean).join(" · ") || "NFL player"}</p>
