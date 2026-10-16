@@ -1,4 +1,3 @@
-import { ArrowLeftRightIcon, MinusIcon, PlusIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { PanelHeader, PanelLink } from "@/components/panel-header";
@@ -8,73 +7,73 @@ import { headshotUrl } from "@/lib/display";
 import type { ActivityItem, NflPlayer } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+type MoveKind = "add" | "drop" | "trade";
+
 /**
- * Three shapes only, so the column reads at a glance: a player came in, a player went out, or
- * two rosters swapped. Waiver claims and free agent adds share the plus — both are an arrival.
+ * One marker per player, written out: a mono kicker above the name carries the verb and how it
+ * happened, so the header row is just who and when.
  */
-const ENTRY_STYLE = {
-  add: { icon: PlusIcon, chip: "bg-positive/10 text-positive" },
-  drop: { icon: MinusIcon, chip: "bg-negative/10 text-negative" },
-  trade: { icon: ArrowLeftRightIcon, chip: "bg-primary/10 text-primary" },
+const KICKER = {
+  add: { verb: "+ Add", tone: "text-positive" },
+  drop: { verb: "− Drop", tone: "text-negative" },
+  trade: { verb: "⇄ Traded", tone: "text-primary" },
 } as const;
 
-function PlayerMove({ kind, player }: { kind: "add" | "drop"; player: NflPlayer }) {
-  const Icon = kind === "add" ? PlusIcon : MinusIcon;
+function PlayerMove({ kind, player, via }: { kind: MoveKind; player: NflPlayer; via?: string }) {
+  const { verb, tone } = KICKER[kind];
   return (
-    <div className="flex items-center gap-2.5">
-      <Avatar shape={player.position === "DEF" ? "logo" : "circle"} className="size-9 shrink-0">
+    <div className="flex items-center gap-3">
+      <Avatar shape={player.position === "DEF" ? "logo" : "circle"} className="size-11 shrink-0">
         <AvatarImage alt="" src={headshotUrl(player)} />
         <AvatarFallback className="text-xs">{player.position ?? "NFL"}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <p className={cn("flex items-center gap-1 text-xs font-medium", kind === "add" ? "text-positive" : "text-negative")}>
-          <Icon className="size-3" aria-hidden="true" /><span className="sr-only">{kind}</span>
+        <p className="mb-0.5 truncate font-mono text-[0.625rem] font-bold uppercase leading-4 tracking-widest">
+          <span className={tone}>{verb}</span>
+          {via ? <span className="font-medium tracking-wider text-muted-foreground"> · {via}</span> : null}
         </p>
-        <p className="truncate text-sm font-medium">{player.name}</p>
+        <p className="truncate text-[0.9375rem] font-medium leading-5">{player.name}</p>
         <p className="text-xs text-muted-foreground">{[player.position, player.team].filter(Boolean).join(" · ") || "NFL player"}</p>
       </div>
     </div>
   );
 }
 
+/** How an arrival happened: a claim (with its bid) or a free agent pickup. */
+function arrivalVia(item: ActivityItem) {
+  if (item.type === "Waiver claim") return item.bid !== null ? `Claim · $${item.bid}` : "Claim";
+  return "Free agent";
+}
+
 export function ActivityRow({ item, leagueId, username }: { item: ActivityItem; leagueId?: string; username?: string }) {
-  const { icon: Icon, chip } = ENTRY_STYLE[item.kind] ?? ENTRY_STYLE.add;
+  const trade = item.kind === "trade";
+  // A trade's first side receives `adds` and sends `drops` to the other side.
+  const [receiver, sender] = item.teams;
   const moves = [
-    ...item.adds.map((player) => ({ kind: "add" as const, player })),
-    ...item.drops.map((player) => ({ kind: "drop" as const, player })),
+    ...item.adds.map((player) => ({ kind: trade ? "trade" as const : "add" as const, player, via: trade ? receiver && `To ${receiver.name}` : arrivalVia(item) })),
+    ...item.drops.map((player) => ({ kind: trade ? "trade" as const : "drop" as const, player, via: trade ? sender && `To ${sender.name}` : undefined })),
   ].slice(0, 3);
 
   return (
-    <li className="border-b py-3 first:pt-0 last:border-b-0 last:pb-0">
-      <div className="flex min-w-0 items-baseline gap-x-2 gap-y-0.5 text-xs">
-        <span className="truncate font-medium text-foreground">
+    <li className="border-b py-3.5 first:pt-0 last:border-b-0 last:pb-0">
+      <div className="flex min-w-0 items-baseline gap-x-2 text-xs">
+        <span className="truncate font-semibold text-foreground">
           {item.teams.length && leagueId ? item.teams.map((team, index) => (
             <span key={team.rosterId}>
-              {index ? <span className="px-1 text-muted-foreground">↔</span> : null}
+              {index ? <span className="px-1 font-normal text-muted-foreground">⇄</span> : null}
               <TeamLink leagueId={leagueId} rosterId={team.rosterId} username={username}>{team.name}</TeamLink>
             </span>
-          )) : item.team ?? (item.kind === "trade" ? "League trade" : "League")}
+          )) : item.team ?? (trade ? "League trade" : "League")}
         </span>
-        <span className="shrink-0 text-muted-foreground">{item.type}</span>
-        <span className="ml-auto shrink-0 text-muted-foreground">{item.time}</span>
+        <span className="sr-only">{item.type}</span>
+        <span className="ml-auto shrink-0 tabular-nums text-muted-foreground">{item.time}</span>
       </div>
-      <div className="mt-2 flex items-start gap-2.5">
-        <span className={cn("grid size-7 shrink-0 place-items-center rounded-lg", chip)}>
-          <Icon aria-hidden="true" className="size-3.5" />
-        </span>
-        <div className="min-w-0 flex-1">
-          {moves.length ? (
-            <div className="grid gap-2">{moves.map((move) => <PlayerMove key={`${move.kind}-${move.player.id}`} {...move} />)}</div>
-          ) : (
-            <p className="text-sm font-medium leading-snug" title={item.detail}>{item.detail}</p>
-          )}
-        </div>
-        {item.bid !== null ? (
-          <div className="shrink-0 text-right">
-            <p className="text-xs text-muted-foreground">Bid</p>
-            <p className="tabular-nums text-sm font-medium">${item.bid}</p>
-          </div>
-        ) : null}
+      <div className="mt-2.5">
+        {moves.length ? (
+          <div className="grid gap-3">{moves.map((move) => <PlayerMove key={`${move.kind}-${move.player.id}`} {...move} />)}</div>
+        ) : (
+          <p className="text-sm font-medium leading-snug" title={item.detail}>{item.detail}</p>
+        )}
       </div>
     </li>
   );
