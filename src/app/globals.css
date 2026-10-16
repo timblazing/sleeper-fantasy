@@ -95,6 +95,10 @@
   ::selection { background: color-mix(in srgb, var(--foreground) 25%, transparent); }
 }
 
+/* Roster edge dot plot: dots spring out from the league-average line, the user's gap span grows from it. */
+@keyframes roster-edge-dot { from { left: var(--edge-from); } }
+@keyframes roster-edge-span { from { transform: scaleX(0); } }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
