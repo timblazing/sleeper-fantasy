@@ -1,30 +1,32 @@
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle2 } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, CircleAlert, Info, TrendingUp, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { PanelHeader, PanelLink } from "@/components/panel-header";
-import { PositionBadge } from "@/components/position-badge";
+import { RosterEdgeChart } from "@/components/roster-edge-chart";
 import type { OverviewData } from "@/lib/team-insights";
 import { cn, withUsername } from "@/lib/utils";
 
-const ROOM_BAR: Record<string, string> = {
-  QB: "bg-position-qb-foreground", RB: "bg-position-rb-foreground", WR: "bg-position-wr-foreground", TE: "bg-position-te-foreground",
-};
+const INSIGHT_ICON = {
+  positive: { icon: TrendingUp, className: "bg-positive/10 text-positive" },
+  warning: { icon: TriangleAlert, className: "bg-warning/10 text-warning-foreground" },
+  critical: { icon: CircleAlert, className: "bg-negative/10 text-negative" },
+  neutral: { icon: Info, className: "bg-muted text-muted-foreground" },
+} as const;
 
 export function DashboardRoster({ data, className }: { data: OverviewData; className?: string }) {
   if (!data.team) return null;
   return <Card className={className}>
     <PanelHeader title="Roster edge" description={data.league.isDynasty ? "Position value against the league" : "Projected PPG against the league"} actions={<PanelLink href={withUsername(`/${data.league.id}/teams/${data.team.rosterId}`, data.username)} label="Open your roster" />} />
     <CardContent className="flex flex-1 flex-col">
-      {data.valuesReady ? <div className="grid flex-1 grid-cols-2 content-evenly gap-x-5 gap-y-4">{data.rooms.map(room => {
-        const relative = room.leagueAvg > 0 ? (room.value / room.leagueAvg - 1) * 100 : null;
-        return <div key={room.position}>
-          <div className="flex items-center justify-between"><PositionBadge position={room.position} /><span className="text-xs tabular-nums text-muted-foreground">#{room.rank} <span className="text-muted-foreground/60">/ {data.league.teams}</span></span></div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className={cn("h-full rounded-full", ROOM_BAR[room.position] ?? "bg-info")} style={{ width: `${Math.max(0, Math.min(100, room.leagueAvg ? room.value / (room.leagueAvg * 2) * 100 : 0))}%` }} /></div>
-          <p className={cn("mt-1.5 text-xs tabular-nums", relative == null ? "text-muted-foreground" : relative >= 0 ? "text-positive" : "text-negative")}>{relative == null ? "No league baseline" : `${relative >= 0 ? "+" : ""}${relative.toFixed(0)}% vs average`}</p>
-        </div>;
-      })}</div> : <p className="text-sm text-muted-foreground">Roster values are temporarily unavailable.</p>}
-      {data.insights.length ? <div className="mt-4"><div className="space-y-3 border-t pt-4">{data.insights.slice(0, 2).map(insight => <div key={insight.id}><p className="text-sm font-medium">{insight.title}</p><p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{insight.detail}</p></div>)}</div></div> : null}
+      {data.valuesReady ? <RosterEdgeChart rooms={data.rooms} scarcity={data.positionScarcity} teams={data.league.teams} isDynasty={data.league.isDynasty} /> : <p className="text-sm text-muted-foreground">Roster values are temporarily unavailable.</p>}
+      {data.insights.length ? <ul className="mt-4 space-y-3 border-t pt-4">{data.insights.slice(0, 2).map(insight => {
+        const { icon: Icon, className: tone } = INSIGHT_ICON[insight.tone];
+        return <li key={insight.id} className="flex gap-3">
+          <span className={cn("grid size-7 shrink-0 place-items-center rounded-lg", tone)}><Icon className="size-3.5" aria-hidden="true" /></span>
+          <div className="min-w-0"><p className="text-sm font-medium">{insight.title}</p><p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{insight.detail}</p></div>
+        </li>;
+      })}</ul> : null}
     </CardContent>
   </Card>;
 }
