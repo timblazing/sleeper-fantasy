@@ -7,7 +7,7 @@ import { DashboardPlayoffs } from "@/components/dashboard-playoffs";
 import { RecentActivityCard } from "@/components/recent-activity-card";
 import type { DashboardPulse } from "@/lib/dashboard-pulse";
 import { MatchupLineup } from "@/components/matchup-lineup";
-import { MatchupSummary } from "@/components/matchup-summary";
+import { LiveBadge, MatchupHero, matchupIsLive } from "@/components/matchup-hero";
 import { PanelHeader, PanelLabel, PanelLink } from "@/components/panel-header";
 import type { PlayoffPicture, RemainingGame } from "@/lib/playoff-odds";
 import { TeamLink } from "@/components/team-link";
@@ -29,11 +29,11 @@ function CurrentMatchup({ data, schedule = [], className }: { data: OverviewData
 
   return (
     <Card className={className}>
-      <PanelHeader title={data.team && matchup && (matchup.home.team.rosterId === data.team.rosterId || matchup.away.team.rosterId === data.team.rosterId) ? "Your matchup" : "This week"} description={`Week ${data.state.matchupWeek}${data.state.regularSeason ? "" : " · preseason preview"}`} actions={<PanelLink href={withUsername(`/${data.league.id}/matchups/${data.state.matchupWeek}`, data.username)} label="All matchups this week" />} />
+      <PanelHeader title={data.team && matchup && (matchup.home.team.rosterId === data.team.rosterId || matchup.away.team.rosterId === data.team.rosterId) ? "Your matchup" : "This week"} description={`Week ${data.state.matchupWeek}${data.state.regularSeason ? "" : " · preseason preview"}`} actions={<>{matchup && matchupIsLive(matchup) ? <LiveBadge /> : null}<PanelLink href={withUsername(`/${data.league.id}/matchups/${data.state.matchupWeek}`, data.username)} label="All matchups this week" /></>} />
       <CardContent className="flex flex-1 flex-col gap-3">
         {matchup ? (
           <>
-            <div className={cn(TILE, "p-2.5 sm:p-3")}><MatchupSummary featured leagueId={data.league.id} matchup={matchup} username={data.username} /></div>
+            <MatchupHero leagueId={data.league.id} matchup={matchup} username={data.username} />
             <LineupPreview leagueId={data.league.id} matchup={matchup} username={data.username} />
             {upcoming.length ? <section className="mt-auto border-t pt-4">
               <PanelLabel className="mb-3">Up next</PanelLabel>
@@ -53,7 +53,7 @@ function CurrentMatchup({ data, schedule = [], className }: { data: OverviewData
 
 function LineupPreview({ matchup, leagueId, username }: { matchup: MatchupDetail; leagueId: string; username?: string }) {
   if (!matchup.home.slots.length) return null;
-  return <MatchupLineup leagueId={leagueId} matchup={matchup} username={username} />;
+  return <MatchupLineup dimTrailing leagueId={leagueId} matchup={matchup} username={username} />;
 }
 
 function ConnectPrompt({ leagueId }: { leagueId: string }) {
