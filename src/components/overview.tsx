@@ -9,6 +9,7 @@ import type { DashboardPulse } from "@/lib/dashboard-pulse";
 import { MatchupLineup } from "@/components/matchup-lineup";
 import { LiveBadge, MatchupHero, matchupIsLive } from "@/components/matchup-hero";
 import { PanelHeader, PanelLabel, PanelLink } from "@/components/panel-header";
+import { TeamWash } from "@/components/team-wash";
 import type { PlayoffPicture, RemainingGame } from "@/lib/playoff-odds";
 import { TeamLink } from "@/components/team-link";
 import { SummaryMetrics } from "@/components/summary-metrics";
@@ -28,12 +29,16 @@ function CurrentMatchup({ data, schedule = [], className }: { data: OverviewData
   const upcoming = schedule.filter(game => game.week > data.state.matchupWeek).slice(0, 3);
 
   return (
-    <Card className={className}>
-      <PanelHeader title={data.team && matchup && (matchup.home.team.rosterId === data.team.rosterId || matchup.away.team.rosterId === data.team.rosterId) ? "Your matchup" : "This week"} description={`Week ${data.state.matchupWeek}${data.state.regularSeason ? "" : " · preseason preview"}`} actions={<>{matchup && matchupIsLive(matchup) ? <LiveBadge /> : null}<PanelLink href={withUsername(`/${data.league.id}/matchups/${data.state.matchupWeek}`, data.username)} label="All matchups this week" /></>} />
+    <Card className={cn("pt-0", className)}>
+      {/* The header and scoreboard share one band, tinted edge to edge with each team's avatar color. */}
+      <div className="relative border-b pt-(--card-spacing) pb-(--card-spacing)">
+        {matchup ? <TeamWash away={matchup.away.team.avatar} home={matchup.home.team.avatar} /> : null}
+        <PanelHeader className="relative" title={data.team && matchup && (matchup.home.team.rosterId === data.team.rosterId || matchup.away.team.rosterId === data.team.rosterId) ? "Your matchup" : "This week"} description={`Week ${data.state.matchupWeek}${data.state.regularSeason ? "" : " · preseason preview"}`} actions={<>{matchup && matchupIsLive(matchup) ? <LiveBadge /> : null}<PanelLink href={withUsername(`/${data.league.id}/matchups/${data.state.matchupWeek}`, data.username)} label="All matchups this week" /></>} />
+        {matchup ? <MatchupHero bare className="mt-4 px-(--card-spacing)" leagueId={data.league.id} matchup={matchup} username={data.username} /> : null}
+      </div>
       <CardContent className="flex flex-1 flex-col gap-3">
         {matchup ? (
           <>
-            <MatchupHero leagueId={data.league.id} matchup={matchup} username={data.username} />
             <LineupPreview leagueId={data.league.id} matchup={matchup} username={data.username} />
             {upcoming.length ? <section className="mt-auto border-t pt-4">
               <PanelLabel className="mb-3">Up next</PanelLabel>
@@ -107,7 +112,7 @@ export function Overview({ data, picture, pulse }: { data: OverviewData; picture
         </div>
         <div className={SIDE}>
           <DashboardPriorities data={data} />
-          <RecentActivityCard className="xl:flex-1" activity={data.activity} href={withUsername(`/${data.league.id}/activity`, data.username)} leagueId={data.league.id} limit={4} username={data.username} />
+          <RecentActivityCard className="xl:flex-1" activity={data.activity} href={withUsername(`/${data.league.id}/activity`, data.username)} fill leagueId={data.league.id} limit={12} username={data.username} />
         </div>
       </div>
     </PageContainer>

@@ -328,7 +328,7 @@ export async function getOverviewData(leagueId: string, username?: string): Prom
   const [board, moversResult, feed] = await Promise.all([
     getMatchupBoard(leagueId, context.matchupWeek).catch(() => null),
     context.basis === "dynasty" ? getMovers({ limit: 60 }) : undefined,
-    getTransactionFeed(leagueId, 8).catch(() => []),
+    getTransactionFeed(leagueId, 12).catch(() => []),
   ]);
 
   const trends = new Map<string, number>();

@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
-import { getMatchupBoard } from "@/lib/matchup-detail";
+import { getMatchupBoard, matchupForRoster } from "@/lib/matchup-detail";
+import { getLeagueRosters, getUser } from "@/lib/sleeper";
+import type { MatchupDetail } from "@/lib/types";
 import { withUsername } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Matchups" };
@@ -20,7 +22,17 @@ export default async function MatchupsPage({ params, searchParams }: { params: P
   const [{ leagueId, week }, query] = await Promise.all([params, searchParams]);
   const username = typeof query.username === "string" ? query.username : undefined;
   const requestedWeek = Math.min(18, Math.max(1, Number.parseInt(week, 10) || 1));
-  const board = await getMatchupBoard(leagueId, requestedWeek).catch(() => null);
+  const [board, user, rosters] = await Promise.all([
+    getMatchupBoard(leagueId, requestedWeek).catch(() => null),
+    username ? getUser(username).catch(() => null) : null,
+    username ? getLeagueRosters(leagueId).catch(() => []) : [],
+  ]);
+  // The connected user's matchup leads the board, with their team on the left as on the dashboard.
+  const rosterId = user ? rosters.find((roster) => roster.owner_id === user.user_id)?.roster_id : undefined;
+  const isMine = (matchup: MatchupDetail) => matchup.home.team.rosterId === rosterId || matchup.away.team.rosterId === rosterId;
+  const matchups = board && rosterId != null
+    ? [...board.matchups.filter(isMine).map((matchup) => matchupForRoster(matchup, rosterId)), ...board.matchups.filter((matchup) => !isMine(matchup))]
+    : board?.matchups ?? [];
 
   return (
     <PageContainer className="flex flex-col gap-5">
@@ -41,8 +53,8 @@ export default async function MatchupsPage({ params, searchParams }: { params: P
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      {board?.matchups.length ? (
-        <MatchupBoard leagueId={leagueId} matchups={board.matchups} username={username} week={requestedWeek} />
+      {matchups.length ? (
+        <MatchupBoard leagueId={leagueId} matchups={matchups} username={username} week={requestedWeek} />
       ) : (
         <Card><CardContent><Empty className="min-h-64"><EmptyHeader><EmptyMedia variant="icon"><Swords /></EmptyMedia><EmptyTitle>No matchup data</EmptyTitle><EmptyDescription>Sleeper has no matchups scheduled for week {requestedWeek}.</EmptyDescription></EmptyHeader></Empty></CardContent></Card>
       )}
