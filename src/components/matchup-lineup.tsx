@@ -7,6 +7,7 @@ import type { MatchupDetail, RosterSlot } from "@/lib/types";
 import { cn, withUsername } from "@/lib/utils";
 
 const points = (entry: RosterSlot) => (entry.game?.state !== "in" && entry.game?.state !== "post") || entry.points == null ? "-" : entry.points.toFixed(1);
+const scored = (entry: RosterSlot | undefined) => entry?.game?.state === "in" || entry?.game?.state === "post" ? entry.points ?? 0 : null;
 const projection = (entry: RosterSlot) => entry.projection == null ? "—" : entry.projection.toFixed(1);
 
 /**
@@ -23,7 +24,7 @@ function opponentLabel(entry: RosterSlot) {
   return `${entry.projectionHome === false ? "@" : "vs"} ${entry.projectionOpponent}`;
 }
 
-function PlayerSide({ entry, reverse, leagueId, username }: { entry: RosterSlot; reverse?: boolean; leagueId?: string; username?: string }) {
+function PlayerSide({ entry, reverse, trailing, leagueId, username }: { entry: RosterSlot; reverse?: boolean; trailing?: boolean; leagueId?: string; username?: string }) {
   const player = entry.player;
   // Team defenses have no RosterAudit profile, so only real players get a link — an empty slot
   // or a DEF keeps the plain text it had before.
@@ -45,15 +46,18 @@ function PlayerSide({ entry, reverse, leagueId, username }: { entry: RosterSlot;
         </p>
       </div>
       <div className={cn("hidden shrink-0 tabular-nums sm:block", reverse ? "text-left" : "text-right")}>
-        <p className="text-xs font-medium leading-tight sm:text-sm">{points(entry)}</p>
+        <p className={cn("text-xs font-medium leading-tight sm:text-sm", trailing && "font-normal text-muted-foreground")}>{points(entry)}</p>
         <p className="text-xs leading-tight text-muted-foreground"><span className="sr-only">Projected </span>{projection(entry)}<span className="sr-only"> points</span></p>
       </div>
     </div>
   );
 }
 
-/** `leagueId` is optional so a caller without league context still renders plain names. */
-export function MatchupLineup({ matchup, leagueId, username }: { matchup: MatchupDetail; leagueId?: string; username?: string }) {
+/**
+ * `leagueId` is optional so a caller without league context still renders plain names.
+ * `dimTrailing` mutes the lower score in each slot once at least one side has points on the board.
+ */
+export function MatchupLineup({ matchup, leagueId, username, dimTrailing = false }: { matchup: MatchupDetail; leagueId?: string; username?: string; dimTrailing?: boolean }) {
   const rows = Math.max(matchup.home.slots.length, matchup.away.slots.length);
 
   return (
@@ -62,13 +66,18 @@ export function MatchupLineup({ matchup, leagueId, username }: { matchup: Matchu
         const home = matchup.home.slots[index];
         const away = matchup.away.slots[index];
         const slot = home?.slot ?? away?.slot ?? null;
+        const homePoints = scored(home);
+        const awayPoints = scored(away);
+        const decided = dimTrailing && (homePoints != null || awayPoints != null) && homePoints !== awayPoints;
+        const homeTrails = decided && (homePoints ?? 0) < (awayPoints ?? 0);
+        const awayTrails = decided && !homeTrails;
         return (
           <div className="grid grid-cols-[minmax(0,1fr)_1.75rem_minmax(0,1fr)] items-center gap-1 sm:grid-cols-[minmax(0,1fr)_3.25rem_minmax(0,1fr)] sm:gap-2" key={`${home?.slot ?? "home"}-${away?.slot ?? "away"}-${index}`}>
-            {home ? <PlayerSide entry={home} leagueId={leagueId} username={username} /> : <span />}
+            {home ? <PlayerSide entry={home} leagueId={leagueId} trailing={homeTrails} username={username} /> : <span />}
             <span className="flex justify-center">
               <PositionBadge position={slot} label={slot ?? "—"} />
             </span>
-            {away ? <PlayerSide entry={away} leagueId={leagueId} reverse username={username} /> : <span />}
+            {away ? <PlayerSide entry={away} leagueId={leagueId} reverse trailing={awayTrails} username={username} /> : <span />}
           </div>
         );
       })}
