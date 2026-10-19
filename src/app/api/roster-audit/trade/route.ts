@@ -15,6 +15,10 @@ const sideSchema = z.array(assetSchema).min(1).max(12);
 const requestSchema = z.object({ leagueId: z.string().min(1).max(32), sideA: sideSchema, sideB: sideSchema });
 
 function getClientAddress(headers: Headers): string {
+  // Set by Cloudflare's edge and not client-spoofable, unlike the forwarded headers below.
+  const cloudflareAddress = headers.get("cf-connecting-ip")?.trim();
+  if (cloudflareAddress && isIP(cloudflareAddress) !== 0) return cloudflareAddress;
+
   const forwardedAddress = headers.get("x-forwarded-for")
     ?.split(",")
     .map((address) => address.trim())

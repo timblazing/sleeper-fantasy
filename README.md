@@ -48,3 +48,10 @@
 The UI follows [blasingame.dev foundations](https://components.blasingame.dev/foundations).
 See [the implementation guide](docs/design-system.md) for tokens, component sourcing,
 and updating the pinned reference. Open `/design-system` for interactive specimens.
+
+## Deployment
+
+Runs on Cloudflare Workers through [OpenNext](https://opennext.js.org/cloudflare), deployed by
+Workers Builds on every push to `main`. `npm run preview` builds and serves the Worker locally;
+`npm run deploy` builds and deploys it from your machine. Fetch caching uses the
+`sleeper-fantasy-opennext-cache` R2 bucket, and `ROSTERAUDIT_API_KEY` is a Worker secret.

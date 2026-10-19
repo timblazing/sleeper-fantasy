@@ -1,3 +1,4 @@
 import type { NextConfig } from "next";
-const nextConfig: NextConfig = { output: "standalone", turbopack: { root: process.cwd() }, images: { remotePatterns: [{ protocol: "https", hostname: "sleepercdn.com", pathname: "/avatars/**" }] }, devIndicators: false };
+// Every <Image> already opts out of optimization; disabling it app-wide keeps the Worker off the Images binding.
+const nextConfig: NextConfig = { turbopack: { root: process.cwd() }, images: { unoptimized: true }, devIndicators: false };
 export default nextConfig;
