@@ -7,7 +7,8 @@
   // Workers Paid. The slowest measured render is ~1.5 s of CPU (cold standings); this caps a runaway
   // request well below the 30 s default.
   "limits": { "cpu_ms": 5000 },
-  "workers_dev": true,
+  // Only the custom domain serves the app, so the zone's WAF rate-limit rule covers every request.
+  "workers_dev": false,
   // Cloudflare owns the DNS record and certificate for a custom domain.
   "routes": [{ "pattern": "sleeper.blasingame.dev", "custom_domain": true }],
   "preview_urls": false,
