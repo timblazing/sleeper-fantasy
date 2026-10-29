@@ -10,10 +10,8 @@ const isIpAddress = (value: string | undefined): value is string => value !== un
  * into one shared bucket, which fails closed.
  */
 export function getClientAddress(headers: Headers): string {
-  // Set by Cloudflare's edge and not client-spoofable, unlike the forwarded headers below.
-  const cloudflareAddress = headers.get("cf-connecting-ip")?.trim();
-  if (isIpAddress(cloudflareAddress)) return cloudflareAddress;
-
+  // Vercel overwrites x-forwarded-for with the connecting client's address, so on Vercel the first
+  // entry is trustworthy; behind any other proxy it is only as good as that proxy.
   const forwardedAddress = headers.get("x-forwarded-for")
     ?.split(",")
     .map((address) => address.trim())
