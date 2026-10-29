@@ -266,6 +266,7 @@ or Workers Logs. No request hit the 128 MB limit.
    - Deleted the tunnel CNAME (`sleeper.blasingame.dev` → `hostinger` tunnel) and its
      ingress rule, and replaced the zone route with a Worker custom domain, so
      Cloudflare owns the DNS record and certificate. The WAF rule still applies.
+   - Turned off the `workers.dev` URL, which the zone's WAF rule does not cover.
    - Removed the `Dockerfile`, `.dockerignore`, the GHCR image workflow and
      `output: "standalone"`.
    - Added `.github/workflows/deploy.yml`: on every push to `main` it runs
