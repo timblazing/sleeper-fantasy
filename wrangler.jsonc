@@ -1,12 +1,17 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // Preview only: no routes or custom domains. Production stays on the Hostinger tunnel until the
-  // cutover steps in docs/cloudflare-migration.md are run.
   "name": "sleeper-fantasy",
   "main": "cloudflare/worker.ts",
   "compatibility_date": "2026-10-29",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // Workers Paid. The slowest measured render is ~1.5 s of CPU (cold standings); this caps a runaway
+  // request well below the 30 s default.
+  "limits": { "cpu_ms": 5000 },
   "workers_dev": true,
+  // A zone route rather than a custom domain: the proxied tunnel DNS record stays in place, so
+  // removing this route sends traffic straight back to the Hostinger container (see
+  // docs/cloudflare-migration.md, "Rollback").
+  "routes": [{ "pattern": "sleeper.blasingame.dev/*", "zone_name": "blasingame.dev" }],
   "preview_urls": false,
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "sleeper-fantasy" }],

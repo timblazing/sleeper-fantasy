@@ -1,27 +1,28 @@
-# Cloudflare Workers migration readiness
+# Cloudflare Workers migration
 
-Status as of 2026-10-29, branch `perf/cloudflare-readiness`. Production still runs
-as a Docker container on Hostinger behind a Cloudflare tunnel; nothing here moves
-hosting. The audit this answers is `docs/cloudflare-migration-audit.md` in the
-homelab repo (reviewed against `2c7451b`).
+Since 2026-10-29, `sleeper.blasingame.dev` is served by the `sleeper-fantasy` Worker
+(Workers Paid) through a zone route. The Hostinger Docker container and its
+Cloudflare tunnel still run as the rollback target; see [Rollback](#rollback). The
+audit this answers is `docs/cloudflare-migration-audit.md` in the homelab repo
+(reviewed against `2c7451b`).
 
-## Verdict
+## Why Workers Paid
 
 **The app runs on Workers, but not on Workers Free.** On a workers.dev preview
-against the real dynasty and redraft leagues, a warm page render costs
+against the real dynasty and redraft leagues, a warm page render cost
 **83–997 ms of CPU** (median ~200 ms), against a Free limit of 10 ms. After the
 first few requests used up the free burst allowance, requests began failing with
 `exceededCpu` (HTTP 503) at 10 ms, including trivial ones. Even a fully cached
 matchups page, with 6 subrequests and no simulation, needs 83–172 ms. That cost is
 React server rendering of the page itself, so no caching or snapshotting can bring
-it under 10 ms without replacing server rendering, which would mean removing
-features. Workers Free also caps a request at 50 subrequests, and the dashboard,
-history and scouting pages exceed it (57–198). See [Measurements](#measurements).
+it under 10 ms without removing features. Workers Free also caps a request at 50
+subrequests, and the dashboard, history and scouting pages exceeded it (57–198).
+See [Measurements](#measurements).
 
-Workers Paid ($5/month account-wide) covers this comfortably: 30 s CPU per request
-by default, 10,000 subrequests per request, 30M CPU-ms/month included. At ~250 ms
-per page view, 30M CPU-ms is about 120,000 page views a month. The account was not
-upgraded. That decision belongs to the owner.
+Workers Paid ($5/month account-wide) covers this: 10,000 subrequests per request
+and 30M CPU-ms/month included. The Worker caps CPU at 5 s per request
+(`limits.cpu_ms`); the slowest measured render is ~1.8 s cold. At ~250 ms per page
+view, 30M CPU-ms is about 120,000 page views a month.
 
 ## What changed to prepare
 
@@ -136,7 +137,7 @@ snapshots/projections/v1/<season>/<week>.json        one week, ~200–275 KB
 
 Storage: ~3.3 MB of data cache per build ID plus ~12 MB of snapshots. Each deploy
 starts a new build ID prefix, so old prefixes should be expired with an R2
-lifecycle rule (cutover step 5). Even 10× this traffic stays inside the free tier.
+lifecycle rule (cutover step 4). Even 10× this traffic stays inside the free tier.
 
 ## WAF rate-limiting rule
 
@@ -159,6 +160,37 @@ requests (`/api/avatar` with an invalid id, answered without any upstream call)
 got 100 × 400 then 15 × 429, and the next request 12 s later returned 200.
 
 ## Measurements
+
+### Workers Paid (2026-10-29, before the route went live)
+
+Same method as below, on workers.dev after the upgrade. Every request returned 200
+with outcome `ok`, and there were no subrequest or Cache API errors. Cold is the
+first pass after a deploy; warm is the range over two later passes.
+
+| Page | League | Cold CPU / wall / subreq | Warm CPU / wall / subreq |
+|---|---|---|---|
+| Dashboard | dynasty | — | 697–1,069 ms / 1.1–1.5 s / 27 |
+| Dashboard | redraft | — | 248–527 ms / 0.3–0.6 s / 23–24 |
+| Standings | dynasty | 1,846 ms / 5.0 s / 29 | 90–145 ms / 0.1–0.2 s / 14 |
+| Standings | redraft | 385 ms / 1.9 s / 28 | 111–495 ms / 0.2–0.7 s / 14 |
+| History | dynasty | 1,293 ms / 4.4 s / 51 | 110–217 ms / 0.2–0.3 s / 7 |
+| History | redraft | 913 ms / 1.0 s / 7 | 91–194 ms / 0.1–0.2 s / 7 |
+| Scouting report | dynasty | 753 ms / 8.6 s / 112 | 413–549 ms / 0.7–1.1 s / 16 |
+| Scouting report | redraft | 429 ms / 4.9 s / 65 | 118–155 ms / 0.2–0.3 s / 16 |
+| Trade | dynasty | 488 ms / 0.9 s / 6 | 130–463 ms / 0.2–0.7 s / 5 |
+| Trade | redraft | 655 ms / 0.8 s / 5 | 77–85 ms / 0.1 s / 5 |
+| Matchups (wk 8) | dynasty | 88 ms / 0.2 s / 7 | 48–81 ms / 0.1–0.2 s / 6–7 |
+| Matchups (wk 8) | redraft | 135 ms / 0.3 s / 7 | 67–430 ms / 0.2–0.6 s / 7 |
+| Players | dynasty | 646 ms / 1.7 s / 14 | 202–259 ms / 0.4–0.9 s / 8 |
+| Players | redraft | 635 ms / 0.8 s / 7 | 167–323 ms / 0.2–0.5 s / 7 |
+| Game summary API | — | 71 ms / 0.2 s / 1 | 17–186 ms / 0.1–0.3 s / 1 |
+| Scoreboard API | — | 273 ms / 0.6 s / 2 | 15–180 ms / 0.02–0.4 s / 0–2 |
+
+The dashboards were measured after the other pages, so their data cache was
+partly warm already. Once the cache can fill, warm history and scouting drop from
+111–198 subrequests and ~10 s to 7–16 subrequests and under 1.2 s.
+
+### Workers Free (preview)
 
 Preview Worker `sleeper-fantasy` on `sleeper-fantasy.timothy-blasingame.workers.dev`
 (Free plan, no routes), real leagues: dynasty `1388584098439639040`, redraft
@@ -212,51 +244,46 @@ or Workers Logs. No request hit the 128 MB limit.
 
 ## Still open
 
-1. **Workers Paid.** Required (see [Verdict](#verdict)). Nothing below should be
-   done on Free.
-2. **ESPN sharing is per isolate.** The 15 s shared scoreboard read becomes one
+1. **ESPN sharing is per isolate.** The 15 s shared scoreboard read becomes one
    read per isolate per window. Fine at this traffic; if a strict global ceiling
-   matters, put the scoreboard behind the Cache API on the custom domain or a
-   Durable Object.
-3. **RosterAudit trade budget is per isolate.** If the paid key must be protected
+   matters, put the scoreboard behind the Cache API or a Durable Object.
+2. **RosterAudit trade budget is per isolate.** If the paid key must be protected
    strictly, add a Workers Rate Limiting binding keyed account-wide.
-4. **Optional:** materialize scouting (and long dynasty histories) into R2 to cut
+3. **Optional:** materialize scouting (and long dynasty histories) into R2 to cut
    cold wall time, and load the archive shard only for name lookups.
+4. **Retire Hostinger** once the rollback window ends: follow the Hostinger exit
+   steps in the homelab audit (container, cloudflared tunnel, image workflow).
 
-## Cutover steps (after upgrading to Workers Paid)
+## Cutover (2026-10-29)
 
-1. Merge this PR. Scheduled workflows run only from `main`, so then run
-   **Actions → Sleeper snapshots → Run workflow** once and confirm a new
-   `snapshots/players/v1/latest.json`.
-2. In `wrangler.jsonc`, add `"limits": { "cpu_ms": 5000 }`. Measured worst case
-   is ~1.5 s cold. It is a Paid-plan setting, so it is not set yet. Add a billing
-   notification for Workers CPU-ms and requests.
-3. Secrets: `ROSTERAUDIT_API_KEY` is already set on the `sleeper-fantasy` Worker.
-   Rotate with `npx wrangler secret put ROSTERAUDIT_API_KEY`. No other secrets are
-   used.
-4. `npm run cf:deploy` from `main`, then repeat the measurement pass on
-   workers.dev: every page should return 200 with no `exceededCpu` or subrequest
-   errors in `npx wrangler tail sleeper-fantasy --format json`.
-5. Add an R2 lifecycle rule on `sleeper-fantasy-cache` that deletes
-   `incremental-cache/` objects after 30 days. Old build IDs are never read again.
-6. **Move traffic with a Worker route, not a custom domain.** Add
-   `"routes": [{ "pattern": "sleeper.blasingame.dev/*", "zone_name": "blasingame.dev" }]`
-   and deploy. The proxied tunnel DNS record stays in place, and the route sends
-   every request to the Worker ahead of it. A custom domain would mean deleting
-   that record first. The WAF rule keeps applying.
-7. Verify on the real hostname: pages at desktop and phone width, live scoreboard
-   polling, a game dialog, trade calculation, and requests showing up in
-   `npx wrangler tail sleeper-fantasy`.
-8. **Rollback:** remove the route (dashboard → Workers → `sleeper-fantasy` →
-   Domains & Routes, or delete it from `wrangler.jsonc` and redeploy). Traffic
-   goes back to the tunnel immediately. Keep the Hostinger container,
-   cloudflared tunnel and image workflow running until the rollback window ends.
-   Then follow the Hostinger exit steps in the homelab audit.
+1. Upgraded the account to Workers Paid, then set `"limits": { "cpu_ms": 5000 }`
+   in `wrangler.jsonc` and re-measured on workers.dev (table above).
+2. Merged PR #11 and ran **Actions → Sleeper snapshots → Run workflow** from
+   `main` so the scheduled snapshot job owns R2 from then on.
+3. Secrets: `ROSTERAUDIT_API_KEY` is set on the Worker. Rotate with
+   `npx wrangler secret put ROSTERAUDIT_API_KEY`. No other secrets are used.
+4. R2 lifecycle rule on `sleeper-fantasy-cache`: `incremental-cache/` objects are
+   deleted after 30 days, because each deploy writes under a new build ID and old
+   ones are never read again.
+5. Deployed from `main` with `npm run cf:deploy`. `wrangler.jsonc` carries the
+   zone route `sleeper.blasingame.dev/*` (zone `blasingame.dev`). The route sits in
+   front of the proxied tunnel DNS record, which stays in place; a custom domain
+   would have meant deleting that record. The WAF rule keeps applying.
+6. Verified on the real hostname with `npx wrangler tail sleeper-fantasy`.
+
+Deploy future changes with `npm run cf:deploy` from `main`. The Docker build
+(`npm run build`) still works and is the rollback target.
+
+### Rollback
+
+Remove the route: dashboard → Workers & Pages → `sleeper-fantasy` → Settings →
+Domains & Routes, or delete `routes` from `wrangler.jsonc` and run
+`npx wrangler deploy`. Traffic goes back to the tunnel and the Hostinger container
+immediately. Keep the container, the cloudflared tunnel and the image workflow
+running until the rollback window ends.
 
 ## Not changed
 
-- No DNS, tunnel, route or custom-domain changes. The Worker has only its
-  workers.dev URL, and `preview_urls` is off.
+- No DNS or tunnel changes; the cutover is the Worker route alone.
 - `Dockerfile`, the GitHub image workflow and the Hostinger deployment are untouched.
 - The simulation count stays at 10,000; caching made reducing it unnecessary.
-- No plan upgrade or paid feature was enabled.
