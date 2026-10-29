@@ -1,8 +1,9 @@
 # Hosting
 
 `sleeper.blasingame.dev` runs on Vercel (Hobby plan, project `sleeper-fantasy`). The
-DNS record lives in Cloudflare as a DNS-only CNAME, so Cloudflare does not proxy the
-site.
+DNS record lives in Cloudflare as a DNS-only CNAME to
+`315b1c509c5b8a1c.vercel-dns-017.com` (the target Vercel recommends for this project), so
+Cloudflare does not proxy the site and Vercel issues the certificate.
 
 ## Deploying
 
