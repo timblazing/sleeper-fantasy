@@ -1,9 +1,9 @@
 # Cloudflare Workers migration
 
-Since 2026-10-29, `sleeper.blasingame.dev` is served by the `sleeper-fantasy` Worker
-(Workers Paid) through a zone route. The Hostinger Docker container and its
-Cloudflare tunnel still run as the rollback target; see [Rollback](#rollback). The
-audit this answers is `docs/cloudflare-migration-audit.md` in the homelab repo
+Since 2026-10-29, `sleeper.blasingame.dev` is served only by the `sleeper-fantasy`
+Worker (Workers Paid), attached as a custom domain. Every push to `main` deploys it
+(`.github/workflows/deploy.yml`). The Hostinger Docker container, its image
+workflow and the tunnel hostname are gone. The audit this answers is `docs/cloudflare-migration-audit.md` in the homelab repo
 (reviewed against `2c7451b`).
 
 ## Why Workers Paid
@@ -35,10 +35,10 @@ view, 30M CPU-ms is about 120,000 page views a month.
 | No fetch deadline; three retries could hang a render (plan 004) | Every server-side fetch carries a 10 s timeout, and `fetchCached` has a 15 s total budget across retries. 429s are still never retried | `src/lib/fetch-cached.ts`, `players.ts`, `projections.ts`, `roster-audit/client.ts`, `api/avatar` |
 | Only the trade route was rate-limited (plan 006) | Per-route limiters on league lookup (30/10 min), player search (120), teams (60), scoreboard (240) and game summary (120). Client IP prefers `cf-connecting-ip` | `src/lib/request-rate-limit.ts`, `src/lib/client-address.ts`, `src/app/api/**` |
 | Trade route depends on `node:net` | IP validation now uses zod; no `node:net` import remains | `src/lib/client-address.ts` |
-| No Cloudflare adapter | OpenNext (`@opennextjs/cloudflare` 1.20.14) builds a Worker next to the unchanged standalone build. Next's data cache is backed by R2 | `wrangler.jsonc`, `open-next.config.ts`, `cloudflare/` |
-| 15 MB player catalog and 5.8 MB projection feed held only in process memory | A GitHub Actions job writes compact, versioned snapshots to R2. On Workers, readers load the snapshot and keep the last good copy. Under Docker/Node they fetch Sleeper directly, as before | `scripts/sleeper-snapshots.mjs`, `.github/workflows/sleeper-snapshots.yml`, `src/lib/snapshot-*.ts`, `players.ts`, `projections.ts` |
+| No Cloudflare adapter | OpenNext (`@opennextjs/cloudflare` 1.20.14) builds the Worker from `next build`. Next's data cache is backed by R2 | `wrangler.jsonc`, `open-next.config.ts`, `cloudflare/` |
+| 15 MB player catalog and 5.8 MB projection feed held only in process memory | A GitHub Actions job writes compact, versioned snapshots to R2. On Workers, readers load the snapshot and keep the last good copy. Under Node (`next dev`) they fetch Sleeper directly | `scripts/sleeper-snapshots.mjs`, `.github/workflows/sleeper-snapshots.yml`, `src/lib/snapshot-*.ts`, `players.ts`, `projections.ts` |
 | Player catalog TTL allowed twice-daily refetch | 24 h, matching Sleeper's once-a-day guidance | `src/lib/players.ts` |
-| In-app rate limits become per-isolate on Workers | One zone WAF rate-limiting rule on `/api/*`, live now in front of the tunnel too | [WAF rule](#waf-rate-limiting-rule) |
+| In-app rate limits become per-isolate on Workers | One zone WAF rate-limiting rule on `/api/*`, in front of the Worker | [WAF rule](#waf-rate-limiting-rule) |
 
 Measured locally (production build, `next start`, RosterAudit disabled on both
 sides, same league): 20 warm dashboard + standings renders took **~228 ms CPU per
@@ -51,7 +51,7 @@ The expectation was OpenNext with R2. The evidence confirms it.
 
 | Requirement | OpenNext `@opennextjs/cloudflare` 1.20.14 | vinext 1.4.0 |
 |---|---|---|
-| Next 16.4.1 | Supported: peer range `>=15.5.28 <16 \|\| >=16.4.1`. Consumes the real `next build --webpack` output, the same build Docker ships | Reimplements Next on Vite and does not use `next build`, so Docker and Workers would run two different builds. Peer-requires React `^19.3.1`; the app is on 19.2.8 |
+| Next 16.4.1 | Supported: peer range `>=15.5.28 <16 \|\| >=16.4.1`. Consumes the real `next build --webpack` output | Reimplements Next on Vite and does not use `next build`, so local Node and Workers would run two different builds. Peer-requires React `^19.3.1`; the app is on 19.2.8 |
 | Data cache (`fetch` `next.revalidate`, `unstable_cache`) | `r2IncrementalCache` stores both in R2. Verified on the preview: 231 `.fetch` and 3 `.cache` (`unstable_cache` simulation) entries written under `incremental-cache/<buildId>/` | In-memory by default. Its Cloudflare data adapter is KV, whose free tier allows 1,000 writes a day |
 | Intercepting/parallel routes (`@modal`) | Works: in a headless browser, clicking a team on `/teams` changes the URL to `/teams/1` and opens the team dialog over the grid, with no console errors | Listed as supported |
 | Cookies | Works: the league layout reads `sidebar_state` and every page rendered with the account cookie set | Supported |
@@ -67,13 +67,9 @@ Durable Object is needed. `cloudflare/worker.ts` wraps the generated handler to
 log one JSON line per request with its outbound subrequest count, which Workers
 Logs does not report on its own.
 
-The Docker build is unchanged: `npm run build` is still `next build --webpack`
-with `output: "standalone"`. The standalone output picks up no new packages (no
-`@opennextjs/*`, `wrangler` or `workerd`). `npm ci` on `node:22-alpine` installs
-the new dev dependencies; workerd's postinstall logs and continues on musl
-rather than failing. `getSnapshotBucket()` returns null outside a Worker, so
-Node keeps fetching Sleeper directly. That path was checked on the built
-standalone server.
+`npm run dev` and `npm run build`/`start` still run the app on Node.
+`getSnapshotBucket()` returns null outside a Worker, so Node fetches Sleeper
+directly.
 
 | Command | What it does |
 |---|---|
@@ -115,8 +111,7 @@ snapshots/projections/v1/<season>/<week>.json        one week, ~200–275 KB
   the version moves. On failure the memo keeps serving the last good catalog.
   It never falls back to Sleeper's 15 MB feed inside a Worker. `getWeeklyProjections()`
   reads the week's file; a week with no snapshot shows no projections (they were
-  already optional decoration). Under Docker/Node both fetch Sleeper exactly as
-  before.
+  already optional decoration). Under Node (`next dev`) both fetch Sleeper directly.
 - **Parse cost in a Worker** (tail `cpuTime`, three runs, ~2 ms of request
   overhead included): active shard 6–11 ms, archive 17–25 ms, both 23–30 ms, one
   projection week 4–10 ms. The full catalog alone exceeds the Free budget, which
@@ -153,7 +148,7 @@ lifecycle rule (cutover step 4). Even 10× this traffic stays inside the free ti
 The tightest in-app limit is 30 requests per 10 minutes, and the fastest normal
 pattern (player search on a 150–250 ms debounce, plus avatars) stays well below
 10 requests a second, so the rule only catches floods. The in-app limiters remain
-the fine-grained layer, now per isolate. Verified on the live tunnel: home,
+the fine-grained layer, now per isolate. Verified before the cutover, on the tunnel: home,
 dashboard, standings, matchups, `/api/scoreboard`, `/api/leagues/:id/teams` and
 player search all returned 200 after the rule went live. A burst of 115 cheap
 requests (`/api/avatar` with an invalid id, answered without any upstream call)
@@ -251,8 +246,8 @@ or Workers Logs. No request hit the 128 MB limit.
    strictly, add a Workers Rate Limiting binding keyed account-wide.
 3. **Optional:** materialize scouting (and long dynasty histories) into R2 to cut
    cold wall time, and load the archive shard only for name lookups.
-4. **Retire Hostinger** once the rollback window ends: follow the Hostinger exit
-   steps in the homelab audit (container, cloudflared tunnel, image workflow).
+4. **Hostinger:** the container can be deleted there. The `hostinger` tunnel
+   no longer routes any hostname; delete it with the VPS.
 
 ## Cutover (2026-10-29)
 
@@ -265,25 +260,33 @@ or Workers Logs. No request hit the 128 MB limit.
 4. R2 lifecycle rule on `sleeper-fantasy-cache`: `incremental-cache/` objects are
    deleted after 30 days, because each deploy writes under a new build ID and old
    ones are never read again.
-5. Deployed from `main` with `npm run cf:deploy`. `wrangler.jsonc` carries the
-   zone route `sleeper.blasingame.dev/*` (zone `blasingame.dev`). The route sits in
-   front of the proxied tunnel DNS record, which stays in place; a custom domain
-   would have meant deleting that record. The WAF rule keeps applying.
-6. Verified on the real hostname with `npx wrangler tail sleeper-fantasy`.
+5. Deployed from `main` with `npm run cf:deploy` behind a zone route, with the tunnel
+   DNS record kept as a fallback, and verified every page on the real hostname.
+6. Same day, made Cloudflare the only host:
+   - Deleted the tunnel CNAME (`sleeper.blasingame.dev` → `hostinger` tunnel) and its
+     ingress rule, and replaced the zone route with a Worker custom domain, so
+     Cloudflare owns the DNS record and certificate. The WAF rule still applies.
+   - Removed the `Dockerfile`, `.dockerignore`, the GHCR image workflow and
+     `output: "standalone"`.
+   - Added `.github/workflows/deploy.yml`: on every push to `main` it runs
+     typecheck, lint and tests, then `npm run cf:deploy`. It authenticates with
+     the `CLOUDFLARE_API_TOKEN` secret, a token limited to Workers Scripts, R2 and
+     Account Settings Read on the account, plus Workers Routes, DNS and Zone Read
+     on `blasingame.dev`.
 
-Deploy future changes with `npm run cf:deploy` from `main`. The Docker build
-(`npm run build`) still works and is the rollback target.
+## Deploying and rolling back
 
-### Rollback
+Merge or push to `main`; the Deploy workflow ships it in a few minutes. Run it
+by hand from **Actions → Deploy → Run workflow**. A failing check stops the
+deploy and leaves the current version live.
 
-Remove the route: dashboard → Workers & Pages → `sleeper-fantasy` → Settings →
-Domains & Routes, or delete `routes` from `wrangler.jsonc` and run
-`npx wrangler deploy`. Traffic goes back to the tunnel and the Hostinger container
-immediately. Keep the container, the cloudflared tunnel and the image workflow
-running until the rollback window ends.
+Each deploy writes its data cache under a new build ID, so the first requests
+after a deploy are cold (see the cold columns above).
+
+To roll back, `npx wrangler rollback` (or dashboard → Workers & Pages →
+`sleeper-fantasy` → Deployments) returns to an earlier version immediately. Then
+revert the bad commit on `main` so the next deploy does not ship it again.
 
 ## Not changed
 
-- No DNS or tunnel changes; the cutover is the Worker route alone.
-- `Dockerfile`, the GitHub image workflow and the Hostinger deployment are untouched.
 - The simulation count stays at 10,000; caching made reducing it unnecessary.
