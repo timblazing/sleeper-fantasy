@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ResponsiveTabs } from "@/components/responsive-tabs";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useLiveNfl } from "@/hooks/use-live-nfl";
+import { CLIENT_REFRESH, gameRefreshMs, slateRefreshMs } from "@/lib/live-refresh";
 import type {
   GameDrive,
   GamePlay,
@@ -76,7 +77,7 @@ function TeamLogo({
 
 /** The top bar shows only live games and keeps the existing game details dialog. */
 export function NflScoreTicker() {
-  const { data } = useLiveNfl<NflScoreboard>("/api/scoreboard");
+  const { data } = useLiveNfl<NflScoreboard>("/api/scoreboard", (board) => slateRefreshMs(board.games, CLIENT_REFRESH));
   const [selected, setSelected] = useState<ScoreboardGame | null>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
   const track = useRef<HTMLDivElement>(null);
@@ -355,6 +356,7 @@ function GameDetails({ initial }: { initial: ScoreboardGame }) {
   const [detailTab, setDetailTab] = useState(initial.state === "live" ? "plays" : "boxscore");
   const { data, error, refreshing, refresh } = useLiveNfl<GameSummary>(
     `/api/scoreboard/${initial.id}`,
+    (summary) => gameRefreshMs(summary.game, CLIENT_REFRESH),
   );
   const game = data?.game ?? initial;
   const latest = data?.drives[0]?.plays[0];

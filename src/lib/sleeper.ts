@@ -12,9 +12,32 @@ export const getUserLeagues = (userId: string, season: string) => sleeper<Sleepe
 // upstream URL path below is defense in depth only.
 export const getLeague = (id: string) => sleeper<SleeperLeague>(`/league/${encodeURIComponent(id)}`, 3600);
 export const getLeagueUsers = (id: string) => sleeper<SleeperUser[]>(`/league/${encodeURIComponent(id)}/users`, 3600);
-export const getLeagueRosters = (id: string) => sleeper<SleeperRoster[]>(`/league/${encodeURIComponent(id)}/rosters`, "live");
-export const getMatchups = (id: string, week: number) => sleeper<SleeperMatchup[]>(`/league/${encodeURIComponent(id)}/matchups/${week}`, "live");
-export const getTransactions = (id: string, week: number) => sleeper<SleeperTransaction[]>(`/league/${encodeURIComponent(id)}/transactions/${week}`, "live");
+// Rosters, matchups and transactions move during the current week, so they default to uncached.
+// A caller that knows the read is settled (see `settledTtl`) passes a longer ttl.
+export const getLeagueRosters = (id: string, ttl: CacheTtl = "live") => sleeper<SleeperRoster[]>(`/league/${encodeURIComponent(id)}/rosters`, ttl);
+export const getMatchups = (id: string, week: number, ttl: CacheTtl = "live") => sleeper<SleeperMatchup[]>(`/league/${encodeURIComponent(id)}/matchups/${week}`, ttl);
+export const getTransactions = (id: string, week: number, ttl: CacheTtl = "live") => sleeper<SleeperTransaction[]>(`/league/${encodeURIComponent(id)}/transactions/${week}`, ttl);
+
+/** A week behind the current one: scores only move on stat corrections, which an hour absorbs. */
+export const SETTLED_WEEK_TTL = 3600;
+/** A finished season does not change at all; a week only bounds how long a correction could linger. */
+export const FINISHED_SEASON_TTL = 7 * 86400;
+
+/** Whether `league` is a season that is over — complete, or older than the NFL's current season. */
+export function isFinishedSeason(league: Pick<SleeperLeague, "season" | "status">, state: Pick<NflState, "season">) {
+  return league.status === "complete" || Number(league.season) < Number(state.season);
+}
+
+/**
+ * How long a league's per-week read can be cached. Finished seasons cache for a week, weeks
+ * already behind the NFL's current week for an hour, and the current week (or anything ahead of
+ * it) stays live. `week` omitted means a season-level read such as rosters.
+ */
+export function settledTtl(league: Pick<SleeperLeague, "season" | "status">, state: Pick<NflState, "season" | "week">, week?: number): CacheTtl {
+  if (isFinishedSeason(league, state)) return FINISHED_SEASON_TTL;
+  if (week !== undefined && league.season === state.season && week < (state.week ?? 0)) return SETTLED_WEEK_TTL;
+  return "live";
+}
 // Completed seasons never change, so the brackets that decide final placements cache for a day.
 export const getWinnersBracket = (id: string) => sleeper<SleeperBracketGame[]>(`/league/${encodeURIComponent(id)}/winners_bracket`, 86400);
 export const getLosersBracket = (id: string) => sleeper<SleeperBracketGame[]>(`/league/${encodeURIComponent(id)}/losers_bracket`, 86400);

@@ -1,3 +1,4 @@
+import { REQUEST_TIMEOUT_MS } from "@/lib/fetch-cached";
 import { leagueAvatarUrl } from "@/lib/utils";
 
 // Same-origin proxy for Sleeper avatars. Canvas background-keying (see `use-keyed-image`) needs
@@ -9,7 +10,8 @@ export async function GET(request: Request) {
     return new Response("Invalid avatar id.", { status: 400 });
   }
 
-  const upstream = await fetch(leagueAvatarUrl(id, "thumb"));
+  const upstream = await fetch(leagueAvatarUrl(id, "thumb"), { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) }).catch(() => null);
+  if (!upstream) return new Response("Avatar unavailable.", { status: 504 });
   if (!upstream.ok || !upstream.body) {
     return new Response("Avatar not found.", { status: 404 });
   }

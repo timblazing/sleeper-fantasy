@@ -73,4 +73,27 @@ describe("live NFL polling", () => {
     unmount();
     expect(signal.aborted).toBe(true);
   });
+  it("follows the refresh policy and stops when it returns null", async () => {
+    fetchMock
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ state: "upcoming" }) })
+      .mockResolvedValue({ ok: true, json: async () => ({ state: "final" }) });
+    const { unmount } = renderHook(() =>
+      useLiveNfl<{ state: string }>("/api/scoreboard/1", (value) => (value.state === "final" ? null : 120_000)),
+    );
+    await flush();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30_000);
+    });
+    // The policy asked for two minutes, so the default 30s cadence must not fire.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(90_000);
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60 * 60_000);
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    unmount();
+  });
 });

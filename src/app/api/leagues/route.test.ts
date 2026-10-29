@@ -85,4 +85,32 @@ describe("GET /api/leagues", () => {
     expect(response.status).toBe(503);
     expect(await response.json()).toEqual({ error: "Sleeper is unavailable right now. This isn't your username — try again in a few minutes." });
   });
+
+  it("rejects a caller that exceeds the lookup budget", async () => {
+    const lookup = vi.fn().mockResolvedValue(account);
+    const { GET } = await getRoute(lookup);
+    const headers = { "x-forwarded-for": "203.0.113.7" };
+    const send = () => GET(new Request("http://localhost/api/leagues?username=clay", { headers }));
+
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      expect((await send()).status).toBe(200);
+    }
+
+    const limited = await send();
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get("retry-after")).toBe("600");
+    expect(lookup).toHaveBeenCalledTimes(30);
+  });
+
+  it("does not spend budget on a request that fails validation", async () => {
+    const lookup = vi.fn().mockResolvedValue(account);
+    const { GET } = await getRoute(lookup);
+    const headers = { "x-forwarded-for": "203.0.113.8" };
+
+    for (let attempt = 0; attempt < 35; attempt += 1) {
+      expect((await GET(new Request("http://localhost/api/leagues", { headers }))).status).toBe(400);
+    }
+
+    expect((await GET(new Request("http://localhost/api/leagues?username=clay", { headers }))).status).toBe(200);
+  });
 });

@@ -1,5 +1,6 @@
 import { liveSource, type LeagueSource } from "@/lib/league-source";
-import type { SleeperBracketGame, SleeperLeague, SleeperMatchup, SleeperRoster, SleeperUser } from "@/lib/types";
+import { FINISHED_SEASON_TTL, settledTtl } from "@/lib/sleeper";
+import type { NflState, SleeperBracketGame, SleeperLeague, SleeperMatchup, SleeperRoster, SleeperUser } from "@/lib/types";
 
 /**
  * League History reads every season this league has ever been, not just the current one.
@@ -157,21 +158,22 @@ async function collectSeasonIds(leagueId: string, source: LeagueSource): Promise
  * Weeks are fetched up to the last one Sleeper has scores for. An in-progress season simply has
  * fewer of them, which is what makes a live year sit alongside finished ones without special-casing.
  */
-async function loadSeason(league: SleeperLeague, currentWeek: number, isCurrent: boolean, source: LeagueSource): Promise<SeasonBundle | null> {
+async function loadSeason(league: SleeperLeague, currentWeek: number, isCurrent: boolean, state: NflState, source: LeagueSource): Promise<SeasonBundle | null> {
   const playoffWeekStart = league.settings.playoff_week_start || 15;
   // A finished season is read to the end of its bracket; the live one stops at the current week.
   const finalWeek = isCurrent ? Math.max(0, currentWeek) : playoffWeekStart + 3;
 
   const [users, rosters, bracket] = await Promise.all([
     source.getLeagueUsers(league.league_id).catch(() => [] as SleeperUser[]),
-    source.getLeagueRosters(league.league_id).catch(() => [] as SleeperRoster[]),
+    // Only an earlier league in the chain is frozen; the newest one can still trade.
+    source.getLeagueRosters(league.league_id, isCurrent ? "live" : FINISHED_SEASON_TTL).catch(() => [] as SleeperRoster[]),
     source.getWinnersBracket(league.league_id).catch(() => [] as SleeperBracketGame[]),
   ]);
   if (!rosters.length) return null;
 
   const weekNumbers = Array.from({ length: Math.max(0, finalWeek) }, (_, index) => index + 1);
   const fetched = await Promise.all(
-    weekNumbers.map((week) => source.getMatchups(league.league_id, week).then((rows) => [week, rows] as const).catch(() => [week, [] as SleeperMatchup[]] as const)),
+    weekNumbers.map((week) => source.getMatchups(league.league_id, week, settledTtl(league, state, week)).then((rows) => [week, rows] as const).catch(() => [week, [] as SleeperMatchup[]] as const)),
   );
 
   const weeks = new Map<number, SleeperMatchup[]>();
@@ -242,7 +244,7 @@ export async function getLeagueHistory(leagueId: string, source: LeagueSource = 
   if (!chain.length) throw new Error("League history unavailable");
 
   const currentWeek = Math.max(1, state.week ?? state.display_week ?? 1);
-  const loaded = await Promise.all(chain.map((league, index) => loadSeason(league, currentWeek, index === 0, source)));
+  const loaded = await Promise.all(chain.map((league, index) => loadSeason(league, currentWeek, index === 0, state, source)));
   const resolved = loaded.filter((bundle): bundle is SeasonBundle => bundle !== null);
   // Newest first. A season with no scored weeks still contributes its roster of managers and a
   // column to the placements grid — that is how the live preseason shows up as "TBD".

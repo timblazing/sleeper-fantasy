@@ -2,6 +2,18 @@ import "server-only";
 const RETRYABLE = new Set([500, 502, 503, 504]);
 /** Upstream error pages can be huge; the captured body is only ever read to classify the failure. */
 const MAX_BODY_CHARS = 8 * 1024;
+/**
+ * Sleeper, ESPN and RosterAudit are all third-party; a stalled socket would otherwise hang a
+ * render forever, because nothing above this layer imposes a deadline. Generous enough for the
+ * large player and projection payloads, short enough that a wedged upstream fails fast.
+ */
+export const REQUEST_TIMEOUT_MS = 10_000;
+/**
+ * Total wall time one `fetchCached` call may spend across all of its attempts. Without it, three
+ * timed-out attempts plus backoff park a render for over half a minute; with it, a retry is only
+ * started when it still has a real chance of finishing.
+ */
+export const REQUEST_BUDGET_MS = 15_000;
 
 /**
  * A non-ok HTTP response, with the body already read. Callers classify on `status` and `body`
@@ -43,10 +55,13 @@ export type CacheTtl = number | "live";
 
 export async function fetchCached<T>(url: string, options: { ttl: CacheTtl; headers?: HeadersInit }): Promise<T> {
   const caching: RequestInit = options.ttl === "live" ? { cache: "no-store" } : { next: { revalidate: options.ttl } };
+  const deadline = Date.now() + REQUEST_BUDGET_MS;
   let lastError: Error | null = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
+    // A fresh signal per attempt: one already-expired signal would abort every retry instantly.
+    const timeout = Math.max(1, Math.min(REQUEST_TIMEOUT_MS, deadline - Date.now()));
     try {
-      const response = await fetch(url, { headers: { "User-Agent": "Sleeper Fantasy/0.1", ...options.headers }, ...caching });
+      const response = await fetch(url, { headers: { "User-Agent": "Sleeper Fantasy/0.1", ...options.headers }, ...caching, signal: AbortSignal.timeout(timeout) });
       if (!response.ok) { const error = await httpError(response, url); if (!RETRYABLE.has(response.status)) throw error; lastError = error; }
       else { return (await response.json()) as T; }
     } catch (error) {
@@ -54,7 +69,10 @@ export async function fetchCached<T>(url: string, options: { ttl: CacheTtl; head
       if (error instanceof HttpError && !RETRYABLE.has(error.status)) throw error;
       lastError = error instanceof Error ? error : new Error("External request failed");
     }
-    if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 800 * 2 ** attempt));
+    const backoff = 800 * 2 ** attempt;
+    // Out of budget: a retry that cannot finish only delays the failure the caller degrades on.
+    if (attempt >= 2 || Date.now() + backoff >= deadline) break;
+    await new Promise((resolve) => setTimeout(resolve, backoff));
   }
   throw lastError ?? new Error(`Failed to fetch ${url}`);
 }

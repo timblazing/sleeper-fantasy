@@ -1,5 +1,7 @@
 import "server-only";
 import { fetchCached } from "@/lib/fetch-cached";
+import { createMemo } from "@/lib/memo";
+import { slateRefreshMs } from "@/lib/live-refresh";
 import type { PlayerGame } from "@/lib/types";
 
 const SITE = "https://site.api.espn.com/apis/site/v2/sports/football/nfl";
@@ -22,14 +24,12 @@ type ScoreboardResponse = {
 
 export type NflGame = { period?: number; clockSeconds?: number; id: string; kickoff: string; state: "pre" | "in" | "post"; detail: string; home: string; away: string; homeScore: number | null; awayScore: number | null };
 
-/**
- * ESPN's `seasontype`: 1 = preseason, 2 = regular, 3 = postseason.
- *
- * Uncached: this drives the live/final game labels beside every player, and a stale-while-revalidate
- * read would show the previous refresh's scores to whoever arrives first after the window lapses.
- */
-export async function getScoreboard(season: string, week: number, seasonType = 2): Promise<NflGame[]> {
-  try {
+const STATE: Record<NflGame["state"], "upcoming" | "live" | "final"> = { pre: "upcoming", in: "live", post: "final" };
+
+/** Keyed `${season}:${week}:${seasonType}`. Pages only ask for a league's current week, so a handful of keys covers every reader. */
+const scoreboardMemo = createMemo<string, NflGame[]>({
+  load: async (key) => {
+    const [season, week, seasonType] = key.split(":");
     const data = await fetchCached<ScoreboardResponse>(`${SITE}/scoreboard?dates=${season}&seasontype=${seasonType}&week=${week}`, { ttl: "live" });
     return (data.events ?? []).flatMap((event) => {
       const competitors = event.competitions?.[0]?.competitors ?? [];
@@ -39,6 +39,25 @@ export async function getScoreboard(season: string, week: number, seasonType = 2
       const score = (value?: string) => (value == null || value === "" ? null : Number(value));
       return [{ period: event.status.period, clockSeconds: event.status.clock, id: event.id, kickoff: event.date, state: event.status.type.state, detail: event.status.type.shortDetail, home: toSleeperTeam(home.team.abbreviation), away: toSleeperTeam(away.team.abbreviation), homeScore: score(home.score), awayScore: score(away.score) }];
     });
+  },
+  // Every roster, matchup and injury view reads this, so one fetch is shared per window. The
+  // window is seconds while a game is live — matching how often the pages are refreshed — and
+  // minutes otherwise, shortened so an upcoming game is re-read at its kickoff.
+  ttlMs: (games) => slateRefreshMs(games.map((game) => ({ state: STATE[game.state] ?? "upcoming", kickoff: game.kickoff })), { liveMs: 15_000, idleMs: 5 * 60_000 }),
+  maxKeys: 16,
+  onError: "throw",
+});
+
+/**
+ * ESPN's `seasontype`: 1 = preseason, 2 = regular, 3 = postseason.
+ *
+ * Not in Next's data cache: this drives the live/final game labels beside every player, and a
+ * stale-while-revalidate read would show the previous refresh's scores to whoever arrives first
+ * after the window lapses. The in-process memo above only ever serves a value inside its window.
+ */
+export async function getScoreboard(season: string, week: number, seasonType = 2): Promise<NflGame[]> {
+  try {
+    return await scoreboardMemo.get(`${season}:${week}:${seasonType}`);
   } catch {
     // ESPN is undocumented and occasionally unavailable; the roster and matchup views degrade to
     // showing no game context rather than failing.
