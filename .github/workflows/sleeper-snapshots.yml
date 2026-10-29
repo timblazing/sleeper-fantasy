@@ -1,0 +1,57 @@
+name: Sleeper snapshots
+
+# Writes the player catalog and weekly projections to R2 for the Cloudflare Worker, which cannot
+# fetch and parse Sleeper's 15MB player map or 5.8MB projection feed within the Workers Free CPU
+# budget. Runs here rather than as a Worker Cron Trigger, which has the same 10 ms CPU limit.
+on:
+  schedule:
+    # Daily: the player catalog (Sleeper asks for at most one /players/nfl fetch a day) and every
+    # remaining week's projections.
+    - cron: "23 10 * * *"
+    # Hourly: the current and next week's projections, which move with injury news.
+    - cron: "17 * * * *"
+  # Proves the script still runs on a PR that touches it, without writing to R2.
+  pull_request:
+    paths:
+      - scripts/sleeper-snapshots.mjs
+      - src/lib/snapshot-format.ts
+      - .github/workflows/sleeper-snapshots.yml
+  workflow_dispatch:
+    inputs:
+      catalog:
+        description: Refresh the player catalog too
+        type: boolean
+        default: true
+
+concurrency:
+  group: sleeper-snapshots-${{ github.event_name == 'pull_request' && github.ref || 'r2' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Write snapshots to R2
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          DAILY: ${{ github.event.schedule == '23 10 * * *' || (github.event_name == 'workflow_dispatch' && inputs.catalog) }}
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/sleeper-snapshots.mjs --catalog --projections --dry-run
+          elif [ "$DAILY" = "true" ]; then
+            node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/sleeper-snapshots.mjs --catalog --projections --all-weeks
+          else
+            node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/sleeper-snapshots.mjs --projections
+          fi
