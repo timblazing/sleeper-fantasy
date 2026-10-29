@@ -3,7 +3,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 /**
  * The slice of an R2 bucket binding the snapshot readers use. Declared structurally rather than
- * from `@cloudflare/workers-types` because the same code also builds for the Docker/Node server,
+ * from `@cloudflare/workers-types` because the same code also runs under Node (`next dev`, tests),
  * where those globals would clash with the DOM and Node `fetch` types.
  */
 export type SnapshotBucket = {
@@ -11,8 +11,8 @@ export type SnapshotBucket = {
 };
 
 /**
- * The `SNAPSHOTS` R2 binding when running as a Cloudflare Worker, or null under `next start`/Docker
- * (and in tests), where readers fall back to fetching Sleeper directly as they always have.
+ * The `SNAPSHOTS` R2 binding when running as a Cloudflare Worker, or null under Node (`next dev`,
+ * `next start` and tests), where readers fall back to fetching Sleeper directly as they always have.
  */
 export function getSnapshotBucket(): SnapshotBucket | null {
   try {

@@ -8,10 +8,8 @@
   // request well below the 30 s default.
   "limits": { "cpu_ms": 5000 },
   "workers_dev": true,
-  // A zone route rather than a custom domain: the proxied tunnel DNS record stays in place, so
-  // removing this route sends traffic straight back to the Hostinger container (see
-  // docs/cloudflare-migration.md, "Rollback").
-  "routes": [{ "pattern": "sleeper.blasingame.dev/*", "zone_name": "blasingame.dev" }],
+  // Cloudflare owns the DNS record and certificate for a custom domain.
+  "routes": [{ "pattern": "sleeper.blasingame.dev", "custom_domain": true }],
   "preview_urls": false,
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "sleeper-fantasy" }],

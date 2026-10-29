@@ -43,6 +43,13 @@
 - [pseudo-r/Public-ESPN-API](https://github.com/pseudo-r/Public-ESPN-API)
 - [akeaswaran/espn-api-docs](https://gist.github.com/akeaswaran/b48b02f1c94f873c6655e7129910fc3b)
 
+## Hosting
+
+Runs on Cloudflare Workers through [OpenNext](https://opennext.js.org/cloudflare) at
+[sleeper.blasingame.dev](https://sleeper.blasingame.dev). Every push to `main` is checked and
+deployed by `.github/workflows/deploy.yml`. See [the migration notes](docs/cloudflare-migration.md)
+for the R2 snapshots, caching, measurements and rollback.
+
 ## Design system
 
 The UI follows [blasingame.dev foundations](https://components.blasingame.dev/foundations).
