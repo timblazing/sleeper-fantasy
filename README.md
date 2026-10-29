@@ -45,10 +45,8 @@
 
 ## Hosting
 
-Runs on Cloudflare Workers through [OpenNext](https://opennext.js.org/cloudflare) at
-[sleeper.blasingame.dev](https://sleeper.blasingame.dev). Every push to `main` is checked and
-deployed by `.github/workflows/deploy.yml`. See [the migration notes](docs/cloudflare-migration.md)
-for the R2 snapshots, caching, measurements and rollback.
+Runs on [Vercel](https://vercel.com) at [sleeper.blasingame.dev](https://sleeper.blasingame.dev).
+Every push to `main` deploys to production. See [the hosting notes](docs/hosting.md).
 
 ## Design system
 

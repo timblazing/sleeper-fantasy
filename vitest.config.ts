@@ -10,5 +10,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    // Tests opt into a RosterAudit key with vi.stubEnv; a real key in the build environment must not leak in.
+    env: { ROSTERAUDIT_API_KEY: "" },
   },
 });

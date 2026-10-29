@@ -44,8 +44,3 @@ next-env.d.ts
 # agent tooling (repo root)
 .claude/settings.local.json
 .claude/worktrees/
-
-# cloudflare workers (OpenNext / Wrangler)
-/.open-next/
-/.wrangler/
-.dev.vars*

@@ -1,15 +1,16 @@
 import "server-only";
 import { REQUEST_TIMEOUT_MS } from "@/lib/fetch-cached";
 import { createMemo } from "@/lib/memo";
-import { decodeProjections, type ProjectionFile, type ProjectionRow, projectionsKey, trimProjections, type WeeklyProjection } from "@/lib/snapshot-format";
-import { getSnapshotBucket, readSnapshot, type SnapshotBucket } from "@/lib/snapshot-store";
+import { type ProjectionRow, trimProjections, type WeeklyProjection } from "@/lib/sleeper-feeds";
 
 export type { WeeklyProjection };
 
 const API = "https://api.sleeper.com";
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
-async function fetchWeeklyProjections(season: string, week: string): Promise<Map<string, WeeklyProjection>> {
+/** The memo is keyed by `${season}:${week}`, which this parses back into the two request parameters. */
+async function loadWeeklyProjections(key: string): Promise<Map<string, WeeklyProjection>> {
+  const [season, week] = key.split(":");
   const response = await fetch(`${API}/projections/nfl/${season}/${week}?season_type=regular`, {
     cache: "no-store",
     headers: { "User-Agent": "Sleeper Fantasy/0.1" },
@@ -17,24 +18,6 @@ async function fetchWeeklyProjections(season: string, week: string): Promise<Map
   });
   if (!response.ok) throw new Error(`Sleeper projections returned ${response.status}`);
   return trimProjections((await response.json()) as ProjectionRow[]);
-}
-
-/**
- * On Workers, projections come from the R2 snapshot the GitHub Actions job refreshes hourly for the
- * current and next week (and once for every other week of the season). A week with no snapshot is
- * treated as having no projections rather than parsing Sleeper's ~5.8MB feed inside the request.
- */
-export async function readProjectionSnapshot(bucket: SnapshotBucket, season: string, week: number): Promise<Map<string, WeeklyProjection>> {
-  const file = await readSnapshot<ProjectionFile>(bucket, projectionsKey(season, week));
-  if (!file) throw new Error(`No projection snapshot for ${season} week ${week}`);
-  return decodeProjections(file);
-}
-
-/** The memo is keyed by `${season}:${week}`, which this parses back into the two request parameters. */
-function loadWeeklyProjections(key: string): Promise<Map<string, WeeklyProjection>> {
-  const [season, week] = key.split(":");
-  const bucket = getSnapshotBucket();
-  return bucket ? readProjectionSnapshot(bucket, season, Number(week)) : fetchWeeklyProjections(season, week);
 }
 
 // Sleeper's undocumented projection feed is large, so one week is kept in process memory rather

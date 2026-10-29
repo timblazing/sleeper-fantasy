@@ -95,14 +95,3 @@ describe("liveWinProbability", () => {
     expect(leadFinal).toBeGreaterThan(leadEarly);
   });
 });
-
-describe("readProjectionSnapshot", () => {
-  it("decodes the week's snapshot and fails when the week has none", async () => {
-    const { readProjectionSnapshot } = await import("@/lib/projections");
-    const { encodeProjections, projectionsKey } = await import("@/lib/snapshot-format");
-    const file = encodeProjections("2026", 9, new Map([["4046", { stats: { pass_td: 2 }, opponent: "LV" }]]), "2026-10-29T00:00:00.000Z");
-    const bucket = { get: async (key: string) => (key === projectionsKey("2026", 9) ? { json: async <T>() => file as T } : null) };
-    expect(await readProjectionSnapshot(bucket, "2026", 9)).toEqual(new Map([["4046", { stats: { pass_td: 2 }, opponent: "LV" }]]));
-    await expect(readProjectionSnapshot(bucket, "2026", 10)).rejects.toThrow(/No projection snapshot/);
-  });
-});
