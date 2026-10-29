@@ -1,8 +1,8 @@
-import { isIP } from "node:net";
 import { z } from "zod";
 import { evaluateTrade } from "@/lib/trade-lab";
 import type { RaError } from "@/lib/roster-audit";
 import { isRequestAllowed } from "@/lib/request-rate-limit";
+import { getClientAddress } from "@/lib/client-address";
 
 const assetSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("player"), id: z.string().min(1).max(32) }),
@@ -13,23 +13,6 @@ const assetSchema = z.discriminatedUnion("type", [
 // dynasty trade needs more than this, and /trade/calculate is the only rate-limited endpoint.
 const sideSchema = z.array(assetSchema).min(1).max(12);
 const requestSchema = z.object({ leagueId: z.string().min(1).max(32), sideA: sideSchema, sideB: sideSchema });
-
-function getClientAddress(headers: Headers): string {
-  // Set by Cloudflare's edge and not client-spoofable, unlike the forwarded headers below.
-  const cloudflareAddress = headers.get("cf-connecting-ip")?.trim();
-  if (cloudflareAddress && isIP(cloudflareAddress) !== 0) return cloudflareAddress;
-
-  const forwardedAddress = headers.get("x-forwarded-for")
-    ?.split(",")
-    .map((address) => address.trim())
-    .find((address) => isIP(address) !== 0);
-  if (forwardedAddress) return forwardedAddress;
-
-  const realAddress = headers.get("x-real-ip")?.trim();
-  if (realAddress && isIP(realAddress) !== 0) return realAddress;
-
-  return "anonymous";
-}
 
 /** Upstream failures map to statuses the client can act on; only the message is user-facing. */
 function describe(error: RaError): { status: number; message: string } {

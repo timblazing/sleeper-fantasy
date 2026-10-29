@@ -1,4 +1,5 @@
 import "server-only";
+import { REQUEST_TIMEOUT_MS } from "@/lib/fetch-cached";
 import { createMemo } from "@/lib/memo";
 import type { NflPlayer } from "@/lib/types";
 
@@ -6,7 +7,7 @@ const API = "https://api.sleeper.app/v1";
 // Sleeper asks that the full player map be fetched no more than once per day. It is ~15MB of JSON,
 // which is far past Next's data-cache entry limit, so it is trimmed and held in module memory here
 // rather than going through fetchCached.
-const CATALOG_TTL_MS = 12 * 60 * 60 * 1000;
+const CATALOG_TTL_MS = 24 * 60 * 60 * 1000;
 
 export const NFL_TEAMS: Record<string, string> = {
   ARI: "Cardinals", ATL: "Falcons", BAL: "Ravens", BUF: "Bills", CAR: "Panthers", CHI: "Bears", CIN: "Bengals", CLE: "Browns",
@@ -44,7 +45,7 @@ function trim(id: string, raw: RawPlayer): NflPlayer | null {
 }
 
 async function loadCatalog(): Promise<Map<string, NflPlayer>> {
-  const response = await fetch(`${API}/players/nfl`, { cache: "no-store", headers: { "User-Agent": "Sleeper Fantasy/0.1" } });
+  const response = await fetch(`${API}/players/nfl`, { cache: "no-store", headers: { "User-Agent": "Sleeper Fantasy/0.1" }, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
   if (!response.ok) throw new Error(`Sleeper player map returned ${response.status}`);
   const raw = (await response.json()) as Record<string, RawPlayer>;
   const players = new Map<string, NflPlayer>();
@@ -59,7 +60,7 @@ async function loadCatalog(): Promise<Map<string, NflPlayer>> {
 // names at all when Sleeper is briefly unavailable, and with no catalog at all the read must fail.
 const catalogMemo = createMemo({ load: loadCatalog, ttlMs: CATALOG_TTL_MS, onError: "throw" });
 
-/** The full Sleeper player map, trimmed to the fields the dashboard renders and cached for 12h. */
+/** The full Sleeper player map, trimmed to the fields the dashboard renders and cached for 24h. */
 export function getPlayerCatalog(): Promise<Map<string, NflPlayer>> {
   return catalogMemo.get("nfl");
 }

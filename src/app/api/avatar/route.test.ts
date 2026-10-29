@@ -39,11 +39,20 @@ describe("GET /api/avatar", () => {
 
     const response = await GET(request("ABC123"));
 
-    expect(fetchMock).toHaveBeenCalledWith(leagueAvatarUrl("ABC123", "thumb"));
+    expect(fetchMock).toHaveBeenCalledWith(leagueAvatarUrl("ABC123", "thumb"), { signal: expect.any(AbortSignal) });
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe("image/jpeg");
     expect(response.headers.get("cache-control")).toBe("public, max-age=86400, immutable");
     expect(await response.text()).toBe("avatar-bytes");
+  });
+
+  it("answers a timed-out or failed upstream with a gateway timeout instead of throwing", async () => {
+    fetchMock.mockRejectedValue(new DOMException("The operation timed out.", "TimeoutError"));
+    const { GET } = await getRoute();
+
+    const response = await GET(request("abc123"));
+
+    expect(response.status).toBe(504);
   });
 
   it("maps a non-OK upstream response to not found", async () => {

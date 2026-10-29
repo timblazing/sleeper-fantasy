@@ -1,7 +1,8 @@
+import { unstable_cache } from "next/cache";
 import { findTeamForUser, getLeagueValueContext, type LeagueTeam } from "@/lib/league-values";
 import { buildBracket, type PlayoffBracket } from "@/lib/playoff-bracket";
 import { liveSource, type LeagueSource } from "@/lib/league-source";
-import { getNflLeaguesForUsername } from "@/lib/sleeper";
+import { getNflLeaguesForUsername, settledTtl } from "@/lib/sleeper";
 import type { SleeperAccount, SleeperBracketGame, SleeperMatchup } from "@/lib/types";
 
 /** One scheduled head-to-head, resolved once the week is played. */
@@ -182,7 +183,7 @@ type SimTeam = {
  * the sample grows. With no values and no games, everyone is average and the odds fall back to
  * seeding noise rather than pretending to know something.
  */
-function expectedPpg(team: LeagueTeam, valueScale: number | null, leagueAvgPpg: number): number {
+function expectedPpg(team: SimSourceTeam, valueScale: number | null, leagueAvgPpg: number): number {
   const games = team.wins + team.losses + team.ties;
   const actual = games ? team.pointsFor / games : null;
   // Roster value maps onto a ±12% scoring swing around the league average.
@@ -283,18 +284,27 @@ function classify(playoffOdds: number, started: boolean): PlayoffOutlook {
   return "eliminated";
 }
 
+/** The per-team simulated columns of a `PlayoffRow`; identity and record columns are joined on later. */
+export type RaceOdds = Omit<PlayoffRow, "name" | "manager" | "avatar" | "isUser" | "division" | "wins" | "losses" | "ties" | "pointsFor">;
+
+/** What the simulation reads from a team. Kept narrow so the inputs can double as a cache key. */
+export type SimSourceTeam = Pick<LeagueTeam, "rosterId" | "name" | "wins" | "losses" | "ties" | "pointsFor" | "value">;
+
+export type SimulationOptions = { playoffTeams: number; divisions: number; simulations?: number; seed?: number; divisionByRoster?: Map<number, number> };
+
 /**
  * Monte Carlo the rest of the regular season and the bracket that follows it.
  *
  * Every run replays each unplayed game, re-seeds on the resulting records, and plays the
  * bracket out, so playoff, bye, seed and title odds all fall out of the same set of runs and
  * stay consistent with one another.
+ *
+ * With `trackRosterId`, the same runs also record that team's road to the title — who it drew in
+ * the bracket and whether it survived. Tracking only observes games, so it draws nothing from
+ * the PRNG and the race odds are identical with or without it. One pass serves both the race
+ * table and the path card, which is half the CPU of simulating each separately.
  */
-export function simulatePlayoffs(
-  teams: LeagueTeam[],
-  schedule: ScheduledGame[],
-  options: { playoffTeams: number; divisions: number; simulations?: number; seed?: number; divisionByRoster?: Map<number, number> },
-): Map<number, Omit<PlayoffRow, "name" | "manager" | "avatar" | "isUser" | "division" | "wins" | "losses" | "ties" | "pointsFor">> {
+function runSimulation(teams: SimSourceTeam[], schedule: ScheduledGame[], options: SimulationOptions, trackRosterId?: number): { race: Map<number, RaceOdds>; path: PathAnalysis | null } {
   const runs = options.simulations ?? SIMULATIONS;
   const random = createRandom(options.seed ?? 1);
   const playoffTeams = Math.max(2, Math.min(teams.length, options.playoffTeams));
@@ -333,6 +343,27 @@ export function simulatePlayoffs(
     winTotals: [] as number[],
   }]));
 
+  const tracking = trackRosterId !== undefined && teams.some((team) => team.rosterId === trackRosterId);
+  // Per opponent: how often the tracked team met them in a bracket at all, and how often it won.
+  const met = new Map<number, { faced: number; beat: number }>();
+  // Per bracket round: how often the tracked team was still alive to play it, and how often it advanced.
+  const byRound = new Map<number, { reached: number; won: number }>();
+  let qualified = 0;
+  let trackedTitles = 0;
+  const observe: BracketObserver = ({ round, home, away, winner }) => {
+    if (home.rosterId !== trackRosterId && away.rosterId !== trackRosterId) return;
+    const opponent = home.rosterId === trackRosterId ? away : home;
+    const entry = met.get(opponent.rosterId) ?? { faced: 0, beat: 0 };
+    entry.faced += 1;
+    if (winner.rosterId === trackRosterId) entry.beat += 1;
+    met.set(opponent.rosterId, entry);
+
+    const roundEntry = byRound.get(round) ?? { reached: 0, won: 0 };
+    roundEntry.reached += 1;
+    if (winner.rosterId === trackRosterId) roundEntry.won += 1;
+    byRound.set(round, roundEntry);
+  };
+
   for (let run = 0; run < runs; run += 1) {
     const state = new Map(base.map((team) => [team.rosterId, { ...team }]));
 
@@ -359,19 +390,23 @@ export function simulatePlayoffs(
       if (index < byeTeams) record.byes += 1;
     }
 
-    const champion = simulateBracket(seeded.slice(0, playoffTeams), byeTeams, random);
+    const field = seeded.slice(0, playoffTeams);
+    const trackedIn = tracking && field.some((team) => team.rosterId === trackRosterId);
+    if (trackedIn) qualified += 1;
+    const champion = simulateBracket(field, byeTeams, random, trackedIn ? observe : undefined);
     const winner = tally.get(champion);
     if (winner) winner.titles += 1;
+    if (trackedIn && champion === trackRosterId) trackedTitles += 1;
   }
 
   const started = schedule.some((game) => game.played);
-  const result = new Map<number, Omit<PlayoffRow, "name" | "manager" | "avatar" | "isUser" | "division" | "wins" | "losses" | "ties" | "pointsFor">>();
+  const race = new Map<number, RaceOdds>();
   for (const team of teams) {
     const record = tally.get(team.rosterId);
     if (!record) continue;
     const sortedWins = record.winTotals.toSorted((a, b) => a - b);
     const playoffOdds = (record.made / runs) * 100;
-    result.set(team.rosterId, {
+    race.set(team.rosterId, {
       rosterId: team.rosterId,
       ppg: ppgByRoster.get(team.rosterId) ?? leagueAvgPpg,
       playoffOdds,
@@ -385,102 +420,7 @@ export function simulatePlayoffs(
     });
   }
 
-  return result;
-}
-
-/** Win probability for a single game between two mean scoring levels. */
-export function winProbability(mine: number, theirs: number): number {
-  // The difference of two normals is normal with a √2-scaled spread.
-  const z = (mine - theirs) / (SCORE_STDDEV * Math.SQRT2);
-  // Logistic approximation to the normal CDF — within a point of exact across the useful range.
-  return (1 / (1 + Math.exp(-1.702 * z))) * 100;
-}
-
-/**
- * Simulate one team's road to the title: who it runs into, and how often it gets past them.
- *
- * This re-runs the same Monte Carlo as `simulatePlayoffs` but records, for the tracked team,
- * every bracket opponent it drew and whether it survived that game. The regular-season half is
- * identical, so the qualification rate this produces matches the race table's playoff odds.
- */
-export function simulatePlayoffPath(
-  teams: LeagueTeam[],
-  schedule: ScheduledGame[],
-  rosterId: number,
-  options: { playoffTeams: number; divisions: number; simulations?: number; seed?: number; divisionByRoster?: Map<number, number> },
-): PathAnalysis | null {
-  if (!teams.some((team) => team.rosterId === rosterId)) return null;
-
-  const runs = options.simulations ?? SIMULATIONS;
-  const random = createRandom(options.seed ?? 1);
-  const playoffTeams = Math.max(2, Math.min(teams.length, options.playoffTeams));
-  const byeTeams = 2 ** Math.ceil(Math.log2(playoffTeams)) - playoffTeams;
-
-  const games = teams.map((team) => team.wins + team.losses + team.ties);
-  const measured = teams.map((team, index) => (games[index] ? team.pointsFor / games[index] : null)).filter((value): value is number => value !== null);
-  const leagueAvgPpg = measured.length ? measured.reduce((sum, value) => sum + value, 0) / measured.length : 110;
-  const values = teams.map((team) => team.value || 0);
-  const valueSpread = Math.max(...values) - Math.min(...values);
-  const valueMin = Math.min(...values);
-  const scales = values.map((value) => (valueSpread ? ((value - valueMin) / valueSpread) * 2 - 1 : null));
-
-  const base: SimTeam[] = teams.map((team, index) => ({
-    rosterId: team.rosterId,
-    ppg: expectedPpg(team, scales[index], leagueAvgPpg),
-    wins: team.wins,
-    losses: team.losses,
-    ties: team.ties,
-    pointsFor: team.pointsFor,
-    division: options.divisionByRoster?.get(team.rosterId) ?? 0,
-  }));
-
-  const remaining = schedule.filter((game) => !game.played);
-  // Per opponent: how often we met them in a bracket at all, and how often we won that game.
-  const met = new Map<number, { faced: number; beat: number }>();
-  // Per bracket round: how often we were still alive to play it, and how often we advanced.
-  const byRound = new Map<number, { reached: number; won: number }>();
-  let qualified = 0;
-  let titles = 0;
-
-  for (let run = 0; run < runs; run += 1) {
-    const state = new Map(base.map((team) => [team.rosterId, { ...team }]));
-
-    for (const game of remaining) {
-      const home = state.get(game.home);
-      const away = state.get(game.away);
-      if (!home || !away) continue;
-      const homeScore = home.ppg + normal(random) * SCORE_STDDEV;
-      const awayScore = away.ppg + normal(random) * SCORE_STDDEV;
-      home.pointsFor += homeScore;
-      away.pointsFor += awayScore;
-      if (homeScore > awayScore) { home.wins += 1; away.losses += 1; }
-      else { away.wins += 1; home.losses += 1; }
-    }
-
-    const seeded = seedOrder([...state.values()], options.divisions);
-    const field = seeded.slice(0, playoffTeams);
-    if (!field.some((team) => team.rosterId === rosterId)) {
-      // Still play the bracket out so the shared PRNG stream stays aligned with the odds run.
-      simulateBracket(field, byeTeams, random);
-      continue;
-    }
-    qualified += 1;
-
-    const champion = simulateBracket(field, byeTeams, random, ({ round, home, away, winner }) => {
-      if (home.rosterId !== rosterId && away.rosterId !== rosterId) return;
-      const opponent = home.rosterId === rosterId ? away : home;
-      const entry = met.get(opponent.rosterId) ?? { faced: 0, beat: 0 };
-      entry.faced += 1;
-      if (winner.rosterId === rosterId) entry.beat += 1;
-      met.set(opponent.rosterId, entry);
-
-      const roundEntry = byRound.get(round) ?? { reached: 0, won: 0 };
-      roundEntry.reached += 1;
-      if (winner.rosterId === rosterId) roundEntry.won += 1;
-      byRound.set(round, roundEntry);
-    });
-    if (champion === rosterId) titles += 1;
-  }
+  if (!tracking || trackRosterId === undefined) return { race, path: null };
 
   const nameByRoster = new Map(teams.map((team) => [team.rosterId, team]));
   const threats: PathThreat[] = [...met.entries()]
@@ -503,15 +443,69 @@ export function simulatePlayoffPath(
     }));
 
   return {
-    rosterId,
-    playoffOdds: (qualified / runs) * 100,
-    titleOdds: (titles / runs) * 100,
-    // The question a manager actually asks in week 10: "if I get in, can I win it?"
-    titleOddsIfQualified: qualified ? (titles / qualified) * 100 : 0,
-    rounds,
-    threats,
+    race,
+    path: {
+      rosterId: trackRosterId,
+      playoffOdds: (qualified / runs) * 100,
+      titleOdds: (trackedTitles / runs) * 100,
+      // The question a manager actually asks in week 10: "if I get in, can I win it?"
+      titleOddsIfQualified: qualified ? (trackedTitles / qualified) * 100 : 0,
+      rounds,
+      threats,
+    },
   };
 }
+
+/** The league-wide race: playoff, bye, seed and title odds for every team. */
+export function simulatePlayoffs(teams: SimSourceTeam[], schedule: ScheduledGame[], options: SimulationOptions): Map<number, RaceOdds> {
+  return runSimulation(teams, schedule, options).race;
+}
+
+/**
+ * One team's road to the title: who it runs into, and how often it gets past them. Drawn from
+ * the same runs as `simulatePlayoffs`, so its qualification rate matches the race table's odds.
+ */
+export function simulatePlayoffPath(teams: SimSourceTeam[], schedule: ScheduledGame[], rosterId: number, options: SimulationOptions): PathAnalysis | null {
+  return runSimulation(teams, schedule, options, rosterId).path;
+}
+
+/** Win probability for a single game between two mean scoring levels. */
+export function winProbability(mine: number, theirs: number): number {
+  // The difference of two normals is normal with a √2-scaled spread.
+  const z = (mine - theirs) / (SCORE_STDDEV * Math.SQRT2);
+  // Logistic approximation to the normal CDF — within a point of exact across the useful range.
+  return (1 / (1 + Math.exp(-1.702 * z))) * 100;
+}
+
+type SimulationInput = {
+  teams: SimSourceTeam[];
+  schedule: ScheduledGame[];
+  playoffTeams: number;
+  divisions: number;
+  divisionByRoster: [number, number][];
+  seed: number;
+  trackRosterId: number | null;
+};
+
+/**
+ * The simulation, cached on its own inputs.
+ *
+ * Ten thousand seeded runs take most of a second of CPU, and the inputs only change when a week
+ * is scored or roster values move — so the dashboard and standings pages, and every viewer of the
+ * same league, share one result in Next's data cache instead of re-simulating on every render.
+ * The inputs are the key, so a stale entry is impossible: changed inputs are a different entry,
+ * and `revalidate` only bounds how long an unused one is kept. Bump the key version whenever the
+ * model itself changes.
+ */
+const simulateCached = unstable_cache(
+  async (input: SimulationInput) => {
+    const options = { playoffTeams: input.playoffTeams, divisions: input.divisions, divisionByRoster: new Map(input.divisionByRoster), seed: input.seed };
+    const { race, path } = runSimulation(input.teams, input.schedule, options, input.trackRosterId ?? undefined);
+    return { race: [...race], path };
+  },
+  ["playoff-odds", "v1"],
+  { revalidate: 86400 },
+);
 
 export async function getPlayoffPicture(leagueId: string, username?: string, source: LeagueSource = liveSource): Promise<PlayoffPicture> {
   const [context, account] = await Promise.all([
@@ -528,7 +522,7 @@ export async function getPlayoffPicture(leagueId: string, username?: string, sou
     Promise.all(
       Array.from({ length: finalWeek }, (_, index) => index + 1).map(async (week) => ({
         week,
-        matchups: await source.getMatchups(leagueId, week).catch(() => [] as SleeperMatchup[]),
+        matchups: await source.getMatchups(leagueId, week, settledTtl(context.league, context.state, week)).catch(() => [] as SleeperMatchup[]),
       })),
     ),
     // A league with no bracket published yet simply renders no bracket card.
@@ -541,7 +535,15 @@ export async function getPlayoffPicture(leagueId: string, username?: string, sou
   const divisionByRoster = new Map([...context.base.teamByRoster].map(([rosterId, identity]) => [rosterId, identity.division]));
   // One seed for both simulations, so the path analysis and the race table describe the same season.
   const seed = Number(leagueId.slice(-8)) || 1;
-  const simulated = simulatePlayoffs(context.teams, schedule, { playoffTeams, divisions, divisionByRoster, seed });
+  const { race, path } = await simulateCached({
+    teams: context.teams.map(({ rosterId, name, wins, losses, ties, pointsFor, value }) => ({ rosterId, name, wins, losses, ties, pointsFor, value })),
+    // Scores are dropped: records come from the rosters, and unplayed scores move every live
+    // refresh, which would turn each poll into a cache miss without changing a single odd.
+    schedule: schedule.map(({ week, home, away, played }) => ({ week, home, away, homeScore: 0, awayScore: 0, played })),
+    playoffTeams, divisions, divisionByRoster: [...divisionByRoster], seed,
+    trackRosterId: team?.rosterId ?? null,
+  });
+  const simulated = new Map(race);
 
   const rows: PlayoffRow[] = context.teams
     .map((entry) => {
@@ -585,8 +587,6 @@ export async function getPlayoffPicture(leagueId: string, username?: string, sou
     : [];
 
   const weeksPlayed = new Set(schedule.filter((game) => game.played).map((game) => game.week)).size;
-
-  const path = team ? simulatePlayoffPath(context.teams, schedule, team.rosterId, { playoffTeams, divisions, divisionByRoster, seed }) : null;
 
   return {
     winnersBracket: buildBracket(winnersGames, rows, "winners"),

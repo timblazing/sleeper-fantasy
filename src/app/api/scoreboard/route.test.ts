@@ -19,7 +19,7 @@ describe("NFL scoreboard routes", () => {
       games: [],
       updatedAt: "now",
     });
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/scoreboard"));
     expect(response.status).toBe(200);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
     expect(await response.json()).toMatchObject({ week: 3 });
@@ -28,7 +28,7 @@ describe("NFL scoreboard routes", () => {
     vi.mocked(getCurrentNflScoreboard).mockRejectedValue(
       new Error("private provider details"),
     );
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/scoreboard"));
     expect(response.status).toBe(502);
     expect(JSON.stringify(await response.json())).not.toContain(
       "private provider details",

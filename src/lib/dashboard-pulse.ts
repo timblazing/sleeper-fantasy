@@ -1,6 +1,7 @@
 import { getLeagueValueContext, type LeagueValueContext } from "@/lib/league-values";
 import { liveSource, type LeagueSource } from "@/lib/league-source";
 import { scoreProjection, type WeeklyProjection } from "@/lib/projections";
+import { settledTtl } from "@/lib/sleeper";
 import type { NflPlayer, SleeperMatchup } from "@/lib/types";
 
 export type ScoringWeek = { week: number; average: number; scores: Record<number, number> };
@@ -45,7 +46,7 @@ export async function getDashboardPulse(leagueId: string, source: LeagueSource =
   const weeks = Array.from({ length: Math.min(6, Math.max(0, lastWeek)) }, (_, i) => lastWeek - Math.min(6, lastWeek) + i + 1);
   const [history, projections] = await Promise.all([
     Promise.all(weeks.map(async week => {
-      try { return { ok: true, row: scoringWeek(week, await source.getMatchups(leagueId, week)) }; }
+      try { return { ok: true, row: scoringWeek(week, await source.getMatchups(leagueId, week, settledTtl(context.league, context.state, week))) }; }
       catch { return { ok: false, row: null }; }
     })),
     sameSeason && context.regularSeason ? source.getWeeklyProjections(context.league.season, context.matchupWeek).catch(() => new Map<string, WeeklyProjection>()) : new Map<string, WeeklyProjection>(),

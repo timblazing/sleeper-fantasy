@@ -1,6 +1,6 @@
 import "server-only";
 import type { ZodType } from "zod";
-import { fetchCached, HttpError } from "@/lib/fetch-cached";
+import { fetchCached, HttpError, REQUEST_TIMEOUT_MS } from "@/lib/fetch-cached";
 import { parseAttribution } from "@/lib/roster-audit/schemas";
 import type { RaError, RaResult } from "@/lib/roster-audit/types";
 
@@ -29,7 +29,7 @@ export async function raFetch<T>(path: string, schema: ZodType<T>, options: { tt
 
   if (method === "POST") {
     try {
-      const response = await fetch(`${API}${path}`, { method: "POST", headers: { "Content-Type": "application/json", "User-Agent": "Sleeper Fantasy/0.1", ...headers }, body: JSON.stringify(options.body ?? {}) });
+      const response = await fetch(`${API}${path}`, { method: "POST", headers: { "Content-Type": "application/json", "User-Agent": "Sleeper Fantasy/0.1", ...headers }, body: JSON.stringify(options.body ?? {}), signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
       const json = await response.json().catch(() => undefined);
       if (!response.ok) return { ok: false, error: classifyStatus(response.status, json, Boolean(apiKey), `${response.status} upstream error`) };
       payload = json;

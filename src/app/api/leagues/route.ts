@@ -1,11 +1,19 @@
 import { classifyLookupFailure } from "@/lib/account-lookup";
+import { getClientAddress, rateLimited } from "@/lib/client-address";
+import { createRequestRateLimiter } from "@/lib/request-rate-limit";
 import { getNflLeaguesForUsername } from "@/lib/sleeper";
+
+// A username lookup fans out to one Sleeper league read per league the user is in, so it gets its
+// own budget rather than sharing the trade calculator's.
+const limiter = createRequestRateLimiter(30);
 
 export async function GET(request: Request) {
   const username = new URL(request.url).searchParams.get("username")?.trim() ?? "";
   if (!username || username.length > 50) {
     return Response.json({ error: "Enter a valid Sleeper username." }, { status: 400 });
   }
+
+  if (!limiter.isAllowed(getClientAddress(request.headers))) return rateLimited("Too many lookups. Try again shortly.");
 
   try {
     const account = await getNflLeaguesForUsername(username);

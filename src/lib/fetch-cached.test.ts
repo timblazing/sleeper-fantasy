@@ -15,6 +15,38 @@ async function rejection(promise: Promise<unknown>): Promise<HttpError> {
 describe("fetchCached", () => {
   afterEach(() => vi.unstubAllGlobals());
 
+  it("passes an abort signal so a stalled upstream cannot hang forever", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(response(200, "{}"));
+    vi.stubGlobal("fetch", fetchMock);
+    await fetchCached("https://x.test/k", { ttl: 60 });
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(init.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("gives each retry attempt a fresh signal", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(response(503, "{}"));
+    vi.stubGlobal("fetch", fetchMock);
+    await fetchCached("https://x.test/l", { ttl: 60 }).catch(() => undefined);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    const signals = fetchMock.mock.calls.map((call) => (call[1] as RequestInit).signal);
+    expect(new Set(signals).size).toBe(3);
+  });
+
+  it("stops retrying once the total request budget is spent", async () => {
+    vi.useFakeTimers();
+    try {
+      // Each attempt "takes" 9s, so after the first one there is no room for a second inside 15s.
+      const fetchMock = vi.fn().mockImplementation(async () => { vi.advanceTimersByTime(9_000); return response(503, "{}"); });
+      vi.stubGlobal("fetch", fetchMock);
+      const pending = fetchCached("https://x.test/m", { ttl: 60 }).catch((error: unknown) => error);
+      await vi.runAllTimersAsync();
+      expect(await pending).toBeInstanceOf(HttpError);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("returns the parsed JSON body on success", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response(200, '{"value":1}')));
     await expect(fetchCached<{ value: number }>("https://x.test/a", { ttl: 60 })).resolves.toEqual({ value: 1 });

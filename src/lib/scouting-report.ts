@@ -1,7 +1,8 @@
 import { getLeagueValueContext, ROOM_POSITIONS, type LeagueTeam, type RoomPosition } from "@/lib/league-values";
 import { liveSource, type LeagueSource } from "@/lib/league-source";
 import { getHeadToHead, getLeagueManagers, getManagerCareer } from "@/lib/roster-audit";
-import { getLeagueLineage, getLeagueRosters, getUserLeagues } from "@/lib/sleeper";
+import { FINISHED_SEASON_TTL, getLeagueLineage, getLeagueRosters, getUserLeagues, settledTtl } from "@/lib/sleeper";
+import type { CacheTtl } from "@/lib/fetch-cached";
 import type { NflPlayer, SleeperDraftPick, SleeperTransaction } from "@/lib/types";
 import type { ValueBasis } from "@/lib/value-basis";
 
@@ -172,10 +173,12 @@ export type Lineage = { leagueId: string; transactions: SleeperTransaction[]; dr
  * Weeks are fetched in parallel per season but seasons run in sequence, so a league with no
  * history costs one season's worth of requests rather than the cap's worth.
  */
-async function readLineage(leagueIds: string[], source: LeagueSource): Promise<Lineage[]> {
-  return Promise.all(leagueIds.map(async (leagueId) => {
+async function readLineage(leagueIds: string[], source: LeagueSource, currentWeekTtl: (week: number) => CacheTtl): Promise<Lineage[]> {
+  return Promise.all(leagueIds.map(async (leagueId, seasonIndex) => {
+    // Every league behind the newest one is a finished season, so its transactions never change.
+    const ttlFor = (week: number) => (seasonIndex === 0 ? currentWeekTtl(week) : FINISHED_SEASON_TTL);
     const weeks = await Promise.all(
-      Array.from({ length: MAX_WEEK }, (_, index) => source.getTransactions(leagueId, index + 1).catch(() => [] as SleeperTransaction[])),
+      Array.from({ length: MAX_WEEK }, (_, index) => source.getTransactions(leagueId, index + 1, ttlFor(index + 1)).catch(() => [] as SleeperTransaction[])),
     );
     const drafts = await source.getLeagueDrafts(leagueId).catch(() => []);
     const draftPicks = (await Promise.all(drafts.map((draft) => source.getDraftPicks(draft.draft_id).catch(() => [] as SleeperDraftPick[])))).flat();
@@ -309,7 +312,8 @@ async function buildCrushes(userId: string, season: string, currentLeagueId: str
   if (!others.length) return { crushes: [], scanned: 0 };
 
   const rosterSets = await Promise.all(others.map(async (league) => {
-    const rosters = await getLeagueRosters(league.league_id).catch(() => []);
+    // Holdings are a taste signal, not a live roster view; an hour of staleness costs nothing here.
+    const rosters = await getLeagueRosters(league.league_id, 3600).catch(() => []);
     return rosters.find((roster) => roster.owner_id === userId)?.players ?? [];
   }));
   const scanned = rosterSets.filter((players) => players.length > 0).length;
@@ -659,7 +663,7 @@ export async function getScoutingReport(leagueId: string, username?: string, sou
 
   const lineageIds = await getLeagueLineage(leagueId, LINEAGE_LIMIT).catch(() => [leagueId]);
   const [lineage, managersResult] = await Promise.all([
-    readLineage(lineageIds, source),
+    readLineage(lineageIds, source, (week) => settledTtl(context.league, context.state, week)),
     getLeagueManagers(leagueId).catch(() => ({ ok: false as const, error: { kind: "upstream-unavailable" as const, message: "unavailable", retryable: true } })),
   ]);
 

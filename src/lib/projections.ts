@@ -1,4 +1,5 @@
 import "server-only";
+import { REQUEST_TIMEOUT_MS } from "@/lib/fetch-cached";
 import { createMemo } from "@/lib/memo";
 
 type SleeperProjection = {
@@ -18,6 +19,7 @@ async function loadWeeklyProjections(key: string): Promise<Map<string, WeeklyPro
   const response = await fetch(`${API}/projections/nfl/${season}/${week}?season_type=regular`, {
     cache: "no-store",
     headers: { "User-Agent": "Sleeper Fantasy/0.1" },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   if (!response.ok) throw new Error(`Sleeper projections returned ${response.status}`);
   const rows = (await response.json()) as SleeperProjection[];

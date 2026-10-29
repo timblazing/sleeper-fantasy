@@ -14,9 +14,9 @@ status row when complete.
 | 001 | Make malformed account cookies fail closed | P1 | S | — | DONE |
 | 002 | Bound public trade-calculation requests | P1 | M | — | DONE |
 | 003 | Add API route boundary coverage | P2 | M | — | DONE |
-| 004 | Give every server-side outbound fetch a timeout | P1 | S | — | TODO |
+| 004 | Give every server-side outbound fetch a timeout | P1 | S | — | DONE |
 | 005 | Cover season-phase and outlook logic with tests | P2 | M | — | TODO |
-| 006 | Rate-limit the remaining public API routes | P2 | M | — | TODO |
+| 006 | Rate-limit the remaining public API routes | P2 | M | — | DONE |
 | 007 | Adopt current design system + light/dark toggle | P1 | M | — | DONE |
 | 008 | Landing page replaces the connect dialog | P1 | M | 007 | DONE |
 | 009 | Sidebar IA + split dashboard into pages | P1 | L | 007 | DONE |
@@ -58,6 +58,8 @@ are stated relative to that 421-test baseline.
 - Plan 008: executed on `main` (landing page at `/` with masked dot-field hero, pill username form, in-page league picker, `?league=` preselect, features strip, footer; connect dialog removed; "Switch account" in NavUser); typecheck, lint, test (59 files, 485 tests) and build pass; browser-verified at 1440 and 393 in both themes.
 - Plan 009: executed on `main` (League/Players/Tools sidebar with WK badge on Matchups; new Standings, Teams, Activity, History and Injuries pages with loading skeletons; dashboard slimmed to a playoff-odds mini list and 4 recent moves linking out; `/players?view=injuries` redirects to `/injuries`; `/teams/[id]` direct loads render the Teams grid behind the sheet); typecheck, lint, test and build pass; browser-verified at 1440 and 393 in both themes, both league formats.
 - Plan 010: executed on `main` (⌘K / Ctrl+K command palette on shadcn `command`/cmdk with Pages, Teams, Players, Leagues and Theme groups, search button in the header, new `/api/leagues/[leagueId]/teams` route; flat bordered summary metric cards; Roster edge layout tightened; Rankings/Scouting Report titles aligned with the sidebar); typecheck, lint, test and build pass; browser-verified at 1440 and 393 in both themes, both leagues, no horizontal overflow at 393.
+
+- Plans 004 and 006: executed on `perf/cloudflare-readiness` (2026-10-29) as part of Cloudflare Workers readiness; see `docs/cloudflare-migration.md`. Deviations, decided at review: `fetchCached` also has a 15 s total budget across retries (the plan only added per-attempt timeouts); the avatar route answers 504 on a timed-out upstream instead of throwing; player search gets 120 requests per 10 min rather than 20, because the trade calculator and command palette search on a 150–250 ms debounce (plan 006's own STOP condition); the teams, scoreboard and game-summary routes are limited too; `getClientAddress` validates with zod instead of `node:net`. typecheck, lint, test (66 files, 523 tests) and build pass.
 
 ## Findings considered and rejected
 

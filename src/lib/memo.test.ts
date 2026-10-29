@@ -78,4 +78,26 @@ describe("createMemo", () => {
     await memo.get("a");
     expect(load).toHaveBeenCalledTimes(2);
   });
+
+  it("chooses the TTL from the loaded value", async () => {
+    const load = vi.fn(async (key: string) => key);
+    const memo = createMemo({ load, ttlMs: (value: string) => (value === "final" ? 10_000 : 1000), onError: "throw" });
+    await memo.get("final");
+    await memo.get("live");
+    vi.advanceTimersByTime(1001);
+    await memo.get("final");
+    await memo.get("live");
+    expect(load.mock.calls.map(([key]) => key)).toEqual(["final", "live", "live"]);
+  });
+
+  it("evicts the oldest-written key once maxKeys is reached", async () => {
+    const load = vi.fn(async (key: string) => key);
+    const memo = createMemo({ load, ttlMs: 10_000, maxKeys: 2, onError: "throw" });
+    await memo.get("a");
+    await memo.get("b");
+    await memo.get("c");
+    await memo.get("b");
+    await memo.get("a");
+    expect(load.mock.calls.map(([key]) => key)).toEqual(["a", "b", "c", "a"]);
+  });
 });
