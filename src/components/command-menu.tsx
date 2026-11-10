@@ -7,6 +7,7 @@ import { Monitor, Moon, Search, Sun, TrophyIcon, UserRound, UsersRoundIcon } fro
 import { Button } from "@/components/ui/button";
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator, CommandShortcut } from "@/components/ui/command";
 import { useAccount } from "@/hooks/use-account";
+import { type Answer, readJson, viewOf } from "@/lib/async-view";
 import type { LeagueChrome } from "@/lib/league-chrome";
 import { leagueNav, playersNav, resourcesNav, toolsNav } from "@/lib/nav";
 import { withUsername } from "@/lib/utils";
@@ -29,7 +30,7 @@ export function CommandMenu({ league }: { league: LeagueChrome }) {
   const [query, setQuery] = useState("");
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
-  const [players, setPlayers] = useState<{ query: string; items: MarketPlayer[] }>({ query: "", items: [] });
+  const [players, setPlayers] = useState<Answer<MarketPlayer[]> | null>(null);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -54,17 +55,22 @@ export function CommandMenu({ league }: { league: LeagueChrome }) {
   }, [open, league.id, loadedFor]);
 
   const term = query.trim();
+  const playerKey = term.length >= MIN_QUERY ? term : null;
+  const playerSearch = viewOf(playerKey, players);
   useEffect(() => {
-    if (term.length < MIN_QUERY) return;
+    if (playerKey === null) return;
     const controller = new AbortController();
-    const timer = setTimeout(() => {
-      fetch(`/api/leagues/${league.id}/players?q=${encodeURIComponent(term)}`, { signal: controller.signal })
-        .then((response) => (response.ok ? (response.json() as Promise<{ players: MarketPlayer[] }>) : null))
-        .then((data) => { if (data) setPlayers({ query: term, items: data.players.slice(0, PLAYER_LIMIT) }); })
-        .catch(() => {});
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/leagues/${league.id}/players?q=${encodeURIComponent(playerKey)}`, { signal: controller.signal });
+        const data = await readJson<{ players: MarketPlayer[] }>(response);
+        setPlayers(response.ok ? { key: playerKey, ok: true, value: (data.players ?? []).slice(0, PLAYER_LIMIT) } : { key: playerKey, ok: false, error: "Player search is unavailable." });
+      } catch {
+        if (!controller.signal.aborted) setPlayers({ key: playerKey, ok: false, error: "Player search is unavailable." });
+      }
     }, 250);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [term, league.id]);
+  }, [playerKey, league.id]);
 
   const setOpenAndReset = useCallback((next: boolean) => { setOpen(next); if (!next) setQuery(""); }, []);
   const go = useCallback((href: string) => {
@@ -73,7 +79,7 @@ export function CommandMenu({ league }: { league: LeagueChrome }) {
   }, [router, username, setOpenAndReset]);
   const pick = useCallback((action: () => void) => { setOpenAndReset(false); action(); }, [setOpenAndReset]);
 
-  const matches = players.query === term && term.length >= MIN_QUERY ? players.items : [];
+  const matches = playerSearch.status === "done" ? playerSearch.value : [];
   const otherLeagues = (account?.leagues ?? []).filter((option) => option.id !== league.id);
 
   return (
@@ -92,7 +98,7 @@ export function CommandMenu({ league }: { league: LeagueChrome }) {
         <Command>
           <CommandInput value={query} onValueChange={setQuery} placeholder="Search pages, teams, players…" />
           <CommandList>
-            {matches.length ? null : <CommandEmpty>No results found.</CommandEmpty>}
+            {matches.length ? null : <CommandEmpty>{playerSearch.status === "pending" ? "Searching players…" : "No results found."}</CommandEmpty>}
             <CommandGroup heading="Pages">
               {PAGES.map(({ title, segment, icon: Icon }) => (
                 <CommandItem key={title} value={`page ${title}`} onSelect={() => go(`/${league.id}${segment ? `/${segment}` : ""}${segment === "matchups" ? `/${league.matchupWeek}` : ""}`)}>

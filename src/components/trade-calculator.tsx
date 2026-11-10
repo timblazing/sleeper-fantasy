@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { type Answer, readJson, viewOf } from "@/lib/async-view";
 import { headshotUrl } from "@/lib/display";
 import type { MarketPlayer } from "@/lib/player-market";
 import type { RaTrade, TradeAssetInput } from "@/lib/roster-audit";
@@ -26,6 +27,8 @@ type CalculateResponse = { trade?: RaTrade; error?: string };
 const formatter = new Intl.NumberFormat("en-US");
 const ANY_TEAM = "any";
 const SUGGESTION_LIMIT = 8;
+const SEARCH_UNAVAILABLE = "Player search is unavailable. Try another search or select a roster.";
+const CALCULATION_FAILED = "The trade could not be calculated.";
 
 const playerAsset = (player: TradePlayer | MarketPlayer["player"] & { value?: number }, value: number): StagedAsset => ({
   key: `player:${player.id}`,
@@ -104,9 +107,7 @@ function Side({ data, title, description, teamId, onTeamChange, assets, onAdd, o
   onRemove: (key: string) => void;
 }) {
   const [query, setQuery] = React.useState("");
-  const [remote, setRemote] = React.useState<MarketPlayer[]>([]);
-  const [isSearching, setIsSearching] = React.useState(false);
-  const [searchError, setSearchError] = React.useState(false);
+  const [answer, setAnswer] = React.useState<Answer<MarketPlayer[]> | null>(null);
   const trimmed = query.trim();
   const roster = teamId === ANY_TEAM ? null : data.teams.find((team) => String(team.rosterId) === teamId) ?? null;
   const staged = new Set(assets.map((asset) => asset.key));
@@ -115,29 +116,27 @@ function Side({ data, title, description, teamId, onTeamChange, assets, onAdd, o
 
   // Roster mode filters a list we already hold; hypothetical mode has to ask the server,
   // which is also the only path that can reach players nobody in the league rosters.
+  const searchKey = roster || !trimmed ? null : trimmed;
+  const search = viewOf(searchKey, answer);
+
   React.useEffect(() => {
-    if (roster || !trimmed) return;
+    if (searchKey === null) return;
     const controller = new AbortController();
     const timeout = window.setTimeout(async () => {
       try {
-        const response = await fetch(`/api/leagues/${data.league.id}/players?q=${encodeURIComponent(trimmed)}`, { signal: controller.signal });
-        const payload = await response.json() as { players?: MarketPlayer[] };
-        setRemote(response.ok ? payload.players ?? [] : []);
-        setSearchError(!response.ok);
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setRemote([]);
-        setSearchError(true);
-      } finally {
-        if (!controller.signal.aborted) setIsSearching(false);
+        const response = await fetch(`/api/leagues/${data.league.id}/players?q=${encodeURIComponent(searchKey)}`, { signal: controller.signal });
+        const payload = await readJson<{ players: MarketPlayer[] }>(response);
+        setAnswer(response.ok ? { key: searchKey, ok: true, value: payload.players ?? [] } : { key: searchKey, ok: false, error: SEARCH_UNAVAILABLE });
+      } catch {
+        if (!controller.signal.aborted) setAnswer({ key: searchKey, ok: false, error: SEARCH_UNAVAILABLE });
       }
     }, 150);
     return () => { window.clearTimeout(timeout); controller.abort(); };
-  }, [data.league.id, roster, trimmed]);
+  }, [data.league.id, searchKey]);
 
   const playerSuggestions: StagedAsset[] = roster
     ? roster.players.filter((player) => player.name.toLowerCase().includes(trimmed.toLowerCase())).map((player) => playerAsset(player, player.value))
-    : trimmed ? remote.map((entry) => playerAsset(entry.player, entry.value)) : [];
+    : search.status === "done" ? search.value.map((entry) => playerAsset(entry.player, entry.value)) : [];
   const pickSuggestions = data.picks.filter((pick) => !trimmed || pick.label.toLowerCase().includes(trimmed.toLowerCase())).map(pickAsset);
   const suggestions = [...playerSuggestions, ...(trimmed ? pickSuggestions : pickSuggestions.slice(0, 3))].filter((asset) => !staged.has(asset.key)).slice(0, SUGGESTION_LIMIT);
   const total = sumValues(assets.map((asset) => asset.value));
@@ -146,7 +145,7 @@ function Side({ data, title, description, teamId, onTeamChange, assets, onAdd, o
     <CardHeader>
       <div className="flex items-center justify-between gap-3"><CardTitle>{title}</CardTitle><Badge variant="secondary">{assets.length} {assets.length === 1 ? "asset" : "assets"}</Badge></div>
       <CardDescription>{description}</CardDescription>
-      <div className="mt-3"><TeamSelect label={`${title} — team`} onChange={(next) => { onTeamChange(next); setQuery(""); setRemote([]); setSearchError(false); setIsSearching(false); }} teams={data.teams} value={teamId} /></div>
+      <div className="mt-3"><TeamSelect label={`${title} — team`} onChange={(next) => { onTeamChange(next); setQuery(""); }} teams={data.teams} value={teamId} /></div>
     </CardHeader>
     <CardContent className="flex flex-1 flex-col gap-4">
       <div className="overflow-hidden rounded-lg border">
@@ -161,13 +160,13 @@ function Side({ data, title, description, teamId, onTeamChange, assets, onAdd, o
 
       <div className="relative">
         <SearchIcon aria-hidden="true" className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input aria-label={`Add an asset to ${title}`} className="h-10 pl-8" onChange={(event) => { const value = event.target.value; setQuery(value); setRemote([]); setSearchError(false); setIsSearching(!roster && Boolean(value.trim())); }} placeholder={roster ? `Search ${roster.name}${hasPicks ? " and picks" : ""}...` : hasPicks ? "Search any player or pick..." : "Search any player..."} type="search" value={query} />
+        <Input aria-label={`Add an asset to ${title}`} className="h-10 pl-8" onChange={(event) => setQuery(event.target.value)} placeholder={roster ? `Search ${roster.name}${hasPicks ? " and picks" : ""}...` : hasPicks ? "Search any player or pick..." : "Search any player..."} type="search" value={query} />
       </div>
 
-      <div aria-busy={isSearching} className="max-h-80 overflow-y-auto rounded-lg border">
+      <div aria-busy={search.status === "pending"} className="max-h-80 overflow-y-auto rounded-lg border">
         {suggestions.length
           ? <div className="divide-y">{suggestions.map((asset) => <SuggestionRow asset={asset} key={asset.key} onAdd={() => { onAdd(asset); setQuery(""); }} />)}</div>
-          : <p className="px-4 py-6 text-center text-sm text-muted-foreground">{isSearching ? "Searching..." : searchError ? "Player search is unavailable. Try another search or select a roster." : trimmed ? (hasPicks ? "No players or picks matched." : "No players matched.") : "Start typing to find a player."}</p>}
+          : <p className="px-4 py-6 text-center text-sm text-muted-foreground">{search.status === "pending" ? "Searching..." : search.status === "failed" ? search.error : trimmed ? (hasPicks ? "No players or picks matched." : "No players matched.") : "Start typing to find a player."}</p>}
       </div>
     </CardContent>
   </Card>;
@@ -225,62 +224,47 @@ export function TradeCalculator({ data }: { data: TradeLabData }) {
   const [sendTeam, setSendTeam] = React.useState(myTeam ? String(myTeam.rosterId) : ANY_TEAM);
   const [receive, setReceive] = React.useState<StagedAsset[]>([]);
   const [send, setSend] = React.useState<StagedAsset[]>([]);
-  const [trade, setTrade] = React.useState<RaTrade | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-  const [isCalculating, setIsCalculating] = React.useState(false);
+  const [answer, setAnswer] = React.useState<Answer<RaTrade> | null>(null);
 
   const hasAssets = receive.length > 0 || send.length > 0;
   const ready = receive.length > 0 && send.length > 0;
-  const add = (setter: React.Dispatch<React.SetStateAction<StagedAsset[]>>) => (asset: StagedAsset) => {
+  // The request body doubles as the answer's key: any edit makes the held verdict stale, so the
+  // comparison reads as pending until the answer for exactly this deal arrives.
+  const request = ready ? JSON.stringify({ leagueId: data.league.id, sideA: receive.map((asset) => asset.input), sideB: send.map((asset) => asset.input) }) : null;
+  const comparison = viewOf(request, answer);
+  const add = (setter: React.Dispatch<React.SetStateAction<StagedAsset[]>>) => (asset: StagedAsset) =>
     setter((current) => current.some((entry) => entry.key === asset.key) ? current : [...current, asset]);
-    setTrade(null);
-    setError(null);
-    setIsCalculating(false);
-  };
-  const remove = (setter: React.Dispatch<React.SetStateAction<StagedAsset[]>>) => (key: string) => {
+  const remove = (setter: React.Dispatch<React.SetStateAction<StagedAsset[]>>) => (key: string) =>
     setter((current) => current.filter((entry) => entry.key !== key));
-    setTrade(null);
-    setError(null);
-    setIsCalculating(false);
-  };
   const swap = () => {
     setReceive(send); setSend(receive);
     setReceiveTeam(sendTeam); setSendTeam(receiveTeam);
-    setTrade(null);
-    setError(null);
-    setIsCalculating(false);
   };
-  const clear = () => { setReceive([]); setSend([]); setTrade(null); setError(null); setIsCalculating(false); };
+  const clear = () => { setReceive([]); setSend([]); };
 
   // Wait for a short pause after each edit, then cancel any obsolete request. This keeps the
   // calculator feeling live without spending the upstream rate limit on rapid add/remove clicks.
   React.useEffect(() => {
-    if (!ready) return;
+    if (request === null) return;
 
     const controller = new AbortController();
     const timeout = window.setTimeout(async () => {
-      setIsCalculating(true);
       try {
         const response = await fetch("/api/roster-audit/trade", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ leagueId: data.league.id, sideA: receive.map((asset) => asset.input), sideB: send.map((asset) => asset.input) }),
+          body: request,
           signal: controller.signal,
         });
-        const payload = await response.json() as CalculateResponse;
-        if (!response.ok || !payload.trade) throw new Error(payload.error ?? "The trade could not be calculated.");
-        setTrade(payload.trade);
-      } catch (requestError) {
-        if (requestError instanceof DOMException && requestError.name === "AbortError") return;
-        setTrade(null);
-        setError(requestError instanceof Error ? requestError.message : "The trade could not be calculated.");
-      } finally {
-        if (!controller.signal.aborted) setIsCalculating(false);
+        const payload = await readJson<CalculateResponse>(response);
+        setAnswer(response.ok && payload.trade ? { key: request, ok: true, value: payload.trade } : { key: request, ok: false, error: payload.error ?? CALCULATION_FAILED });
+      } catch {
+        if (!controller.signal.aborted) setAnswer({ key: request, ok: false, error: CALCULATION_FAILED });
       }
     }, 350);
 
     return () => { window.clearTimeout(timeout); controller.abort(); };
-  }, [data.league.id, ready, receive, send]);
+  }, [request]);
 
 
   return <PageContainer className="flex flex-col gap-6">
@@ -299,11 +283,11 @@ export function TradeCalculator({ data }: { data: TradeLabData }) {
           <CardHeader><CardTitle>Deal overview</CardTitle><CardDescription>{data.league.name}</CardDescription></CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3 border-b pb-3"><span className="text-muted-foreground">Receive / send</span><span className="font-medium tabular-nums">{receive.length} / {send.length} assets</span></div>
-            <div aria-live="polite" className="flex items-start gap-2 text-sm text-muted-foreground">{isCalculating || ready && !trade && !error ? <LoaderCircleIcon className="mt-0.5 size-4 shrink-0 animate-spin" /> : <InfoIcon className="mt-0.5 size-4 shrink-0 text-info-foreground" />}<span>{isCalculating || ready && !trade && !error ? "Updating comparison…" : ready ? "Comparison updates as you edit." : "Add at least one asset to each side to calculate the deal."}</span></div>
+            <div aria-live="polite" className="flex items-start gap-2 text-sm text-muted-foreground">{comparison.status === "pending" ? <LoaderCircleIcon className="mt-0.5 size-4 shrink-0 animate-spin" /> : <InfoIcon className="mt-0.5 size-4 shrink-0 text-info-foreground" />}<span>{comparison.status === "pending" ? "Updating comparison…" : ready ? "Comparison updates as you edit." : "Add at least one asset to each side to calculate the deal."}</span></div>
             <div className="flex flex-wrap items-center gap-2"><Button disabled={!hasAssets} onClick={swap} size="sm" variant="outline"><ArrowUpDownIcon className="size-4" />Swap sides</Button><Button disabled={!hasAssets} onClick={clear} size="sm" variant="ghost">Clear all</Button></div>
           </CardContent>
         </Card>
-        {trade ? <Verdict basis={data.league.basis} trade={trade} /> : error ? <Card><CardContent role="alert" className="flex items-start gap-3 text-sm"><TriangleAlertIcon className="mt-0.5 size-4 shrink-0 text-destructive" /><div><p className="font-medium">Comparison unavailable</p><p className="mt-1 text-muted-foreground">{error}</p><p className="mt-2 text-xs text-muted-foreground">Your staged assets are saved here. Edit either side to try again.</p></div></CardContent></Card> : <Card><CardHeader><CardTitle>How to compare</CardTitle></CardHeader><CardContent className="space-y-3 text-sm text-muted-foreground"><p>Select each team’s roster, then add the assets they would send.</p><p>{dynasty ? "Draft picks use early, mid, or late slot estimates. Pick ownership is not verified." : "This redraft league compares projected production; future picks are excluded."}</p><p className="text-xs">Use “Any player” to explore a hypothetical deal.</p></CardContent></Card>}
+        {comparison.status === "done" ? <Verdict basis={data.league.basis} trade={comparison.value} /> : comparison.status === "failed" ? <Card><CardContent role="alert" className="flex items-start gap-3 text-sm"><TriangleAlertIcon className="mt-0.5 size-4 shrink-0 text-destructive" /><div><p className="font-medium">Comparison unavailable</p><p className="mt-1 text-muted-foreground">{comparison.error}</p><p className="mt-2 text-xs text-muted-foreground">Your staged assets are saved here. Edit either side to try again.</p></div></CardContent></Card> : <Card><CardHeader><CardTitle>How to compare</CardTitle></CardHeader><CardContent className="space-y-3 text-sm text-muted-foreground"><p>Select each team’s roster, then add the assets they would send.</p><p>{dynasty ? "Draft picks use early, mid, or late slot estimates. Pick ownership is not verified." : "This redraft league compares projected production; future picks are excluded."}</p><p className="text-xs">Use “Any player” to explore a hypothetical deal.</p></CardContent></Card>}
       </aside>
     </div>
   </PageContainer>;

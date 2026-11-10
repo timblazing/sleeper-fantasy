@@ -63,4 +63,27 @@ describe("ConnectForm", () => {
     expect(await screen.findByText("Sleeper user not found.")).toBeInTheDocument();
     expect(mocks.push).not.toHaveBeenCalled();
   });
+
+  it("locks the picker while the chosen league opens", async () => {
+    const user = userEvent.setup();
+    respond({ leagues: [league("L1", "Alpha"), league("L2", "Beta")], username: "TimBlazing" });
+    render(<ConnectForm />);
+
+    await user.type(screen.getByLabelText("Sleeper username"), "TimBlazing{Enter}");
+    await user.click(await screen.findByRole("button", { name: /Beta/ }));
+    await user.click(screen.getByRole("button", { name: /Alpha/ }));
+
+    expect(mocks.push).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: "Change" })).toBeDisabled();
+  });
+
+  it("shows a readable error when the lookup returns a non-JSON page", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: async () => { throw new SyntaxError("Unexpected token '<'"); } }));
+    render(<ConnectForm />);
+
+    await user.type(screen.getByLabelText("Sleeper username"), "TimBlazing{Enter}");
+
+    expect(await screen.findByText("No NFL leagues were found.")).toBeInTheDocument();
+  });
 });
