@@ -44,7 +44,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 For Claude (GitHub Actions, `@claude`) and Codex (Codex Cloud, `@codex`) working on this repo in the cloud.
 
-- Skills come from [timblazing/skills](https://github.com/timblazing/skills). The Claude workflow installs them before each run, and so does the Codex Cloud environment's setup script. Use `pr-workflow` to land changes and `leaving-pr-comments` for anything you post on GitHub.
+- Skills come from [timblazing/skills](https://github.com/timblazing/skills). The Claude workflow installs them before each run, and so does the Codex Cloud environment's setup script. Use `build` to land changes (it calls the other workflow skills) and `leaving-pr-comments` for anything you post on GitHub.
 - Never push to `main`. Work on a branch and open a pull request.
 - Verify with `npm run build`, `npm run typecheck`, `npm test` and `npm run lint` before you push (install first with `npm ci`).
 - Do not update local session logs or work logs (for example `docs/WORKLOG.md`); put remaining work in the PR description.
