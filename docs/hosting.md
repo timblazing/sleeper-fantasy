@@ -17,6 +17,21 @@ Manual deploys: `vercel deploy --prod` from `main` (after `vercel link`).
 Secrets: `ROSTERAUDIT_API_KEY` is set for Production and Preview in the project's
 environment variables (`vercel env ls`). No other secrets are used.
 
+## Local dev
+
+Local secrets live in Infisical Cloud, project `sleeper-fantasy`, environment `dev`.
+`.infisical.yaml` holds only the project id. After one `infisical login` on the machine:
+
+```bash
+npm ci
+infisical run --env=dev -- npm run dev
+```
+
+No `.env` file is needed. Plain `npm run dev` also works; without the key, the Trade Lab
+and the key-gated player pages are unavailable (see `.env.example`). To add or rotate a
+local secret: `infisical secrets set NAME=value --env=dev`. Production and Preview still
+read Vercel's environment variables.
+
 Rollback: `vercel rollback` (or dashboard → Deployments → Promote an earlier
 deployment), then revert the bad commit on `main`.
 
